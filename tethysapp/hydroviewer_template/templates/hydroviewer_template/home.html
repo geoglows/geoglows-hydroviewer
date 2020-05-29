@@ -1,0 +1,189 @@
+{% extends "hydroviewer_template/base.html" %}
+
+{% load staticfiles %}
+{% load tethys_gizmos %}
+
+{% block header_buttons %}
+  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Upload CSV">
+    <a data-toggle="modal" data-target="#csv_modal"><span class="glyphicon glyphicon-upload"></span></a>
+  </div>
+  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="View Chart">
+    <a data-toggle="modal" data-target="#chart_modal"><span class="glyphicon glyphicon-globe"></span></a>
+  </div>
+{% endblock %}
+
+{# The name you provided in your app.py is accessible through the tethys_app.name context variable #}
+{% block app_title %}{{ tethys_app.name }} for {{ branded_name }}{% endblock %}
+
+{% block app_navigation_items %}
+  <li class="title">App controls</li>
+
+  <li class="title">Bias Correction</li>
+  {% gizmo select_input uploaded_observations %}
+  <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New
+    Observation</a>
+
+{% endblock %}
+
+{% block app_content %}
+  <div id="map" class="map"></div>
+{% endblock %}
+
+{% block after_app_content %}
+  {# Chart Modal #}
+  <div class="modal fade" id="chart_modal" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+          <div class="row">
+            <h2 style="text-align: center">Streamflow Results <span id="request-status" class="load-status"/></h2>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a id="forecast_tab_link" href="#forecast" aria-controls="forecast"
+                                                      role="tab" data-toggle="tab">Forecasts</a></li>
+            <li role="presentation"><a id="records_tab_link" href="#records" aria-controls="records" role="tab"
+                                       data-toggle="tab">Past Forecasts</a></li>
+            <li role="presentation"><a id="historical_tab_link" href="#historical" aria-controls="historical" role="tab"
+                                       data-toggle="tab">Historical</a></li>
+            <li role="presentation"><a id="seasonal_avg_tab_link" href="#seasonal_avg" aria-controls="seasonal_avg"
+                                       role="tab" data-toggle="tab">Seasonal Average</a></li>
+            <li role="presentation"><a id="flow_duration_tab_link" href="#flow_duration" aria-controls="flow_duration"
+                                       role="tab" data-toggle="tab">Flow-Duration</a></li>
+          </ul>
+
+          <!-- Tab panes -->
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="forecast">
+              <div class="panel panel-default">
+                <div id="forecast-chart"></div>
+                <div id="forecast-table"></div>
+              </div>
+            </div> <!-- /.tab-pane -->
+
+            <div role="tabpanel" class="tab-pane active" id="records">
+              <div class="panel panel-default">
+                <div id="records-chart"></div>
+              </div>
+            </div> <!-- /.tab-pane -->
+
+            <div role="tabpanel" class="tab-pane" id="historical">
+              <div class="panel panel-default">
+                <div id="historical-5">
+                  <div id="historical-5-chart" class="panel-body"></div>
+                  <div id="historical-5-table"></div>
+                </div>
+              </div>
+            </div><!-- /.tab-pane -->
+
+            <div role="tabpanel" class="tab-pane" id="seasonal_avg">
+              <div class="panel panel-default">
+                <div id='seasonal-5-chart' class="panel-body"></div>
+              </div>
+            </div><!-- /.tab-pane -->
+
+            <div role="tabpanel" class="tab-pane" id="flow_duration">
+              <div class="panel panel-default">
+                <div id='flowduration-5-chart' class="panel-body"></div>
+              </div>
+            </div><!-- /.tab-pane -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a class="btn btn-success" role="button" id="download-forecast-btn" target="_blank">Download Forecast</a>
+          <a class="btn btn-success" role="button" id="download-records-btn" target="_blank" style="display: none">Download
+            Previous Forecasts</a>
+          <a class="btn btn-success" role="button" id="download-historical-btn" target="_blank" style="display: none">Download
+            Historical Data</a>
+          <a class="btn btn-success" role="button" id="download-seasonal-btn" target="_blank" style="display: none">Download
+            Seasonal Average</a>
+          <button type="button" class="btn btn-info" id="resize_charts" onclick="fix_chart_sizes('forecasts')">Resize
+            the Chart
+          </button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="csv_modal" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+          <div class="row">
+            <h2 style="text-align: center">Upload Observational Data</h2>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <strong>Uploaded CSV files are available for a maximum of 24 hours after you upload them.</strong>
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a id="csv_upload_link" href="#csv_upload_tab"
+                                                      role="tab" data-toggle="tab">Upload CSV</a></li>
+            <li role="presentation"><a id="records_tab_link" href="#hydroshare_resource_tab"
+                                       role="tab" data-toggle="tab">Hydroshare</a></li>
+          </ul>
+
+          <!-- Tab panes -->
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="csv_upload_tab">
+              <div class="panel panel-default">
+                <p>Requirements for uploaded csv files:</p>
+                <ol>
+                  <li>Your csv file must contain exactly 2 columns</li>
+                  <li>The first row must contain the names for the columns (e.g. datetime and streamflow)</li>
+                  <li>The first column must contain the date and time (datetime) of the observation</li>
+                  <li>The second column must contain the streamflow observations in cubic meters per second (cms)
+                    (m^3/s)
+                  </li>
+                </ol>
+              </div>
+            </div> <!-- /.tab-pane -->
+
+            <div role="tabpanel" class="tab-pane active" id="hydroshare_resource_tab">
+              <div class="panel panel-default">
+              </div>
+            </div> <!-- /.tab-pane -->
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block styles %}
+  {{ block.super }}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css">
+  <link rel="stylesheet" href="{% static 'hydroviewer_template/css/main.css' %}">
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script>
+      let geoserver_url = "{{ gs_url }}";
+      let app_url = "{{ app_url }}"
+      let endpoint = "{{ endpoint }}";
+      let boundary_layer = "{{ boundary_layer }}";
+      let catchment_layer = "{{ catchment_layer }}";
+      let drainage_layer = "{{ drainage_layer }}";
+  </script>
+  {# Leaflet #}
+  <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/esri-leaflet@2.2.3/dist/esri-leaflet.js"></script>
+  {# Plotly #}
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script type="text/javascript" src="{% static 'hydroviewer_template/js/main.js' %}"></script>
+{% endblock %}
