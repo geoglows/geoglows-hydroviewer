@@ -2,7 +2,7 @@
 L.TileLayer.WMFS = L.TileLayer.WMS.extend({
     GetFeatureInfo: function (evt) {
         // Construct a GetFeatureInfo request URL given a point
-        let size = this._map.getSize();
+        let size = this._map.getSize()
         let params = {
             request: 'GetFeatureInfo',
             service: 'WMS',
@@ -39,12 +39,12 @@ L.TileLayer.WMFS = L.TileLayer.WMS.extend({
         return [reachid, drain_area]
     },
 });
-
 L.tileLayer.WMFS = function (url, options) {
     return new L.TileLayer.WMFS(url, options);
 };
+
 ////////////////////////////////////////////////////////////////////////  MAP FUNCTIONS AND VARIABLES
-function hydroviewer() {
+function makeMap() {
     return L.map('map', {
         zoom: 3,
         minZoom: 2,
@@ -53,6 +53,7 @@ function hydroviewer() {
         center: [20, 0],
     })
 }
+
 function basemaps() {
     return {
         "ESRI Topographic": L.esri.basemapLayer('Topographic').addTo(mapObj),
@@ -60,6 +61,7 @@ function basemaps() {
         "ESRI Grey": L.esri.basemapLayer('Gray'),
     }
 }
+
 function getWatershedComponent(layername) {
     return L.tileLayer.wms(geoserver_url, {
         version: '1.1.0',
@@ -72,6 +74,7 @@ function getWatershedComponent(layername) {
         pane: 'watershedlayers',
     })
 }
+
 function getDrainageLine(layername) {
     return L.tileLayer.WMFS(geoserver_url, {
         version: '1.1.0',
@@ -84,6 +87,7 @@ function getDrainageLine(layername) {
         pane: 'watershedlayers',
     })
 }
+
 function getVIIRS() {
     return L.tileLayer('https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png', {
         layers: 'RIVER-FLDglobal-composite: Latest',
@@ -91,13 +95,13 @@ function getVIIRS() {
         pane: 'viirs',
     });
 }
+
 let reachid;
 let drain_area;
-let needsRefresh = {};
 let marker = null;
 ////////////////////////////////////////////////////////////////////////  SETUP THE MAP
 // make the map
-let mapObj = hydroviewer();
+let mapObj = makeMap();
 // create map panes which help sort layer drawing order
 mapObj.createPane('watershedlayers');
 mapObj.getPane('watershedlayers').style.zIndex = 250;
@@ -119,6 +123,7 @@ legend.onAdd = function () {
     return div
 };
 legend.addTo(mapObj);
+// add the lat/lon box to the map
 let latlon = L.control({position: 'bottomleft'});
 latlon.onAdd = function () {
     let div = L.DomUtil.create('div', 'well well-sm');
@@ -132,16 +137,21 @@ mapObj.on("mousemove", function (event) {
 
 // add layers to the map: the boundary, catchment, and drainage layers are the geoserver layer names and determined by the python controller and rendered in the templates
 let ctrllayers = {};
-if (boundary_layer !== 'none') {boundary_layer = getWatershedComponent(boundary_layer); ctrllayers['Hydroviewer Boundaries'] = boundary_layer}
-if (catchment_layer !== 'none') {catchment_layer = getWatershedComponent(catchment_layer); ctrllayers['Watershed Catchments'] = catchment_layer}
+if (boundary_layer !== 'none') {
+    boundary_layer = getWatershedComponent(boundary_layer);
+    ctrllayers['Hydroviewer Boundaries'] = boundary_layer
+}
+if (catchment_layer !== 'none') {
+    catchment_layer = getWatershedComponent(catchment_layer);
+    ctrllayers['Watershed Catchments'] = catchment_layer
+}
 drainage_layer = getDrainageLine(drainage_layer).addTo(mapObj);
 ctrllayers['Drainage Lines'] = drainage_layer;
 ctrllayers['VIIRS Imagery'] = VIIRSlayer;
 let controlsObj = L.control.layers(basemapObj, ctrllayers).addTo(mapObj);
 
 ////////////////////////////////////////////////////////////////////////  LISTENERS FOR MAP EVENTS
-let startzoom;
-const chart_divs = [$("#forecast-chart"), $("#forecast-table"), $("#historical-chart"), $("#historical-table"), $("#seasonal-chart"), $("#flowduration-chart")];
+const chart_divs = [$("#forecast-chart"), $("#corrected-forecast-chart"), $("#records-chart"), $("#forecast-table"), $("#historical-chart"), $("#historical-table"), $("#daily-avg-chart"), $("#monthly-avg-chart"), $("#flowduration-chart"), $("#volume_plot"), $("#scatters"), $("#stats_table")];
 mapObj.on("click", function (event) {
     // delete any existing marker
     if (marker) {mapObj.removeLayer(marker)}
@@ -154,18 +164,18 @@ mapObj.on("click", function (event) {
     updateStatusIcons('cleared');
     // clear anything (e.g. old charts) in the chart divs
     for (let i in chart_divs) {chart_divs[i].html('')}
-    $("#forecast-table").html('');
     $("#chart_modal").modal('show');
-    askAPI();
+    getStreamflowPlots();
 })
+
 ////////////////////////////////////////////////////////////////////////  GET DATA FROM API
-function askAPI() {
+function getStreamflowPlots() {
     if (!reachid) {return}
     updateStatusIcons('load');
     updateDownloadLinks('clear');
     for (let i in chart_divs) {chart_divs[i].html('')}  // clear the contents of old chart divs
     let ftl = $("#forecast_tab_link");  // select divs with jquery so we can reuse them
-    let fc = $("#forecast-chart");  // select divs with jquery so we can reuse them
+    let fc = chart_divs[0];
     ftl.tab('show')
     fc.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
     fc.css('text-align', 'center');
@@ -183,22 +193,69 @@ function askAPI() {
             $("#records-chart").html(html['rcp']);
             // historical tab
             $("#historical_tab_link").tab('show');
-            $("#historical-5-chart").html(html['hp']);
-            $("#historical-5-table").html(html['rp_table']);
-            // seasonal average tab
-            $("#seasonal_avg_tab_link").tab('show');
-            $("#seasonal-5-chart").html(html['sp']);
+            $("#historical-chart").html(html['hp']);
+            $("#historical-table").html(html['rp_table']);
+            // average flows tab
+            $("#avg_flow_tab_link").tab('show');
+            $("#daily-avg-chart").html(html['sp']);
+            // $("#monthly-avg-chart").html(html['sp']);
             // flow duration tab
             $("#flow_duration_tab_link").tab('show');
-            $("#flowduration-5-chart").html(html['fdp']);
+            $("#flowduration-chart").html(html['fdp']);
             // update other messages and links
             ftl.tab('show');
+            updateStatusIcons('ready');
+            updateDownloadLinks('set');
+            $("#bias_correction_tab_link").show()
+        },
+        error: function () {
+            updateStatusIcons('fail');
+            $("#bias_correction_tab_link").hide()
+            for (let i in chart_divs) {
+                chart_divs[i].html('')
+            }
+        }
+    })
+}
+function getBiasCorrectedPlots() {
+    if (!reachid) {return}
+    let csv = $("#watersheds_select_input").val();
+    if (!confirm('You are about to perform bias correction on reach_id ' + String(reachid) + ' with uploaded observational data file ' + csv + ' Are you sure you want to continue?')) {return}
+    updateStatusIcons('load');
+    updateDownloadLinks('clear');
+    $.ajax({
+        type: 'GET',
+        async: true,
+        url: '/apps/' + app_url + '/correct_bias' + L.Util.getParamString({
+            reach_id: reachid,
+            drain_area: drain_area,
+            observation: csv
+        }),
+        success: function (html) {
+            // forecast tab
+            $("#forecast_tab_link").tab('show');
+            $("#corrected-forecast-chart").append(html['correct_hydro']);
+            // historical tab
+            $("#historical_tab_link").tab('show');
+            $("#historical-chart").html(html['new_hist']);
+            $("#historical-table").html('')
+            // average flows tab
+            $("#avg_flow_tab_link").tab('show');
+            $("#daily-avg-chart").html(html['day_avg'])
+            $("#monthly-avg-chart").html(html['month_avg'])
+            // todo flow duration curve
+            // $("#flow_duration_tab_link").tab('show');
+            // $("#flowduration-chart").html(html['flowdur_plot']);
+            // stats tab
+            $("#bias_correction_tab_link").tab('show');
+            $("#stats_table").html(html['stats_table'])
+            $("#volume_plot").html(html['volume_plot']);
+            $("#scatters").html(html['scatters']);
             updateStatusIcons('ready');
             updateDownloadLinks('set');
         },
         error: function () {
             updateStatusIcons('fail');
-            for (let i in chart_divs) {chart_divs[i].html('')}
         }
     })
 }
@@ -232,33 +289,54 @@ function updateDownloadLinks(type) {
     }
 }
 function fix_buttons(tab) {
-    let buttons = [$("#download-forecast-btn"), $("#download-records-btn"), $("#download-historical-btn"), $("#download-seasonal-btn")]
-    for (let i in buttons) {buttons[i].hide()}
-    if (tab === 'forecast') {buttons[0].show();$("#toggle_historical").hide()}
-    else if (tab === 'records') {buttons[1].show();$("#toggle_historical").hide()}
-    else if (tab === 'historical') {buttons[2].show();$("#toggle_historical").show()}
-    else if (tab === 'seasonal') {buttons[3].show();$("#toggle_historical").show()}
-    else if (tab === 'flowduration') {$("#toggle_historical").show()}
+    let buttons = [$("#download-forecast-btn"), $("#download-records-btn"), $("#download-historical-btn"), $("#download-averages-btn"), $("#start-bias-correction-btn")]
+    for (let i in buttons) {
+        buttons[i].hide()
+    }
+    if (tab === 'forecast') {
+        buttons[0].show()
+    } else if (tab === 'records') {
+        buttons[1].show()
+    } else if (tab === 'historical') {
+        buttons[2].show()
+    } else if (tab === 'averages') {
+        buttons[3].show()
+    } else if (tab === 'flowduration') {
+    } else if (tab === 'biascorrection') {
+        buttons[4].show()
+    }
     fix_chart_sizes(tab);
     $("#resize_charts").attr({'onclick': "fix_chart_sizes('" + tab + "')"})
 }
 function fix_chart_sizes(tab) {
     let divs = [];
-    if (tab === 'forecast') {divs = [$("#forecast-chart .js-plotly-plot")]}
-    else if (tab === 'records') {divs = [$("#records-chart .js-plotly-plot")]}
-    else if (tab === 'historical') {divs = [$("#historical-5-chart .js-plotly-plot"), $("#historical-int-chart .js-plotly-plot")]}
-    else if (tab === 'seasonal') {divs = [$("#seasonal-5-chart .js-plotly-plot"), $("#seasonal-int-chart .js-plotly-plot")];}
-    else if (tab === 'flowduration') {divs = [$("#flowduration-5-chart .js-plotly-plot"), $("#flowduration-int-chart .js-plotly-plot")];}
+    if (tab === 'forecast') {
+        divs = [$("#forecast-chart .js-plotly-plot")]
+    } else if (tab === 'records') {
+        divs = [$("#records-chart .js-plotly-plot")]
+    } else if (tab === 'historical') {
+        divs = [$("#historical-5-chart .js-plotly-plot")]
+    } else if (tab === 'averages') {
+        divs = [$("#daily-avg-chart .js-plotly-plot"), $("#monthly-avg-chart .js-plotly-plot")]
+    } else if (tab === 'flowduration') {
+        divs = [$("#flowduration-5-chart .js-plotly-plot")]
+    } else if (tab === 'biascorrection') {
+        divs = [$("#volume_plot .js-plotly-plot"), $("#scatters .js-plotly-plot")];
+    }
     for (let i in divs) {
-        divs[i].css('height', 500);
-        Plotly.Plots.resize(divs[i][0]);
+        try {
+            divs[i].css('height', 500);
+            Plotly.Plots.resize(divs[i][0]);
+        } catch (e) {
+        }
     }
 }
-$("#forecast_tab_link").on('click', function (){fix_buttons('forecast')})
-$("#records_tab_link").on('click', function (){fix_buttons('records')})
-$("#historical_tab_link").on('click', function (){fix_buttons('historical')})
-$("#seasonal_avg_tab_link").on('click', function (){fix_buttons('seasonal')})
-$("#flow_duration_tab_link").on('click', function (){fix_buttons('flowduration')})
+$("#forecast_tab_link").on('click', function () {fix_buttons('forecast')})
+$("#records_tab_link").on('click', function () {fix_buttons('records')})
+$("#historical_tab_link").on('click', function () {fix_buttons('historical')})
+$("#avg_flow_tab_link").on('click', function () {fix_buttons('averages')})
+$("#flow_duration_tab_link").on('click', function () {fix_buttons('flowduration')})
+$("#bias_correction_tab_link").on('click', function () {fix_buttons('biascorrection')})
 
 ////////////////////////////////////////////////////////////////////////  UPLOAD OBSERVATIONAL DATA
 function uploadCSV() {
@@ -267,7 +345,7 @@ function uploadCSV() {
     let form_data = new FormData();
     Object.keys(files).forEach(function (file) {
         form_data.append('files', files[file]);
-    console.log(form_data);
+        console.log(form_data);
     });
     loading_div.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
     $.ajax({

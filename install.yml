@@ -10,7 +10,7 @@ requirements:
     channels:
       - conda-forge
     packages:
-      - geoglows
+      - geoglows>=0.18
 
   pip:
 
