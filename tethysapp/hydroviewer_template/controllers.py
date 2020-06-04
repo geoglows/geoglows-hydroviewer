@@ -3,6 +3,7 @@ import os
 import geoglows.bias as gbc
 import geoglows.plots as gpp
 import geoglows.streamflow as gsf
+import hydrostats.data
 import pandas as pd
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -77,13 +78,15 @@ def get_streamflow(request):
     ens = gsf.forecast_ensembles(reach_id)
     hist = gsf.historic_simulation(reach_id)
     rper = gsf.return_periods(reach_id)
-    seas = gsf.seasonal_average(reach_id)
+    dayavg = hydrostats.data.daily_average(hist, rolling=True)
+    monavg = hydrostats.data.monthly_average(hist)
     title_headers = {'Reach ID': reach_id, 'Drainage Area': da}
     return JsonResponse(dict(
         fp=gpp.hydroviewer(rec, stats, ens, rper, titles=title_headers, outformat='plotly_html'),
         rcp=gpp.forecast_records(rec, rper, outformat='plotly_html'),
         hp=gpp.historic_simulation(hist, rper, titles=title_headers, outformat='plotly_html'),
-        sp=gpp.seasonal_average(seas, titles=title_headers, outformat='plotly_html'),
+        dp=gpp.daily_averages(dayavg, titles=title_headers, outformat='plotly_html'),
+        mp=gpp.monthly_averages(monavg, titles=title_headers, outformat='plotly_html'),
         fdp=gpp.flow_duration_curve(hist, titles=title_headers, outformat='plotly_html'),
         prob_table=gpp.probabilities_table(stats, ens, rper),
         rp_table=gpp.return_periods_table(rper),
@@ -109,7 +112,7 @@ def correct_bias(request):
     forecast_ens = gsf.forecast_ensembles(reach_id)
 
     # corrected data
-    fixed_hist = gbc.correct_historical_sim(sim_data, obs_data)
+    fixed_hist = gbc.correct_historical(sim_data, obs_data)
     fixed_stats = gbc.correct_forecast(forecast_stats, sim_data, obs_data)
     fixed_rec = gbc.correct_forecast(forecast_rec, sim_data, obs_data, use_month=-1)
     fixed_ens = gbc.correct_forecast(forecast_ens, sim_data, obs_data)
@@ -129,7 +132,14 @@ def correct_bias(request):
             fixed_rec, fixed_stats, fixed_ens, titles=headers_bc, outformat='plotly_html'),
         volume_plot=gpp.corrected_volume_compare(
             fixed_hist, sim_data, obs_data, titles=headers_bc, outformat='plotly_html'),
-        # todo flowdur_plot=gpp.flow_duration_curve(fixed_hist, titles=headers_bc, outformat='plotly_html'),
+        flowdur_plot=gpp.flow_duration_curve(fixed_hist, titles=headers_bc, outformat='plotly_html'),
         scatters=gpp.corrected_scatterplots(fixed_hist, sim_data, obs_data, titles=headers, outformat='plotly_html'),
         stats_table=gbc.statistics_tables(fixed_hist, sim_data, obs_data),
     ))
+
+
+def find_reach_id(request):
+    reach_id = request.GET['reach_id']
+    print(reach_id)
+    lat, lon = gsf.reach_to_latlon(int(reach_id))
+    return JsonResponse({'lat': lat, 'lon': lon})

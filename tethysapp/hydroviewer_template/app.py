@@ -31,7 +31,7 @@ class HydroviewerTemplate(TethysAppBase):
                 controller=f'{self.package}.controllers.home'
             ),
 
-            # handles the requests to get the various pages of plots in the app
+            # handles the requests to get the various plots in the app modals
             UrlMap(
                 name='get_streamflow',
                 url=f'{self.root_url}/get_streamflow',
@@ -47,4 +47,11 @@ class HydroviewerTemplate(TethysAppBase):
                 url=f'{self.root_url}/correct_bias',
                 controller=f'{self.package}.controllers.correct_bias'
             ),
+
+            # some other utilities
+            UrlMap(
+                name='find_reach_id',
+                url=f'{self.root_url}/findReachID',
+                controller=f'{self.package}.controllers.find_reach_id'
+            )
         )

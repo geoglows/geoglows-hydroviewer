@@ -21,6 +21,15 @@
 
 {% block app_navigation_items %}
   <li class="title">App controls</li>
+  <li class="separator"></li>
+  <input id="search_reachid_input" placeholder="Search for a Reach ID" style="width: 100%" class="input">
+  <a class="btn btn-default" role="button" style="width: 100%" onclick="findReachID()">Find A Reach ID</a>
+
+  <li class="separator"></li>
+  <input id="search_latlon_input" placeholder="Enter 'latitude, longitude'" style="width: 100%" class="input">
+  <a class="btn btn-default" role="button" style="width: 100%" onclick="findLatLon()">Find A Lat/Lon Location</a>
+
+  <li class="separator"></li>
   <a class="btn btn-default" role="button" data-toggle="modal" data-target="#viirs_modal" style="width: 100%">About
     VIIRS Imagery</a>
 
@@ -51,12 +60,18 @@
         <div class="modal-body">
           <!-- Nav tabs -->
           <ul class="nav nav-tabs" role="tablist">
-            <li role="presentation" class="active"><a id="forecast_tab_link" href="#forecast" role="tab" data-toggle="tab">Forecasts</a></li>
-            <li role="presentation"><a id="records_tab_link" href="#records" role="tab" data-toggle="tab">Past Forecasts</a></li>
-            <li role="presentation"><a id="historical_tab_link" href="#historical" role="tab" data-toggle="tab">Historical</a></li>
-            <li role="presentation"><a id="avg_flow_tab_link" href="#average_flows" role="tab" data-toggle="tab">Average Flows</a></li>
-            <li role="presentation"><a id="flow_duration_tab_link" href="#flow_duration" role="tab" data-toggle="tab">Flow-Duration</a></li>
-            <li role="presentation"><a id="bias_correction_tab_link" href="#bias_correction" role="tab" data-toggle="tab" style="display: none">Bias Correction</a></li>
+            <li role="presentation" class="active"><a id="forecast_tab_link" href="#forecast" role="tab"
+                                                      data-toggle="tab">Forecasts</a></li>
+            <li role="presentation"><a id="records_tab_link" href="#records" role="tab" data-toggle="tab">Past
+              Forecasts</a></li>
+            <li role="presentation"><a id="historical_tab_link" href="#historical" role="tab" data-toggle="tab">Historical</a>
+            </li>
+            <li role="presentation"><a id="avg_flow_tab_link" href="#average_flows" role="tab" data-toggle="tab">Average
+              Flows</a></li>
+            <li role="presentation"><a id="flow_duration_tab_link" href="#flow_duration" role="tab" data-toggle="tab">Flow-Duration</a>
+            </li>
+            <li role="presentation"><a id="bias_correction_tab_link" href="#bias_correction" role="tab"
+                                       data-toggle="tab" style="display: none">Bias Correction</a></li>
           </ul>
 
           <!-- Tab panes -->
@@ -114,7 +129,7 @@
           <a class="btn btn-success" role="button" id="download-historical-btn" target="_blank" style="display: none">Download
             Historical Data</a>
           <a class="btn btn-success" role="button" id="download-seasonal-btn" target="_blank" style="display: none">Download
-            Seasonal Average</a>
+            Daily Average</a>
           <a class="btn btn-danger" role="button" id="start-bias-correction-btn" target="_blank" style="display: none"
              onclick="getBiasCorrectedPlots()">Start Bias Correction</a>
           <button type="button" class="btn btn-info" id="resize_charts" onclick="fix_chart_sizes('forecasts')">Resize
@@ -148,11 +163,6 @@
           <a href="https://www.star.nesdis.noaa.gov/jpss/images/Harvey/show/VIIRSFloodDetectionMapQuickGuide.pdf"
              target="_blank">VIIRS Flood Detection Map Quick Guide (PDF) (noaa.gov)</a>
 
-          <div role="tabpanel" class="tab-pane active" id="hydroshare_resource_tab">
-            <div class="panel panel-default">
-            </div>
-          </div> <!-- /.tab-pane -->
-
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           </div>
@@ -166,19 +176,17 @@
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                   aria-hidden="true">&times;</span></button>
-          <div class="row">
-            <h2 style="text-align: center">Upload Observational Data</h2>
-          </div>
+          <div class="row"><h2 style="text-align: center">Upload Observational Data</h2></div>
         </div>
 
         <div class="modal-body">
           <strong>Uploaded CSV files are available for a maximum of 24 hours after you upload them.</strong>
           <!-- Nav tabs -->
           <ul class="nav nav-tabs" role="tablist">
-            <li role="presentation" class="active"><a id="csv_upload_link" href="#csv_upload_tab"
-                                                      role="tab" data-toggle="tab">Upload CSV</a></li>
-            <li role="presentation"><a id="records_tab_link" href="#hydroshare_resource_tab"
-                                       role="tab" data-toggle="tab">Hydroshare</a></li>
+            <li role="presentation" class="active"><a id="csv_upload_link" href="#csv_upload_tab" role="tab"
+                                                      data-toggle="tab">Upload CSV</a></li>
+            <li role="presentation"><a id="records_tab_link" href="#hydroshare_resource_tab" role="tab"
+                                       data-toggle="tab">Hydroshare</a></li>
           </ul>
 
           <!-- Tab panes -->
@@ -201,10 +209,9 @@
               <div class="panel panel-default">
               </div>
             </div> <!-- /.tab-pane -->
-
-            <div class="modal-footer">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           </div>
         </div>
       </div>

@@ -42,7 +42,6 @@ L.TileLayer.WMFS = L.TileLayer.WMS.extend({
 L.tileLayer.WMFS = function (url, options) {
     return new L.TileLayer.WMFS(url, options);
 };
-
 ////////////////////////////////////////////////////////////////////////  MAP FUNCTIONS AND VARIABLES
 function makeMap() {
     return L.map('map', {
@@ -53,7 +52,6 @@ function makeMap() {
         center: [20, 0],
     })
 }
-
 function basemaps() {
     return {
         "ESRI Topographic": L.esri.basemapLayer('Topographic').addTo(mapObj),
@@ -61,7 +59,6 @@ function basemaps() {
         "ESRI Grey": L.esri.basemapLayer('Gray'),
     }
 }
-
 function getWatershedComponent(layername) {
     return L.tileLayer.wms(geoserver_url, {
         version: '1.1.0',
@@ -74,7 +71,6 @@ function getWatershedComponent(layername) {
         pane: 'watershedlayers',
     })
 }
-
 function getDrainageLine(layername) {
     return L.tileLayer.WMFS(geoserver_url, {
         version: '1.1.0',
@@ -87,7 +83,6 @@ function getDrainageLine(layername) {
         pane: 'watershedlayers',
     })
 }
-
 function getVIIRS() {
     return L.tileLayer('https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png', {
         layers: 'RIVER-FLDglobal-composite: Latest',
@@ -95,7 +90,6 @@ function getVIIRS() {
         pane: 'viirs',
     });
 }
-
 let reachid;
 let drain_area;
 let marker = null;
@@ -197,7 +191,8 @@ function getStreamflowPlots() {
             $("#historical-table").html(html['rp_table']);
             // average flows tab
             $("#avg_flow_tab_link").tab('show');
-            $("#daily-avg-chart").html(html['sp']);
+            $("#daily-avg-chart").html(html['dp']);
+            $("#monthly-avg-chart").html(html['mp']);
             // $("#monthly-avg-chart").html(html['sp']);
             // flow duration tab
             $("#flow_duration_tab_link").tab('show');
@@ -243,9 +238,9 @@ function getBiasCorrectedPlots() {
             $("#avg_flow_tab_link").tab('show');
             $("#daily-avg-chart").html(html['day_avg'])
             $("#monthly-avg-chart").html(html['month_avg'])
-            // todo flow duration curve
-            // $("#flow_duration_tab_link").tab('show');
-            // $("#flowduration-chart").html(html['flowdur_plot']);
+            // flow duration curve
+            $("#flow_duration_tab_link").tab('show');
+            $("#flowduration-chart").html(html['flowdur_plot']);
             // stats tab
             $("#bias_correction_tab_link").tab('show');
             $("#stats_table").html(html['stats_table'])
@@ -362,4 +357,27 @@ function uploadCSV() {
             loading_div.html('<h3>There was an expected problem uploading your csv file</h3>')
         }
     });
+}
+
+let found_reach_marker;
+function findReachID() {
+    $.ajax({
+        type: 'GET',
+        async: true,
+        url: '/apps/' + app_url + '/findReachID' + L.Util.getParamString({reach_id: $("#search_reachid_input").val()}),
+        success: function (response) {
+            if (found_reach_marker) {mapObj.removeLayer(found_reach_marker)}
+            found_reach_marker = L.marker(L.latLng(response['lat'], response['lon'])).addTo(mapObj);
+            mapObj.flyTo(L.latLng(response['lat'], response['lon']), 9);
+
+        },
+        error: function () {alert('Unable to find the reach_id specified')}
+    })
+}
+let found_latlon_marker;
+function findLatLon() {
+    if (found_latlon_marker) {mapObj.removeLayer(found_latlon_marker)}
+    let ll = $("#search_latlon_input").val().replace(' ', '').split(',')
+    found_latlon_marker = L.marker(L.latLng(ll[0], ll[1])).addTo(mapObj);
+    mapObj.flyTo(L.latLng(ll[0], ll[1]), 9);
 }
