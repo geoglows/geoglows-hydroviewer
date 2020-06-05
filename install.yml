@@ -11,6 +11,9 @@ requirements:
       - conda-forge
     packages:
       - geoglows>=0.18
+      - xmltodict
+      - pandas
+      - requests
 
   pip:
 

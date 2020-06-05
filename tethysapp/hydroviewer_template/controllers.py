@@ -1,4 +1,5 @@
 import os
+import json
 
 import geoglows.bias as gbc
 import geoglows.plots as gpp
@@ -10,6 +11,7 @@ from django.shortcuts import render
 from tethys_sdk.gizmos import SelectInput, Button
 
 from .app import HydroviewerTemplate as App
+from .manage_gauge_networks import list_gauge_networks, get_observed_station_flow
 from .manage_uploaded_observations import delete_old_observations, list_uploaded_observations
 
 GLOBAL_DELINEATIONS = (
@@ -42,6 +44,13 @@ def home(request):
         original=True,
         options=list_uploaded_observations(),
     )
+    gauge_networks = SelectInput(
+        display_text='Stream Gauge Networks',
+        name='gauge_networks',
+        multiple=False,
+        original=True,
+        options=list_gauge_networks(),
+    )
     upload_new_observation = Button(
         name='Upload New Observation',
         display_text='Upload New Observation',
@@ -64,6 +73,9 @@ def home(request):
 
         # appearance customizations
         'branded_name': 'Development',  # {% block app_title %}
+
+        # gauge_networks
+        'gauge_networks': gauge_networks,
     }
 
     return render(request, 'hydroviewer_template/home.html', context)
@@ -83,7 +95,6 @@ def get_streamflow(request):
     title_headers = {'Reach ID': reach_id, 'Drainage Area': da}
     return JsonResponse(dict(
         fp=gpp.hydroviewer(rec, stats, ens, rper, titles=title_headers, outformat='plotly_html'),
-        rcp=gpp.forecast_records(rec, rper, outformat='plotly_html'),
         hp=gpp.historic_simulation(hist, rper, titles=title_headers, outformat='plotly_html'),
         dp=gpp.daily_averages(dayavg, titles=title_headers, outformat='plotly_html'),
         mp=gpp.monthly_averages(monavg, titles=title_headers, outformat='plotly_html'),
@@ -95,15 +106,20 @@ def get_streamflow(request):
 
 def correct_bias(request):
     # accept the parameters from the user
-    data = request.GET
-    reach_id = data['reach_id']
-    csv = data['observation']
-
-    # find their csv
-    workspace_path = App.get_app_workspace().path
-    obs_path = os.path.join(workspace_path, csv)
-    obs_data = pd.read_csv(obs_path, index_col=0)
-    obs_data.index = pd.to_datetime(obs_data.index).tz_localize('UTC')
+    data = request.GET.dict()
+    network = data.get('gauge_network', False)
+    if network:
+        reach_id = data['GEOGLOWSID']
+        obs_data, titles, titles_bc = get_observed_station_flow(network, data)
+    else:
+        reach_id = data['reach_id']
+        csv = data['observation']
+        workspace_path = App.get_app_workspace().path
+        obs_path = os.path.join(workspace_path, csv)
+        obs_data = pd.read_csv(obs_path, index_col=0)
+        obs_data.index = pd.to_datetime(obs_data.index).tz_localize('UTC')
+        titles = {'Reach ID': reach_id, 'Station Data': csv}
+        titles_bc = {'Reach ID': reach_id, 'Station Data': csv, 'bias_corrected': True}
 
     # get the data you need to correct bias
     sim_data = gsf.historic_simulation(reach_id)
@@ -117,29 +133,30 @@ def correct_bias(request):
     fixed_rec = gbc.correct_forecast(forecast_rec, sim_data, obs_data, use_month=-1)
     fixed_ens = gbc.correct_forecast(forecast_ens, sim_data, obs_data)
 
-    # header information
-    headers = {'Reach ID': reach_id, 'Station Data': csv}
-    headers_bc = {'Reach ID': reach_id, 'Station Data': csv, 'bias_corrected': True}
-
     return JsonResponse(dict(
         new_hist=gpp.corrected_historical(
-            fixed_hist, sim_data, obs_data, titles=headers_bc, outformat='plotly_html'),
+            fixed_hist, sim_data, obs_data, titles=titles_bc, outformat='plotly_html'),
         day_avg=gpp.corrected_day_average(
-            fixed_hist, sim_data, obs_data, titles=headers_bc, outformat='plotly_html'),
+            fixed_hist, sim_data, obs_data, titles=titles_bc, outformat='plotly_html'),
         month_avg=gpp.corrected_month_average(
-            fixed_hist, sim_data, obs_data, titles=headers_bc, outformat='plotly_html'),
+            fixed_hist, sim_data, obs_data, titles=titles_bc, outformat='plotly_html'),
         correct_hydro=gpp.hydroviewer(
-            fixed_rec, fixed_stats, fixed_ens, titles=headers_bc, outformat='plotly_html'),
+            fixed_rec, fixed_stats, fixed_ens, titles=titles_bc, outformat='plotly_html'),
         volume_plot=gpp.corrected_volume_compare(
-            fixed_hist, sim_data, obs_data, titles=headers_bc, outformat='plotly_html'),
-        flowdur_plot=gpp.flow_duration_curve(fixed_hist, titles=headers_bc, outformat='plotly_html'),
-        scatters=gpp.corrected_scatterplots(fixed_hist, sim_data, obs_data, titles=headers, outformat='plotly_html'),
+            fixed_hist, sim_data, obs_data, titles=titles_bc, outformat='plotly_html'),
+        flowdur_plot=gpp.flow_duration_curve(fixed_hist, titles=titles_bc, outformat='plotly_html'),
+        scatters=gpp.corrected_scatterplots(fixed_hist, sim_data, obs_data, titles=titles, outformat='plotly_html'),
         stats_table=gbc.statistics_tables(fixed_hist, sim_data, obs_data),
     ))
 
 
 def find_reach_id(request):
     reach_id = request.GET['reach_id']
-    print(reach_id)
     lat, lon = gsf.reach_to_latlon(int(reach_id))
     return JsonResponse({'lat': lat, 'lon': lon})
+
+
+def get_gauge_geojson(request):
+    workspace_path = App.get_app_workspace().path
+    with open(os.path.join(workspace_path, 'gauge_networks', request.GET['network'])) as geojson:
+        return JsonResponse(json.load(geojson))

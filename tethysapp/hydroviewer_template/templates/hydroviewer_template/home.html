@@ -21,7 +21,6 @@
 
 {% block app_navigation_items %}
   <li class="title">App controls</li>
-  <li class="separator"></li>
   <input id="search_reachid_input" placeholder="Search for a Reach ID" style="width: 100%" class="input">
   <a class="btn btn-default" role="button" style="width: 100%" onclick="findReachID()">Find A Reach ID</a>
 
@@ -34,9 +33,10 @@
     VIIRS Imagery</a>
 
   <li class="title">Bias Correction</li>
-  {% gizmo select_input uploaded_observations %}
-  <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New
-    Observation</a>
+{#  {% gizmo select_input uploaded_observations %}#}
+{#  <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New#}
+{#    Observation</a>#}
+  {% gizmo select_input gauge_networks %}
 
 {% endblock %}
 
@@ -62,8 +62,6 @@
           <ul class="nav nav-tabs" role="tablist">
             <li role="presentation" class="active"><a id="forecast_tab_link" href="#forecast" role="tab"
                                                       data-toggle="tab">Forecasts</a></li>
-            <li role="presentation"><a id="records_tab_link" href="#records" role="tab" data-toggle="tab">Past
-              Forecasts</a></li>
             <li role="presentation"><a id="historical_tab_link" href="#historical" role="tab" data-toggle="tab">Historical</a>
             </li>
             <li role="presentation"><a id="avg_flow_tab_link" href="#average_flows" role="tab" data-toggle="tab">Average
@@ -81,12 +79,6 @@
                 <div id="forecast-chart"></div>
                 <div id="corrected-forecast-chart"></div>
                 <div id="forecast-table"></div>
-              </div>
-            </div> <!-- /.tab-pane -->
-
-            <div role="tabpanel" class="tab-pane active" id="records">
-              <div class="panel panel-default">
-                <div id="records-chart"></div>
               </div>
             </div> <!-- /.tab-pane -->
 
@@ -131,7 +123,7 @@
           <a class="btn btn-success" role="button" id="download-seasonal-btn" target="_blank" style="display: none">Download
             Daily Average</a>
           <a class="btn btn-danger" role="button" id="start-bias-correction-btn" target="_blank" style="display: none"
-             onclick="getBiasCorrectedPlots()">Start Bias Correction</a>
+             onclick="getBiasCorrectedPlots(false)">Start Bias Correction</a>
           <button type="button" class="btn btn-info" id="resize_charts" onclick="fix_chart_sizes('forecasts')">Resize
             the Chart
           </button>
@@ -147,6 +139,7 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">X</span>
           </button>
         </div>
+        <h1 style="text-align: center">VIIRS 5-Day Composite Imagery</h1>
         <div class="modal-body">
           <img src="{% static 'hydroviewer_template/images/VIIRS_legend.png' %}" alt="legend" style="width: 100%">
           <ul>
@@ -161,7 +154,9 @@
             <li>0-100: floodwater fractions (light cyan to red)</li>
           </ul>
           <a href="https://www.star.nesdis.noaa.gov/jpss/images/Harvey/show/VIIRSFloodDetectionMapQuickGuide.pdf"
-             target="_blank">VIIRS Flood Detection Map Quick Guide (PDF) (noaa.gov)</a>
+             target="_blank">VIIRS Flood Detection Map Quick Guide (PDF) (noaa.gov)</a><br>
+          <a href="https://www.ssec.wisc.edu/flood-map-demo/"
+             target="_blank">VIIRS Quick Start Guide/Flood Map Demo (wisc.edu)</a>
 
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -238,7 +233,6 @@
   </script>
   {# Leaflet #}
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/esri-leaflet@2.2.3/dist/esri-leaflet.js"></script>
   {# Plotly #}
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script type="text/javascript" src="{% static 'hydroviewer_template/js/main.js' %}"></script>

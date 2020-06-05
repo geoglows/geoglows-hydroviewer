@@ -43,22 +43,6 @@ L.tileLayer.WMFS = function (url, options) {
     return new L.TileLayer.WMFS(url, options);
 };
 ////////////////////////////////////////////////////////////////////////  MAP FUNCTIONS AND VARIABLES
-function makeMap() {
-    return L.map('map', {
-        zoom: 3,
-        minZoom: 2,
-        boxZoom: true,
-        maxBounds: L.latLngBounds(L.latLng(-100, -225), L.latLng(100, 225)),
-        center: [20, 0],
-    })
-}
-function basemaps() {
-    return {
-        "ESRI Topographic": L.esri.basemapLayer('Topographic').addTo(mapObj),
-        "ESRI Terrain": L.layerGroup([L.esri.basemapLayer('Terrain'), L.esri.basemapLayer('TerrainLabels')]),
-        "ESRI Grey": L.esri.basemapLayer('Gray'),
-    }
-}
 function getWatershedComponent(layername) {
     return L.tileLayer.wms(geoserver_url, {
         version: '1.1.0',
@@ -83,28 +67,25 @@ function getDrainageLine(layername) {
         pane: 'watershedlayers',
     })
 }
-function getVIIRS() {
-    return L.tileLayer('https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png', {
-        layers: 'RIVER-FLDglobal-composite: Latest',
-        crossOrigin: true,
-        pane: 'viirs',
-    });
-}
 let reachid;
 let drain_area;
 let marker = null;
 ////////////////////////////////////////////////////////////////////////  SETUP THE MAP
 // make the map
-let mapObj = makeMap();
+const mapObj = L.map('map', {
+        zoom: 3,
+        minZoom: 2,
+        boxZoom: true,
+        maxBounds: L.latLngBounds(L.latLng(-100, -225), L.latLng(100, 225)),
+        center: [20, 0],
+    });
+// add basemaps
+const basemapsJson = {"Open Street Map": L.tileLayer('https://b.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapObj)}
 // create map panes which help sort layer drawing order
 mapObj.createPane('watershedlayers');
 mapObj.getPane('watershedlayers').style.zIndex = 250;
 mapObj.createPane('viirs');
 mapObj.getPane('viirs').style.zIndex = 200;
-// get the VIIRS imagery layer
-let VIIRSlayer = getVIIRS();
-// add basemaps
-let basemapObj = basemaps();
 // add the legends and latlon box to the map
 let legend = L.control({position: 'bottomright'});
 legend.onAdd = function () {
@@ -125,29 +106,10 @@ latlon.onAdd = function () {
     return div;
 };
 latlon.addTo(mapObj);
-mapObj.on("mousemove", function (event) {
-    $("#mouse-position").html('Lat: ' + event.latlng.lat.toFixed(5) + ', Lon: ' + event.latlng.lng.toFixed(5));
-});
-
-// add layers to the map: the boundary, catchment, and drainage layers are the geoserver layer names and determined by the python controller and rendered in the templates
-let ctrllayers = {};
-if (boundary_layer !== 'none') {
-    boundary_layer = getWatershedComponent(boundary_layer);
-    ctrllayers['Hydroviewer Boundaries'] = boundary_layer
-}
-if (catchment_layer !== 'none') {
-    catchment_layer = getWatershedComponent(catchment_layer);
-    ctrllayers['Watershed Catchments'] = catchment_layer
-}
-drainage_layer = getDrainageLine(drainage_layer).addTo(mapObj);
-ctrllayers['Drainage Lines'] = drainage_layer;
-ctrllayers['VIIRS Imagery'] = VIIRSlayer;
-let controlsObj = L.control.layers(basemapObj, ctrllayers).addTo(mapObj);
-
-////////////////////////////////////////////////////////////////////////  LISTENERS FOR MAP EVENTS
-const chart_divs = [$("#forecast-chart"), $("#corrected-forecast-chart"), $("#records-chart"), $("#forecast-table"), $("#historical-chart"), $("#historical-table"), $("#daily-avg-chart"), $("#monthly-avg-chart"), $("#flowduration-chart"), $("#volume_plot"), $("#scatters"), $("#stats_table")];
-mapObj.on("click", function (event) {
-    // delete any existing marker
+// lat/lon tracking box on the bottom left of the map
+mapObj.on("mousemove", function (event) {$("#mouse-position").html('Lat: ' + event.latlng.lat.toFixed(5) + ', Lon: ' + event.latlng.lng.toFixed(5));});
+function mapClickEvents (event) {// delete any existing marker
+    console.log('clicked on map')
     if (marker) {mapObj.removeLayer(marker)}
     // get the reachid by querying geoserver
     let meta = drainage_layer.GetFeatureInfo(event);
@@ -159,10 +121,39 @@ mapObj.on("click", function (event) {
     // clear anything (e.g. old charts) in the chart divs
     for (let i in chart_divs) {chart_divs[i].html('')}
     $("#chart_modal").modal('show');
-    getStreamflowPlots();
-})
+    getStreamflowPlots()}
+mapObj.on("click", function (event) {console.log('turned on');mapClickEvents(event)})
 
-////////////////////////////////////////////////////////////////////////  GET DATA FROM API
+////////////////////////////////////////////////////////////////////////  ADD WMS LAYERS FOR DRAINAGE LINES, VIIRS, ETC - SEE HOME.HTML TEMPLATE
+let reachMarker;
+let latlonMarker;
+let gaugeNetwork = L.geoJSON(false, {
+    onEachFeature: function (feature, layer) {
+        layer.on('click', function (event) {L.DomEvent.stopPropagation(event);console.log('clicked on layer');getBiasCorrectedPlots(feature.properties)});
+    },
+    pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, {radius: 6, fillColor: "#ff0000", color: "#000000", weight: 1, opacity: 1, fillOpacity: 1});
+    }
+});
+let VIIRSlayer = L.tileLayer('https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png', {layers: 'RIVER-FLDglobal-composite: Latest', crossOrigin: true, pane: 'viirs',});
+drainage_layer = getDrainageLine(drainage_layer).addTo(mapObj);
+let ctrllayers = {
+    'Stream Network': drainage_layer,
+    'Gauge Network': gaugeNetwork,
+    'VIIRS Imagery': VIIRSlayer,
+};
+if (boundary_layer !== 'none') {
+    boundary_layer = getWatershedComponent(boundary_layer);
+    ctrllayers['Hydroviewer Boundaries'] = boundary_layer
+}
+if (catchment_layer !== 'none') {
+    catchment_layer = getWatershedComponent(catchment_layer);
+    ctrllayers['Watershed Catchments'] = catchment_layer
+}
+L.control.layers(basemapsJson, ctrllayers, {'collapsed': false}).addTo(mapObj);
+
+////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
+const chart_divs = [$("#forecast-chart"), $("#corrected-forecast-chart"), $("#forecast-table"), $("#historical-chart"), $("#historical-table"), $("#daily-avg-chart"), $("#monthly-avg-chart"), $("#flowduration-chart"), $("#volume_plot"), $("#scatters"), $("#stats_table")];
 function getStreamflowPlots() {
     if (!reachid) {return}
     updateStatusIcons('load');
@@ -176,15 +167,12 @@ function getStreamflowPlots() {
     $.ajax({
         type: 'GET',
         async: true,
-        url: '/apps/' + app_url + '/get_streamflow' + L.Util.getParamString({reach_id: reachid, drain_area: drain_area}),
+        url: '/apps/' + app_url + '/getStreamflow' + L.Util.getParamString({reach_id: reachid, drain_area: drain_area}),
         success: function (html) {
             // forecast tab
             ftl.tab('show');
             fc.html(html['fp']);
             $("#forecast-table").html(html['prob_table']);
-            // records tab
-            $("#records_tab_link").tab('show');
-            $("#records-chart").html(html['rcp']);
             // historical tab
             $("#historical_tab_link").tab('show');
             $("#historical-chart").html(html['hp']);
@@ -212,20 +200,32 @@ function getStreamflowPlots() {
         }
     })
 }
-function getBiasCorrectedPlots() {
-    if (!reachid) {return}
-    let csv = $("#watersheds_select_input").val();
-    if (!confirm('You are about to perform bias correction on reach_id ' + String(reachid) + ' with uploaded observational data file ' + csv + ' Are you sure you want to continue?')) {return}
+function getBiasCorrectedPlots(gauge_metadata) {
+    let data;
+    if (gauge_metadata !== false) {
+        data = gauge_metadata;
+        data['gauge_network'] = $("#gauge_networks").val();
+    } else if (!reachid) {
+        return
+    } else {
+        if (!confirm('You are about to perform bias correction on reach_id ' + String(reachid) + ' with uploaded observational data file ' + csv + ' Are you sure you want to continue?')) {
+            return
+        }
+        let csv = $("#watersheds_select_input").val();
+        data = {
+            reach_id: reachid,
+            observation: csv
+        }
+    }
     updateStatusIcons('load');
     updateDownloadLinks('clear');
+    $("#chart_modal").modal('show');
+    $("#bias_correction_tab_link").show()
     $.ajax({
         type: 'GET',
         async: true,
-        url: '/apps/' + app_url + '/correct_bias' + L.Util.getParamString({
-            reach_id: reachid,
-            drain_area: drain_area,
-            observation: csv
-        }),
+        data: data,
+        url: '/apps/' + app_url + '/correctBias',
         success: function (html) {
             // forecast tab
             $("#forecast_tab_link").tab('show');
@@ -273,7 +273,6 @@ function updateStatusIcons(type) {
 function updateDownloadLinks(type) {
     if (type === 'clear') {
         $("#download-forecast-btn").attr('href', '');
-        $("#download-records-btn").attr('href', '');
         $("#download-historical-btn").attr('href', '');
         $("#download-seasonal-btn").attr('href', '');
     } else if (type === 'set') {
@@ -284,21 +283,18 @@ function updateDownloadLinks(type) {
     }
 }
 function fix_buttons(tab) {
-    let buttons = [$("#download-forecast-btn"), $("#download-records-btn"), $("#download-historical-btn"), $("#download-averages-btn"), $("#start-bias-correction-btn")]
+    let buttons = [$("#download-forecast-btn"), $("#download-historical-btn"), $("#download-averages-btn"), $("#start-bias-correction-btn")]
     for (let i in buttons) {
         buttons[i].hide()
     }
     if (tab === 'forecast') {
         buttons[0].show()
-    } else if (tab === 'records') {
-        buttons[1].show()
     } else if (tab === 'historical') {
-        buttons[2].show()
+        buttons[1].show()
     } else if (tab === 'averages') {
-        buttons[3].show()
-    } else if (tab === 'flowduration') {
+        buttons[2].show()
     } else if (tab === 'biascorrection') {
-        buttons[4].show()
+        buttons[3].show()
     }
     fix_chart_sizes(tab);
     $("#resize_charts").attr({'onclick': "fix_chart_sizes('" + tab + "')"})
@@ -327,7 +323,6 @@ function fix_chart_sizes(tab) {
     }
 }
 $("#forecast_tab_link").on('click', function () {fix_buttons('forecast')})
-$("#records_tab_link").on('click', function () {fix_buttons('records')})
 $("#historical_tab_link").on('click', function () {fix_buttons('historical')})
 $("#avg_flow_tab_link").on('click', function () {fix_buttons('averages')})
 $("#flow_duration_tab_link").on('click', function () {fix_buttons('flowduration')})
@@ -359,25 +354,39 @@ function uploadCSV() {
     });
 }
 
-let found_reach_marker;
+////////////////////////////////////////////////////////////////////////  OTHER UTILITIES ON THE LEFT COLUMN
 function findReachID() {
     $.ajax({
         type: 'GET',
         async: true,
         url: '/apps/' + app_url + '/findReachID' + L.Util.getParamString({reach_id: $("#search_reachid_input").val()}),
         success: function (response) {
-            if (found_reach_marker) {mapObj.removeLayer(found_reach_marker)}
-            found_reach_marker = L.marker(L.latLng(response['lat'], response['lon'])).addTo(mapObj);
+            if (reachMarker) {mapObj.removeLayer(reachMarker)}
+            reachMarker = L.marker(L.latLng(response['lat'], response['lon'])).addTo(mapObj);
             mapObj.flyTo(L.latLng(response['lat'], response['lon']), 9);
 
         },
         error: function () {alert('Unable to find the reach_id specified')}
     })
 }
-let found_latlon_marker;
 function findLatLon() {
-    if (found_latlon_marker) {mapObj.removeLayer(found_latlon_marker)}
+    if (latlonMarker) {mapObj.removeLayer(latlonMarker)}
     let ll = $("#search_latlon_input").val().replace(' ', '').split(',')
-    found_latlon_marker = L.marker(L.latLng(ll[0], ll[1])).addTo(mapObj);
+    latlonMarker = L.marker(L.latLng(ll[0], ll[1])).addTo(mapObj);
     mapObj.flyTo(L.latLng(ll[0], ll[1]), 9);
 }
+
+////////////////////////////////////////////////////////////////////////  GAUGE NETWORKS STUFF
+function getGaugeGeoJSON() {
+    gaugeNetwork.clearLayers();
+    let network = $("#gauge_networks").val();
+    if (network === '') {return}
+    $.ajax({
+        type: 'GET',
+        async: true,
+        url: '/apps/' + app_url + '/getGaugeGeoJSON' + L.Util.getParamString({network: network}),
+        success: function (geojson) {gaugeNetwork.addData(geojson).addTo(mapObj);mapObj.flyToBounds(gaugeNetwork.getBounds());},
+        error: function () {alert('Error retrieving the locations of the gauge network')}
+    })
+}
+$("#gauge_networks").change(function () {getGaugeGeoJSON()})
