@@ -25,7 +25,7 @@
 
 .map {
     height: 100%;
-    /*cursor: pointer;*/
+    cursor: pointer;
 }
 
 .map:-moz-full-screen {

@@ -69,7 +69,6 @@ def home(request):
         'gs_url': 'https://geoserver.hydroshare.org/geoserver/wms',
         'boundary_layer': 'none',
         'catchment_layer': 'HS-94f7e730ea034706ae3497a75c764239:south_america-geoglows-catchment south_america-geoglows-catchment',
-        'drainage_layer': 'HS-94f7e730ea034706ae3497a75c764239:south_america-geoglows-drainageline south_america-geoglows-drainageline',
 
         # appearance customizations
         'branded_name': 'Development',  # {% block app_title %}

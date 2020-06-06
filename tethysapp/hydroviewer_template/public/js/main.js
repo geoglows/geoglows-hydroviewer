@@ -80,7 +80,11 @@ const mapObj = L.map('map', {
         center: [20, 0],
     });
 // add basemaps
-const basemapsJson = {"Open Street Map": L.tileLayer('https://b.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapObj)}
+const basemapsJson = {
+    "ESRI Topographic": L.esri.basemapLayer('Topographic').addTo(mapObj),
+    "ESRI Terrain": L.layerGroup([L.esri.basemapLayer('Terrain'), L.esri.basemapLayer('TerrainLabels')]),
+    "ESRI Grey": L.esri.basemapLayer('Gray'),
+}
 // create map panes which help sort layer drawing order
 mapObj.createPane('watershedlayers');
 mapObj.getPane('watershedlayers').style.zIndex = 250;
@@ -108,37 +112,52 @@ latlon.onAdd = function () {
 latlon.addTo(mapObj);
 // lat/lon tracking box on the bottom left of the map
 mapObj.on("mousemove", function (event) {$("#mouse-position").html('Lat: ' + event.latlng.lat.toFixed(5) + ', Lon: ' + event.latlng.lng.toFixed(5));});
-function mapClickEvents (event) {// delete any existing marker
-    console.log('clicked on map')
-    if (marker) {mapObj.removeLayer(marker)}
-    // get the reachid by querying geoserver
-    let meta = drainage_layer.GetFeatureInfo(event);
-    reachid = meta[0];
-    drain_area = meta[1];
+mapObj.on("click", function (event) {
     // put a new marker on the map
+    mapObj.flyTo(event.latlng, 11);
+    if (marker) {mapObj.removeLayer(marker)}
     marker = L.marker(event.latlng).addTo(mapObj);
-    updateStatusIcons('cleared');
-    // clear anything (e.g. old charts) in the chart divs
     for (let i in chart_divs) {chart_divs[i].html('')}
-    $("#chart_modal").modal('show');
-    getStreamflowPlots()}
-mapObj.on("click", function (event) {console.log('turned on');mapClickEvents(event)})
+    updateStatusIcons('load');
+    $("#chart_modal").modal('show')
+    L.esri.identifyFeatures({
+        url: 'https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
+    })
+        .on(mapObj).tolerance(30)
+        .at([event.latlng['lat'], event.latlng['lng']])
+        .run(function (error, featureCollection) {
+            if (error) {
+                updateStatusIcons('fail');
+                alert('Error finding the reach_id')
+                return;
+            }
+            reachid = featureCollection.features[0].properties["COMID (Stream Identifier)"];
+            getStreamflowPlots();
+        });
+})
 
 ////////////////////////////////////////////////////////////////////////  ADD WMS LAYERS FOR DRAINAGE LINES, VIIRS, ETC - SEE HOME.HTML TEMPLATE
 let reachMarker;
 let latlonMarker;
 let gaugeNetwork = L.geoJSON(false, {
     onEachFeature: function (feature, layer) {
-        layer.on('click', function (event) {L.DomEvent.stopPropagation(event);console.log('clicked on layer');getBiasCorrectedPlots(feature.properties)});
+        layer.on('click', function (event) {L.DomEvent.stopPropagation(event);getBiasCorrectedPlots(feature.properties)});
     },
     pointToLayer: function (feature, latlng) {
         return L.circleMarker(latlng, {radius: 6, fillColor: "#ff0000", color: "#000000", weight: 1, opacity: 1, fillOpacity: 1});
     }
 });
 let VIIRSlayer = L.tileLayer('https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png', {layers: 'RIVER-FLDglobal-composite: Latest', crossOrigin: true, pane: 'viirs',});
-drainage_layer = getDrainageLine(drainage_layer).addTo(mapObj);
+// drainage_layer = getDrainageLine(drainage_layer).addTo(mapObj);
+const globalLayer = L.esri.dynamicMapLayer({
+    url: 'https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer',
+    useCors: false,
+    layers: [0],
+    // from: startTime,
+    // to: endTime
+}).addTo(mapObj);
 let ctrllayers = {
-    'Stream Network': drainage_layer,
+    'Stream Network': globalLayer,
     'Gauge Network': gaugeNetwork,
     'VIIRS Imagery': VIIRSlayer,
 };
