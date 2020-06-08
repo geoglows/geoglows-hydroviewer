@@ -115,7 +115,7 @@ latlon.addTo(mapObj);
 mapObj.on("mousemove", function (event) {$("#mouse-position").html('Lat: ' + event.latlng.lat.toFixed(5) + ', Lon: ' + event.latlng.lng.toFixed(5));});
 mapObj.on("click", function (event) {
     // put a new marker on the map
-    if (mapObj.getZoom<9){mapObj.flyTo(event.latlng, 9)}
+    if (mapObj.getZoom()<8){mapObj.flyTo(event.latlng, 9)}
     else {mapObj.flyTo(event.latlng)}
     if (marker) {mapObj.removeLayer(marker)}
     marker = L.marker(event.latlng).addTo(mapObj);
