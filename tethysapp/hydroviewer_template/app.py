@@ -6,7 +6,7 @@ class HydroviewerTemplate(TethysAppBase):
     Tethys app class for GEOGloWS Hydroviewer Template.
     """
 
-    name = 'GEOGloWS Hydroviewer'
+    name = 'GEOGloWS ECMWF Streamflow Hydroviewer'
     index = 'hydroviewer_template:home'
     icon = 'hydroviewer_template/images/water.jpg'
     package = 'hydroviewer_template'

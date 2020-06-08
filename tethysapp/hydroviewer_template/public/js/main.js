@@ -102,7 +102,7 @@ legend.onAdd = function () {
     return div
 };
 legend.addTo(mapObj);
-// add the lat/lon box to the map
+// lat/lon tracking box on the bottom left of the map
 let latlon = L.control({position: 'bottomleft'});
 latlon.onAdd = function () {
     let div = L.DomUtil.create('div', 'well well-sm');
@@ -110,32 +110,74 @@ latlon.onAdd = function () {
     return div;
 };
 latlon.addTo(mapObj);
-// lat/lon tracking box on the bottom left of the map
 mapObj.on("mousemove", function (event) {$("#mouse-position").html('Lat: ' + event.latlng.lat.toFixed(5) + ', Lon: ' + event.latlng.lng.toFixed(5));});
 mapObj.on("click", function (event) {
     // put a new marker on the map
-    mapObj.flyTo(event.latlng, 11);
+    if (mapObj.getZoom<9){mapObj.flyTo(event.latlng, 9)}
+    else {mapObj.flyTo(event.latlng)}
     if (marker) {mapObj.removeLayer(marker)}
     marker = L.marker(event.latlng).addTo(mapObj);
     for (let i in chart_divs) {chart_divs[i].html('')}
     updateStatusIcons('load');
     $("#chart_modal").modal('show')
-    L.esri.identifyFeatures({
-        url: 'https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
-    })
-        .on(mapObj).tolerance(30)
-        .at([event.latlng['lat'], event.latlng['lng']])
-        .run(function (error, featureCollection) {
-            if (error) {
-                updateStatusIcons('fail');
-                alert('Error finding the reach_id')
-                return;
-            }
-            reachid = featureCollection.features[0].properties["COMID (Stream Identifier)"];
-            getStreamflowPlots();
-        });
+    getStreamflowPlots(event.latlng['lat'], event.latlng['lng']);
 })
-
+////////////////////////////////////////////////////////////////////////  ESRI LAYER ANIMATION CONTROLS
+let layerAnimationTime = new Date();
+layerAnimationTime = new Date(layerAnimationTime.toISOString())
+layerAnimationTime.setUTCHours(0);
+layerAnimationTime.setUTCMinutes(0);
+layerAnimationTime.setUTCSeconds(0);
+layerAnimationTime.setUTCMilliseconds(0);
+const currentDate = $("#current-map-date");
+const startDateTime = new Date(layerAnimationTime);
+const endDateTime = new Date(layerAnimationTime.setUTCHours(5 * 24));
+layerAnimationTime = new Date(startDateTime);
+currentDate.html(layerAnimationTime);
+const slider = $("#time-slider")
+slider.change(function () {
+    refreshLayerAnimation()
+})
+function refreshLayerAnimation() {
+    layerAnimationTime = new Date(startDateTime);
+    layerAnimationTime.setUTCHours(slider.val() * 3);
+    currentDate.html(layerAnimationTime);
+    globalLayer.setTimeRange(layerAnimationTime, endDateTime);
+}
+let animate = false;
+function playAnimation(once = false) {
+    if (!animate) {return}
+    if (layerAnimationTime < endDateTime) {
+        slider.val(Number(slider.val()) + 1)
+    } else {
+        slider.val(0)
+    }
+    refreshLayerAnimation();
+    if (once) {
+        animate = false;
+        return
+    }
+    setTimeout(playAnimation, 500);
+}
+$("#animationPlay").click(function () {
+    animate = true;
+    playAnimation()
+})
+$("#animationStop").click(function () {
+    animate = false;
+})
+$("#animationPlus1").click(function(){
+    animate = true;
+    playAnimation(true)
+})
+$("#animationBack1").click(function(){
+    if (layerAnimationTime > startDateTime) {
+        slider.val(Number(slider.val()) - 1)
+    } else {
+        slider.val(40)
+    }
+    refreshLayerAnimation();
+})
 ////////////////////////////////////////////////////////////////////////  ADD WMS LAYERS FOR DRAINAGE LINES, VIIRS, ETC - SEE HOME.HTML TEMPLATE
 let reachMarker;
 let latlonMarker;
@@ -148,13 +190,12 @@ let gaugeNetwork = L.geoJSON(false, {
     }
 });
 let VIIRSlayer = L.tileLayer('https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png', {layers: 'RIVER-FLDglobal-composite: Latest', crossOrigin: true, pane: 'viirs',});
-// drainage_layer = getDrainageLine(drainage_layer).addTo(mapObj);
 const globalLayer = L.esri.dynamicMapLayer({
     url: 'https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer',
     useCors: false,
     layers: [0],
-    // from: startTime,
-    // to: endTime
+    from: startDateTime,
+    to: endDateTime,
 }).addTo(mapObj);
 let ctrllayers = {
     'Stream Network': globalLayer,
@@ -173,8 +214,7 @@ L.control.layers(basemapsJson, ctrllayers, {'collapsed': false}).addTo(mapObj);
 
 ////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
 const chart_divs = [$("#forecast-chart"), $("#corrected-forecast-chart"), $("#forecast-table"), $("#historical-chart"), $("#historical-table"), $("#daily-avg-chart"), $("#monthly-avg-chart"), $("#flowduration-chart"), $("#volume_plot"), $("#scatters"), $("#stats_table")];
-function getStreamflowPlots() {
-    if (!reachid) {return}
+function getStreamflowPlots(lat, lon) {
     updateStatusIcons('load');
     updateDownloadLinks('clear');
     for (let i in chart_divs) {chart_divs[i].html('')}  // clear the contents of old chart divs
@@ -183,10 +223,12 @@ function getStreamflowPlots() {
     ftl.tab('show')
     fc.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
     fc.css('text-align', 'center');
+    console.log({lat: lat, lon: lon});
     $.ajax({
         type: 'GET',
         async: true,
-        url: '/apps/' + app_url + '/getStreamflow' + L.Util.getParamString({reach_id: reachid, drain_area: drain_area}),
+        data: {lat: lat, lon: lon},
+        url: '/apps/' + app_url + '/getStreamflow',
         success: function (html) {
             // forecast tab
             ftl.tab('show');

@@ -82,8 +82,7 @@ def home(request):
 
 def get_streamflow(request):
     data = request.GET
-    da = data['drain_area']
-    reach_id = data['reach_id']
+    reach_id = gsf.latlon_to_reach(float(data['lat']), float(data['lon']))['reach_id']
     stats = gsf.forecast_stats(reach_id)
     rec = gsf.forecast_records(reach_id)
     ens = gsf.forecast_ensembles(reach_id)
@@ -91,7 +90,7 @@ def get_streamflow(request):
     rper = gsf.return_periods(reach_id)
     dayavg = hydrostats.data.daily_average(hist, rolling=True)
     monavg = hydrostats.data.monthly_average(hist)
-    title_headers = {'Reach ID': reach_id, 'Drainage Area': da}
+    title_headers = {'Reach ID': reach_id}
     return JsonResponse(dict(
         fp=gpp.hydroviewer(rec, stats, ens, rper, titles=title_headers, outformat='plotly_html'),
         hp=gpp.historic_simulation(hist, rper, titles=title_headers, outformat='plotly_html'),
