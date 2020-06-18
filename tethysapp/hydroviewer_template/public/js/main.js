@@ -341,22 +341,16 @@ function getGaugeGeoJSON() {
 }
 $("#gauge_networks").change(function () {getGaugeGeoJSON()})
 ////////////////////////////////////////////////////////////////////////  UPLOAD OBSERVATIONAL DATA
-function uploadCSV() {
-    console.log('upload csv');
-    let files = $('#hydrograph-csv-input')[0].files;
-    console.log(files);
-    let form_data = new FormData();
-    Object.keys(files).forEach(function (file) {
-        form_data.append('files', files[file]);
-    });
-    console.log(form_data);
+$("#hydrograph-csv-form").on('submit', function (e) {
+    e.preventDefault();
     $.ajax({
-        url: URL_upload_new_observations,
         type: 'POST',
-        data: form_data,
+        url: URL_upload_new_observations,
+        data: new FormData(this),
         dataType: 'json',
-        processData: false,
         contentType: false,
+        cache: false,
+        processData: false,
         success: function (response) {
             console.log('success');
             console.log(response);
@@ -364,7 +358,6 @@ function uploadCSV() {
         error: function (response) {
             console.log('error');
             console.log(response);
-        }
+        },
     });
-}
-$("#hydrograph-csv-submit").click(function(){uploadCSV()});
+});

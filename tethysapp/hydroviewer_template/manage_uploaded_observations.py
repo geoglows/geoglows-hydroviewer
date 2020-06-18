@@ -28,17 +28,13 @@ def list_uploaded_observations():
 
 
 def upload_new_observations(request):
-    print(request)
-    print(request.POST)
-    print(request.FILES)
-    files = request.FILES.getlist('files')
-    print(files)
     workspace_path = App.get_app_workspace().path
-
-    # write the new files to the directory
-    for n, file in enumerate(files):
-        with open(os.path.join(workspace_path, file.name), 'wb') as dst:
-            for chunk in files[n].chunks():
+    files = request.FILES
+    for file in files:
+        # print(file)
+        # print(files[file].name)
+        # print(files[file].chunks())
+        with open(os.path.join(workspace_path, 'observations', files[file].name), 'wb') as dst:
+            for chunk in files[file].chunks():
                 dst.write(chunk)
-    # return JsonResponse(dict(new_file_list=list_uploaded_observations()))
-    return JsonResponse(dict(stats='success'))
+    return JsonResponse(dict(new_file_list=list_uploaded_observations()))

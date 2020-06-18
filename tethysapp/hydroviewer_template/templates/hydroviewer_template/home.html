@@ -46,9 +46,8 @@
     VIIRS Imagery</a>
 
   <li class="title">Bias Correction</li>
-{#  {% gizmo select_input uploaded_observations %}#}
-{#  <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New#}
-{#    Observation</a>#}
+  <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New Observation</a>
+  <li class="separator"></li>
   {% gizmo select_input gauge_networks %}
 
 {% endblock %}
@@ -119,6 +118,7 @@
 
             <div role="tabpanel" class="tab-pane" id="bias_correction">
               <div class="panel panel-default">
+                <div class="row">{% gizmo select_input uploaded_observations %}</div>
                 <div id='volume_plot' class="panel-body"></div>
                 <div id='scatters' class="panel-body"></div>
                 <div id='stats_table' class="panel-body" style="text-align: center"></div>
@@ -178,7 +178,6 @@
       </div>
     </div>
   </div>
-
   <div class="modal fade" id="csv_modal" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -213,14 +212,14 @@
                   </li>
                 </ol>
   
-                <form id="hydrograph-upload" method="post" enctype="multipart/form-data">
+                <form id="hydrograph-csv-form" method="post" enctype="multipart/form-data">
                   {% csrf_token %}
                   <div class="form-group">
-                    <label class="control-label" for="hydrograph-csv-input">Hydrograph File</label>
+                    <label class="control-label" for="hydrograph-csv-input">Upload Hydrograph CSV</label>
                     <input type="file" id="hydrograph-csv-input" name="hydrograph-csv-input" accept="text/csv,.csv">
+                    <input type="submit" value="Submit">
                   </div>
                 </form>
-                <button id="hydrograph-csv-submit">Submit</button>
 
               </div>
             </div> <!-- /.tab-pane -->
