@@ -1,33 +1,7 @@
-////////////////////////////////////////////////////////////////////////  MAP FUNCTIONS AND VARIABLES
-function getWatershedComponent(layername) {
-    return L.tileLayer.wms(geoserver_url, {
-        version: '1.1.0',
-        layers: layername,
-        useCache: true,
-        crossOrigin: false,
-        format: 'image/png',
-        transparent: true,
-        opacity: 1,
-        pane: 'watershedlayers',
-    })
-}
-function getDrainageLine(layername) {
-    return L.tileLayer.WMFS(geoserver_url, {
-        version: '1.1.0',
-        layers: layername,
-        useCache: true,
-        crossOrigin: false,
-        format: 'image/png',
-        transparent: true,
-        opacity: 1,
-        pane: 'watershedlayers',
-    })
-}
+////////////////////////////////////////////////////////////////////////  SETUP THE MAP
 let reachid;
 let drain_area;
 let marker = null;
-////////////////////////////////////////////////////////////////////////  SETUP THE MAP
-// make the map
 const mapObj = L.map('map', {
         zoom: 3,
         minZoom: 2,
@@ -70,8 +44,7 @@ latlon.onAdd = function () {
 latlon.addTo(mapObj);
 mapObj.on("mousemove", function (event) {$("#mouse-position").html('Lat: ' + event.latlng.lat.toFixed(5) + ', Lon: ' + event.latlng.lng.toFixed(5));});
 mapObj.on("click", function (event) {
-    // put a new marker on the map
-    if (mapObj.getZoom()<8){mapObj.flyTo(event.latlng, 9); return}
+    if (mapObj.getZoom()<=8){mapObj.flyTo(event.latlng, 9); return}
     else {mapObj.flyTo(event.latlng)}
     if (marker) {mapObj.removeLayer(marker)}
     marker = L.marker(event.latlng).addTo(mapObj);
@@ -167,7 +140,6 @@ function getStreamflowPlots(lat, lon) {
     ftl.tab('show')
     fc.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
     fc.css('text-align', 'center');
-    console.log({lat: lat, lon: lon});
     $.ajax({
         type: 'GET',
         async: true,
@@ -370,26 +342,29 @@ function getGaugeGeoJSON() {
 $("#gauge_networks").change(function () {getGaugeGeoJSON()})
 ////////////////////////////////////////////////////////////////////////  UPLOAD OBSERVATIONAL DATA
 function uploadCSV() {
-    let loading_div = $("#upload_csv_loading");
-    let files = $('#upload-csv-input')[0].files;
+    console.log('upload csv');
+    let files = $('#hydrograph-csv-input')[0].files;
+    console.log(files);
     let form_data = new FormData();
     Object.keys(files).forEach(function (file) {
         form_data.append('files', files[file]);
-        console.log(form_data);
     });
-    loading_div.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
+    console.log(form_data);
     $.ajax({
-        url: '/apps/' + app_url + '/upload_new_observations/',
+        url: URL_upload_new_observations,
         type: 'POST',
         data: form_data,
         dataType: 'json',
         processData: false,
         contentType: false,
         success: function (response) {
-            loading_div.html('<h3>finished successfully</h3>');
+            console.log('success');
+            console.log(response);
         },
         error: function (response) {
-            loading_div.html('<h3>There was an expected problem uploading your csv file</h3>')
+            console.log('error');
+            console.log(response);
         }
     });
 }
+$("#hydrograph-csv-submit").click(function(){uploadCSV()});

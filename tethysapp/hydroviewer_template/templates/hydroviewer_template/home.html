@@ -178,13 +178,14 @@
       </div>
     </div>
   </div>
+
   <div class="modal fade" id="csv_modal" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                   aria-hidden="true">&times;</span></button>
-          <div class="row"><h2 style="text-align: center">Upload Observational Data</h2></div>
+          <h2 style="text-align: center">Upload Observational Data</h2>
         </div>
 
         <div class="modal-body">
@@ -199,6 +200,7 @@
 
           <!-- Tab panes -->
           <div class="tab-content">
+            
             <div role="tabpanel" class="tab-pane active" id="csv_upload_tab">
               <div class="panel panel-default">
                 <p>Requirements for uploaded csv files:</p>
@@ -210,6 +212,16 @@
                     (m^3/s)
                   </li>
                 </ol>
+  
+                <form id="hydrograph-upload" method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <div class="form-group">
+                    <label class="control-label" for="hydrograph-csv-input">Hydrograph File</label>
+                    <input type="file" id="hydrograph-csv-input" name="hydrograph-csv-input" accept="text/csv,.csv">
+                  </div>
+                </form>
+                <button id="hydrograph-csv-submit">Submit</button>
+
               </div>
             </div> <!-- /.tab-pane -->
 
@@ -236,13 +248,10 @@
 {% block scripts %}
   {{ block.super }}
   <script>
-      let geoserver_url = "{{ gs_url }}";
       let app_url = "{{ app_url }}"
       let endpoint = "{{ endpoint }}";
-      {# layer custom settings #}
-      let boundary_layer = "{{ boundary_layer }}";
-      let catchment_layer = "{{ catchment_layer }}";
-      let drainage_layer = "{{ drainage_layer }}";
+      // URLS
+      let URL_upload_new_observations = "{% url 'hydroviewer_template:upload_new_observations' %}"
   </script>
   {# Leaflet #}
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>

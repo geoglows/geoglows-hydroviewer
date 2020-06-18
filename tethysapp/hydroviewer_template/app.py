@@ -37,12 +37,11 @@ class HydroviewerTemplate(TethysAppBase):
                 url=f'{self.root_url}/getStreamflow',
                 controller=f'{self.package}.controllers.get_streamflow'
             ),
-            # todo
-            # UrlMap(
-            #     name='upload_new_observations',
-            #     url=f'{self.root_url}/upload_new_observations',
-            #     controller=f'{self.package}.manage_uploaded_observations.upload_new_observations'
-            # ),
+            UrlMap(
+                name='upload_new_observations',
+                url=f'{self.root_url}/upload_new_observations',
+                controller=f'{self.package}.manage_uploaded_observations.upload_new_observations'
+            ),
             UrlMap(
                 name='correctBias',
                 url=f'{self.root_url}/correctBias',
