@@ -1,47 +1,3 @@
-////////////////////////////////////////////////////////////////////////  WEB MAPPING FEATURE SERVICE EXTENSION
-L.TileLayer.WMFS = L.TileLayer.WMS.extend({
-    GetFeatureInfo: function (evt) {
-        // Construct a GetFeatureInfo request URL given a point
-        let size = this._map.getSize()
-        let params = {
-            request: 'GetFeatureInfo',
-            service: 'WMS',
-            srs: 'EPSG:4326',
-            version: this.wmsParams.version,
-            format: this.wmsParams.format,
-            bbox: this._map.getBounds().toBBoxString(),
-            height: size.y,
-            width: size.x,
-            layers: this.wmsParams.layers,
-            query_layers: this.wmsParams.layers,
-            info_format: 'application/json',
-            buffer: 18,
-        };
-        params[params.version === '1.3.0' ? 'i' : 'x'] = evt.containerPoint.x;
-        params[params.version === '1.3.0' ? 'j' : 'y'] = evt.containerPoint.y;
-
-        let url = this._url + L.Util.getParamString(params, this._url, true);
-        let reachid = null;
-        let drain_area = null;
-
-        if (url) {
-            $.ajax({
-                async: false,
-                type: "GET",
-                url: url,
-                info_format: 'application/json',
-                success: function (data) {
-                    reachid = data.features[0].properties['COMID'];
-                    drain_area = data.features[0].properties['Tot_Drain_'];
-                }
-            });
-        }
-        return [reachid, drain_area]
-    },
-});
-L.tileLayer.WMFS = function (url, options) {
-    return new L.TileLayer.WMFS(url, options);
-};
 ////////////////////////////////////////////////////////////////////////  MAP FUNCTIONS AND VARIABLES
 function getWatershedComponent(layername) {
     return L.tileLayer.wms(geoserver_url, {
@@ -115,7 +71,7 @@ latlon.addTo(mapObj);
 mapObj.on("mousemove", function (event) {$("#mouse-position").html('Lat: ' + event.latlng.lat.toFixed(5) + ', Lon: ' + event.latlng.lng.toFixed(5));});
 mapObj.on("click", function (event) {
     // put a new marker on the map
-    if (mapObj.getZoom()<8){mapObj.flyTo(event.latlng, 9)}
+    if (mapObj.getZoom()<8){mapObj.flyTo(event.latlng, 9); return}
     else {mapObj.flyTo(event.latlng)}
     if (marker) {mapObj.removeLayer(marker)}
     marker = L.marker(event.latlng).addTo(mapObj);
@@ -199,21 +155,7 @@ const globalLayer = L.esri.dynamicMapLayer({
     from: startDateTime,
     to: endDateTime,
 }).addTo(mapObj);
-let ctrllayers = {
-    'Stream Network': globalLayer,
-    'Gauge Network': gaugeNetwork,
-    'VIIRS Imagery': VIIRSlayer,
-};
-if (boundary_layer !== 'none') {
-    boundary_layer = getWatershedComponent(boundary_layer);
-    ctrllayers['Hydroviewer Boundaries'] = boundary_layer
-}
-if (catchment_layer !== 'none') {
-    catchment_layer = getWatershedComponent(catchment_layer);
-    ctrllayers['Watershed Catchments'] = catchment_layer
-}
-L.control.layers(basemapsJson, ctrllayers, {'collapsed': false}).addTo(mapObj);
-
+L.control.layers(basemapsJson, {'Stream Network': globalLayer, 'Gauge Network': gaugeNetwork, 'VIIRS Imagery': VIIRSlayer}, {'collapsed': false}).addTo(mapObj);
 ////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
 const chart_divs = [$("#forecast-chart"), $("#corrected-forecast-chart"), $("#forecast-table"), $("#historical-chart"), $("#historical-table"), $("#daily-avg-chart"), $("#monthly-avg-chart"), $("#flowduration-chart"), $("#volume_plot"), $("#scatters"), $("#stats_table")];
 function getStreamflowPlots(lat, lon) {
@@ -390,33 +332,6 @@ $("#historical_tab_link").on('click', function () {fix_buttons('historical')})
 $("#avg_flow_tab_link").on('click', function () {fix_buttons('averages')})
 $("#flow_duration_tab_link").on('click', function () {fix_buttons('flowduration')})
 $("#bias_correction_tab_link").on('click', function () {fix_buttons('biascorrection')})
-
-////////////////////////////////////////////////////////////////////////  UPLOAD OBSERVATIONAL DATA
-function uploadCSV() {
-    let loading_div = $("#upload_csv_loading");
-    let files = $('#upload-csv-input')[0].files;
-    let form_data = new FormData();
-    Object.keys(files).forEach(function (file) {
-        form_data.append('files', files[file]);
-        console.log(form_data);
-    });
-    loading_div.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
-    $.ajax({
-        url: '/apps/' + app_url + '/upload_new_observations/',
-        type: 'POST',
-        data: form_data,
-        dataType: 'json',
-        processData: false,
-        contentType: false,
-        success: function (response) {
-            loading_div.html('<h3>finished successfully</h3>');
-        },
-        error: function (response) {
-            loading_div.html('<h3>There was an expected problem uploading your csv file</h3>')
-        }
-    });
-}
-
 ////////////////////////////////////////////////////////////////////////  OTHER UTILITIES ON THE LEFT COLUMN
 function findReachID() {
     $.ajax({
@@ -453,3 +368,28 @@ function getGaugeGeoJSON() {
     })
 }
 $("#gauge_networks").change(function () {getGaugeGeoJSON()})
+////////////////////////////////////////////////////////////////////////  UPLOAD OBSERVATIONAL DATA
+function uploadCSV() {
+    let loading_div = $("#upload_csv_loading");
+    let files = $('#upload-csv-input')[0].files;
+    let form_data = new FormData();
+    Object.keys(files).forEach(function (file) {
+        form_data.append('files', files[file]);
+        console.log(form_data);
+    });
+    loading_div.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
+    $.ajax({
+        url: '/apps/' + app_url + '/upload_new_observations/',
+        type: 'POST',
+        data: form_data,
+        dataType: 'json',
+        processData: false,
+        contentType: false,
+        success: function (response) {
+            loading_div.html('<h3>finished successfully</h3>');
+        },
+        error: function (response) {
+            loading_div.html('<h3>There was an expected problem uploading your csv file</h3>')
+        }
+    });
+}
