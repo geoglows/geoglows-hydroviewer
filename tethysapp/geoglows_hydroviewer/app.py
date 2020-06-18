@@ -13,7 +13,7 @@ class HydroviewerTemplate(TethysAppBase):
     root_url = 'geoglows-hydroviewer'
     color = '#2980b9'
     description = ''
-    tags = ''
+    tags = 'geoglows, streamflow, animations, timeseries, hydrograph'
     enable_feedback = False
     feedback_emails = []
 
