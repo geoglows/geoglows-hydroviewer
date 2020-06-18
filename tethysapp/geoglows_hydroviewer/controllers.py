@@ -65,14 +65,11 @@ def home(request):
         'uploaded_observations': uploaded_observations,
         'upload_new_observation': upload_new_observation,
 
-        # appearance customizations
-        'branded_name': 'Development',  # {% block app_title %}
-
         # gauge_networks
         'gauge_networks': gauge_networks,
     }
 
-    return render(request, 'hydroviewer_template/home.html', context)
+    return render(request, 'geoglows_hydroviewer/home.html', context)
 
 
 def get_streamflow(request):

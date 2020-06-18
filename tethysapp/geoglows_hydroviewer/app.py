@@ -7,10 +7,10 @@ class HydroviewerTemplate(TethysAppBase):
     """
 
     name = 'GEOGloWS ECMWF Streamflow Hydroviewer'
-    index = 'hydroviewer_template:home'
-    icon = 'hydroviewer_template/images/water.jpg'
-    package = 'hydroviewer_template'
-    root_url = 'hydroviewer-template'
+    index = 'geoglows_hydroviewer:home'
+    icon = 'geoglows_hydroviewer/images/water.jpeg'
+    package = 'geoglows_hydroviewer'
+    root_url = 'geoglows-hydroviewer'
     color = '#2980b9'
     description = ''
     tags = ''

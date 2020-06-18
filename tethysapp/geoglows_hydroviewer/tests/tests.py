@@ -33,16 +33,16 @@ To run any tests:
        See below for specific examples
 
         To run all tests across this app:
-            Test command: "tethys test -f tethys_apps.tethysapp.hydroviewer_template"
+            Test command: "tethys test -f tethys_apps.tethysapp.geoglows_hydroviewer"
 
         To run all tests in this file:
-            Test command: "tethys test -f tethys_apps.tethysapp.hydroviewer_template.tests.tests"
+            Test command: "tethys test -f tethys_apps.tethysapp.geoglows_hydroviewer.tests.tests"
 
         To run tests in the HydroviewerTemplateTestCase class:
-            Test command: "tethys test -f tethys_apps.tethysapp.hydroviewer_template.tests.tests.HydroviewerTemplateTestCase"
+            Test command: "tethys test -f tethys_apps.tethysapp.geoglows_hydroviewer.tests.tests.HydroviewerTemplateTestCase"
 
         To run only the test_if_tethys_platform_is_great function in the HydroviewerTemplateTestCase class:
-            Test command: "tethys test -f tethys_apps.tethysapp.hydroviewer_template.tests.tests.HydroviewerTemplateTestCase.test_if_tethys_platform_is_great"
+            Test command: "tethys test -f tethys_apps.tethysapp.geoglows_hydroviewer.tests.tests.HydroviewerTemplateTestCase.test_if_tethys_platform_is_great"
 
 To learn more about writing tests, see:
     https://docs.djangoproject.com/en/1.9/topics/testing/overview/#writing-tests

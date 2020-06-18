@@ -1,4 +1,4 @@
-{% extends "hydroviewer_template/base.html" %}
+{% extends "geoglows_hydroviewer/base.html" %}
 
 {% load static %}
 {% load staticfiles %}
@@ -17,7 +17,7 @@
 {% endblock %}
 
 {# The name you provided in your app.py is accessible through the tethys_app.name context variable #}
-{% block app_title %}{{ tethys_app.name }}{% if branded_name %} for {{ branded_name }}{% endif %}{% endblock %}
+{% block app_title %}{{ tethys_app.name }}{% endblock %}
 
 {% block app_navigation_items %}
   <li class="title">App controls</li>
@@ -156,7 +156,7 @@
         </div>
         <h1 style="text-align: center">VIIRS 5-Day Composite Imagery</h1>
         <div class="modal-body">
-          <img src="{% static 'hydroviewer_template/images/VIIRS_legend.png' %}" alt="legend" style="width: 100%">
+          <img src="{% static 'geoglows_hydroviewer/images/VIIRS_legend.png' %}" alt="legend" style="width: 100%">
           <ul>
             <li>MS: missing data (transparent)</li>
             <li>LD: clear-sky land (brown)</li>
@@ -214,7 +214,7 @@
                     (m^3/s)</li>
                   <li>There should be 1 value per day showing the day's average flow. If multiple measurements are
                     specified per day, they will be averaged together.</li>
-                  <li><a href="{% static 'hydroviewer_template/csvs/sample_observed_hydrograph.csv' %}" target="_blank">
+                  <li><a href="{% static 'geoglows_hydroviewer/csvs/sample_observed_hydrograph.csv' %}" target="_blank">
                     Download a sample hydrograph formatted correctly</a></li>
                 </ol>
                 <hr>
@@ -249,7 +249,7 @@
 {% block styles %}
   {{ block.super }}
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css">
-  <link rel="stylesheet" href="{% static 'hydroviewer_template/css/main.css' %}">
+  <link rel="stylesheet" href="{% static 'geoglows_hydroviewer/css/main.css' %}">
 {% endblock %}
 
 {% block scripts %}
@@ -257,16 +257,16 @@
   <script>
     let endpoint = "{{ endpoint }}";
     // URLS
-    let URL_get_streamflow = "{% url 'hydroviewer_template:get_streamflow' %}";
-    let URL_correct_bias = "{% url 'hydroviewer_template:correct_bias' %}";
-    let URL_upload_new_observations = "{% url 'hydroviewer_template:upload_new_observations' %}";
-    let URL_get_gauge_geojson = "{% url 'hydroviewer_template:get_gauge_geojson' %}";
-    let URL_find_reach_id = "{% url 'hydroviewer_template:find_reach_id' %}";
+    let URL_get_streamflow = "{% url 'geoglows_hydroviewer:get_streamflow' %}";
+    let URL_correct_bias = "{% url 'geoglows_hydroviewer:correct_bias' %}";
+    let URL_upload_new_observations = "{% url 'geoglows_hydroviewer:upload_new_observations' %}";
+    let URL_get_gauge_geojson = "{% url 'geoglows_hydroviewer:get_gauge_geojson' %}";
+    let URL_find_reach_id = "{% url 'geoglows_hydroviewer:find_reach_id' %}";
   </script>
   {# Leaflet #}
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
   <script src="https://unpkg.com/esri-leaflet@2.2.3/dist/esri-leaflet.js"></script>
   {# Plotly #}
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script type="text/javascript" src="{% static 'hydroviewer_template/js/main.js' %}"></script>
+  <script type="text/javascript" src="{% static 'geoglows_hydroviewer/js/main.js' %}"></script>
 {% endblock %}

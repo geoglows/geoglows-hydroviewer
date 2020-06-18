@@ -8,4 +8,4 @@
 *.sqlite
 *.DS_Store
 .idea/
-tethysapp/hydroviewer_template/workspaces/app_workspace/observations/*.csv
+tethysapp/geoglows_hydroviewer/workspaces/app_workspace/observations/*.csv

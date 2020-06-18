@@ -374,7 +374,6 @@ $("#hydrograph-csv-form").on('submit', function (e) {
             for (let i = 0; i < new_file_list.length; i++) {
                 uploaded_input.append('<option value="'+new_file_list[i][1]+'">'+new_file_list[i][0]+'</option>')
             }
-            console.log(response);
         },
         error: function (response) {
             upload_stats.html('failed to upload. ' + response['error'])
