@@ -61,7 +61,6 @@ mapObj.on("click", function (event) {
                 alert('Error finding the reach_id')
                 return;
             }
-            console.log(featureCollection.features[0].properties);
             reachid = featureCollection.features[0].properties["COMID (Stream Identifier)"];
             getStreamflowPlots();
         })
@@ -369,6 +368,12 @@ $("#hydrograph-csv-form").on('submit', function (e) {
         processData: false,
         success: function (response) {
             upload_stats.html('uploaded finished successfully.')
+            let uploaded_input = $("#uploaded_observations");
+            uploaded_input.empty();
+            let new_file_list = response['new_file_list'];
+            for (let i = 0; i < new_file_list.length; i++) {
+                uploaded_input.append('<option value="'+new_file_list[i][1]+'">'+new_file_list[i][0]+'</option>')
+            }
             console.log(response);
         },
         error: function (response) {
