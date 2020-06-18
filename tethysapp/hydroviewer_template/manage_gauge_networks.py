@@ -13,13 +13,13 @@ from .app import HydroviewerTemplate as App
 
 def list_gauge_networks():
     workspace_path = App.get_app_workspace().path
-    uploaded_observations = glob.glob(os.path.join(workspace_path, 'gauge_networks', '*.json'))
-    list_of_observations = []
-    for uploaded_observation in uploaded_observations:
+    gauge_jsons = glob.glob(os.path.join(workspace_path, 'gauge_networks', '*.json'))
+    list_of_gauges = []
+    for uploaded_observation in gauge_jsons:
         file_name = os.path.basename(uploaded_observation)
         presentation_name = file_name.replace('_', ' ').replace('.json', '')
-        list_of_observations.append((presentation_name, file_name))
-    return tuple([('Choose A Gauge Network', ''), ] + sorted(list_of_observations))
+        list_of_gauges.append((presentation_name, file_name))
+    return tuple([('Choose A Gauge Network', ''), ] + sorted(list_of_gauges))
 
 
 def get_observed_station_flow(network: str, gauge_metadata: dict):

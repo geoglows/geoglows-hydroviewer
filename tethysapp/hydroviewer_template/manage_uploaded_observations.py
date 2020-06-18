@@ -1,13 +1,15 @@
-import os
-import glob
 import datetime
-from .app import HydroviewerTemplate as App
+import glob
+import os
+import pandas as pd
 from django.http import JsonResponse
+
+from .app import HydroviewerTemplate as App
 
 
 def delete_old_observations():
     workspace_path = App.get_app_workspace().path
-    uploaded_observations = glob.glob(os.path.join(workspace_path, '*.csv'))
+    uploaded_observations = glob.glob(os.path.join(workspace_path, 'observations', '*.csv'))
     expiration_time = datetime.datetime.now() - datetime.timedelta(days=1)
     for uploaded_observation in uploaded_observations:
         created_date = datetime.datetime.fromtimestamp(os.path.getctime(uploaded_observation))
@@ -18,7 +20,7 @@ def delete_old_observations():
 
 def list_uploaded_observations():
     workspace_path = App.get_app_workspace().path
-    uploaded_observations = glob.glob(os.path.join(workspace_path, '*.csv'))
+    uploaded_observations = glob.glob(os.path.join(workspace_path, 'observations', '*.csv'))
     list_of_observations = []
     for uploaded_observation in uploaded_observations:
         file_name = os.path.basename(uploaded_observation)
@@ -28,13 +30,30 @@ def list_uploaded_observations():
 
 
 def upload_new_observations(request):
+    delete_old_observations()
     workspace_path = App.get_app_workspace().path
     files = request.FILES
     for file in files:
-        # print(file)
-        # print(files[file].name)
-        # print(files[file].chunks())
-        with open(os.path.join(workspace_path, 'observations', files[file].name), 'wb') as dst:
+        new_observation_path = os.path.join(workspace_path, 'observations', files[file].name)
+        with open(new_observation_path, 'wb') as dst:
             for chunk in files[file].chunks():
                 dst.write(chunk)
+        try:
+            df = pd.read_csv(new_observation_path, index_col=0)
+            df.dropna(inplace=True)
+        except Exception as e:
+            JsonResponse(dict(error='Cannot read the csv provided. It may not be a valid csv file.'))
+        try:
+            df.index = pd.to_datetime(df.index)
+            df = df.resample('D', axis=0).mean()
+        except Exception as e:
+            JsonResponse(dict(error='Unable to recognize dates. Please specify 1 date/streamflow value pair per date. '
+                                    'Recommended datetime format is YYYY-MM-DD HH:MM:SS'))
+        try:
+            df.index = pd.to_datetime(df.index).tz_localize('UTC')
+        except Exception as e:
+            pass
+
+        df.to_csv(new_observation_path)
+
     return JsonResponse(dict(new_file_list=list_uploaded_observations()))

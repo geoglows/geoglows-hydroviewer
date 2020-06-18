@@ -118,10 +118,12 @@
 
             <div role="tabpanel" class="tab-pane" id="bias_correction">
               <div class="panel panel-default">
-                <div class="row">{% gizmo select_input uploaded_observations %}</div>
+                <div style="margin-left: auto; margin-right: auto; width: 75%">
+                  <p>{% gizmo select_input uploaded_observations %}</p>
+                </div>
                 <div id='volume_plot' class="panel-body"></div>
                 <div id='scatters' class="panel-body"></div>
-                <div id='stats_table' class="panel-body" style="text-align: center"></div>
+                <div id='stats_table' class="panel-body" style="margin-left: auto; margin-right: auto"></div>
               </div>
             </div><!-- /.tab-pane -->
 
@@ -202,16 +204,20 @@
             
             <div role="tabpanel" class="tab-pane active" id="csv_upload_tab">
               <div class="panel panel-default">
-                <p>Requirements for uploaded csv files:</p>
+                <p>The uploaded CSV of observed steamfled MUST satisfy the following:</p>
                 <ol>
-                  <li>Your csv file must contain exactly 2 columns</li>
+                  <li>Your csv must contain exactly 2 columns</li>
                   <li>The first row must contain the names for the columns (e.g. datetime and streamflow)</li>
                   <li>The first column must contain the date and time (datetime) of the observation</li>
+                  <li>The date should be written in a format that can be recognized by a computer</li>
                   <li>The second column must contain the streamflow observations in cubic meters per second (cms)
-                    (m^3/s)
-                  </li>
+                    (m^3/s)</li>
+                  <li>There should be 1 value per day showing the day's average flow. If multiple measurements are
+                    specified per day, they will be averaged together.</li>
+                  <li><a href="{% static 'hydroviewer_template/csvs/sample_observed_hydrograph.csv' %}" target="_blank">
+                    Download a sample hydrograph formatted correctly</a></li>
                 </ol>
-  
+                <hr>
                 <form id="hydrograph-csv-form" method="post" enctype="multipart/form-data">
                   {% csrf_token %}
                   <div class="form-group">
@@ -220,6 +226,8 @@
                     <input type="submit" value="Submit">
                   </div>
                 </form>
+                <hr>
+                <p><strong>Upload Status: </strong><span id="hydrograph-csv-status"></span></p>
 
               </div>
             </div> <!-- /.tab-pane -->
@@ -247,10 +255,13 @@
 {% block scripts %}
   {{ block.super }}
   <script>
-      let app_url = "{{ app_url }}"
-      let endpoint = "{{ endpoint }}";
-      // URLS
-      let URL_upload_new_observations = "{% url 'hydroviewer_template:upload_new_observations' %}"
+    let endpoint = "{{ endpoint }}";
+    // URLS
+    let URL_get_streamflow = "{% url 'hydroviewer_template:get_streamflow' %}";
+    let URL_correct_bias = "{% url 'hydroviewer_template:correct_bias' %}";
+    let URL_upload_new_observations = "{% url 'hydroviewer_template:upload_new_observations' %}";
+    let URL_get_gauge_geojson = "{% url 'hydroviewer_template:get_gauge_geojson' %}";
+    let URL_find_reach_id = "{% url 'hydroviewer_template:find_reach_id' %}";
   </script>
   {# Leaflet #}
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>

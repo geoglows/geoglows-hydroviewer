@@ -1,6 +1,5 @@
 ////////////////////////////////////////////////////////////////////////  SETUP THE MAP
 let reachid;
-let drain_area;
 let marker = null;
 const mapObj = L.map('map', {
         zoom: 3,
@@ -51,8 +50,22 @@ mapObj.on("click", function (event) {
     for (let i in chart_divs) {chart_divs[i].html('')}
     updateStatusIcons('load');
     $("#chart_modal").modal('show')
-    getStreamflowPlots(event.latlng['lat'], event.latlng['lng']);
-})
+    L.esri.identifyFeatures({
+        url: 'https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
+    })
+        .on(mapObj).tolerance(30)
+        .at([event.latlng['lat'], event.latlng['lng']])
+        .run(function (error, featureCollection) {
+            if (error) {
+                updateStatusIcons('fail');
+                alert('Error finding the reach_id')
+                return;
+            }
+            console.log(featureCollection.features[0].properties);
+            reachid = featureCollection.features[0].properties["COMID (Stream Identifier)"];
+            getStreamflowPlots();
+        })
+});
 ////////////////////////////////////////////////////////////////////////  ESRI LAYER ANIMATION CONTROLS
 let layerAnimationTime = new Date();
 layerAnimationTime = new Date(layerAnimationTime.toISOString())
@@ -131,7 +144,7 @@ const globalLayer = L.esri.dynamicMapLayer({
 L.control.layers(basemapsJson, {'Stream Network': globalLayer, 'Gauge Network': gaugeNetwork, 'VIIRS Imagery': VIIRSlayer}, {'collapsed': false}).addTo(mapObj);
 ////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
 const chart_divs = [$("#forecast-chart"), $("#corrected-forecast-chart"), $("#forecast-table"), $("#historical-chart"), $("#historical-table"), $("#daily-avg-chart"), $("#monthly-avg-chart"), $("#flowduration-chart"), $("#volume_plot"), $("#scatters"), $("#stats_table")];
-function getStreamflowPlots(lat, lon) {
+function getStreamflowPlots() {
     updateStatusIcons('load');
     updateDownloadLinks('clear');
     for (let i in chart_divs) {chart_divs[i].html('')}  // clear the contents of old chart divs
@@ -143,8 +156,8 @@ function getStreamflowPlots(lat, lon) {
     $.ajax({
         type: 'GET',
         async: true,
-        data: {lat: lat, lon: lon},
-        url: '/apps/' + app_url + '/getStreamflow',
+        data: {reach_id: reachid},
+        url: URL_get_streamflow,
         success: function (html) {
             // forecast tab
             ftl.tab('show');
@@ -183,15 +196,17 @@ function getBiasCorrectedPlots(gauge_metadata) {
         data = gauge_metadata;
         data['gauge_network'] = $("#gauge_networks").val();
     } else if (!reachid) {
+        alert('No reach-id found');
         return
     } else {
-        if (!confirm('You are about to perform bias correction on reach_id ' + String(reachid) + ' with uploaded observational data file ' + csv + ' Are you sure you want to continue?')) {
-            return
-        }
-        let csv = $("#watersheds_select_input").val();
+        let csv = $("#uploaded_observations").val();
         data = {
             reach_id: reachid,
             observation: csv
+        }
+        if (!confirm('You are about to perform bias correction on reach_id "' + String(reachid) + '" with uploaded ' +
+            'observed steamflow file "' + csv + '". Are you sure you want to continue?')) {
+            return
         }
     }
     updateStatusIcons('load');
@@ -202,7 +217,7 @@ function getBiasCorrectedPlots(gauge_metadata) {
         type: 'GET',
         async: true,
         data: data,
-        url: '/apps/' + app_url + '/correctBias',
+        url: URL_correct_bias,
         success: function (html) {
             // forecast tab
             $("#forecast_tab_link").tab('show');
@@ -309,7 +324,7 @@ function findReachID() {
     $.ajax({
         type: 'GET',
         async: true,
-        url: '/apps/' + app_url + '/findReachID' + L.Util.getParamString({reach_id: $("#search_reachid_input").val()}),
+        url: URL_find_reach_id + L.Util.getParamString({reach_id: $("#search_reachid_input").val()}),
         success: function (response) {
             if (reachMarker) {mapObj.removeLayer(reachMarker)}
             reachMarker = L.marker(L.latLng(response['lat'], response['lon'])).addTo(mapObj);
@@ -325,7 +340,6 @@ function findLatLon() {
     latlonMarker = L.marker(L.latLng(ll[0], ll[1])).addTo(mapObj);
     mapObj.flyTo(L.latLng(ll[0], ll[1]), 9);
 }
-
 ////////////////////////////////////////////////////////////////////////  GAUGE NETWORKS STUFF
 function getGaugeGeoJSON() {
     gaugeNetwork.clearLayers();
@@ -334,7 +348,7 @@ function getGaugeGeoJSON() {
     $.ajax({
         type: 'GET',
         async: true,
-        url: '/apps/' + app_url + '/getGaugeGeoJSON' + L.Util.getParamString({network: network}),
+        url: URL_get_gauge_geojson + L.Util.getParamString({network: network}),
         success: function (geojson) {gaugeNetwork.addData(geojson).addTo(mapObj);mapObj.flyToBounds(gaugeNetwork.getBounds());},
         error: function () {alert('Error retrieving the locations of the gauge network')}
     })
@@ -343,6 +357,8 @@ $("#gauge_networks").change(function () {getGaugeGeoJSON()})
 ////////////////////////////////////////////////////////////////////////  UPLOAD OBSERVATIONAL DATA
 $("#hydrograph-csv-form").on('submit', function (e) {
     e.preventDefault();
+    let upload_stats = $("#hydrograph-csv-status");
+    upload_stats.html('in progress...')
     $.ajax({
         type: 'POST',
         url: URL_upload_new_observations,
@@ -352,12 +368,12 @@ $("#hydrograph-csv-form").on('submit', function (e) {
         cache: false,
         processData: false,
         success: function (response) {
-            console.log('success');
+            upload_stats.html('uploaded finished successfully.')
             console.log(response);
         },
         error: function (response) {
-            console.log('error');
-            console.log(response);
+            upload_stats.html('failed to upload. ' + response['error'])
         },
     });
 });
+$("#start-bias-correction-btn").click(function (e) {getBiasCorrectedPlots(false)})

@@ -33,7 +33,7 @@ class HydroviewerTemplate(TethysAppBase):
 
             # handles the requests to get the various plots in the app modals
             UrlMap(
-                name='getStreamflow',
+                name='get_streamflow',
                 url=f'{self.root_url}/getStreamflow',
                 controller=f'{self.package}.controllers.get_streamflow'
             ),
@@ -43,21 +43,21 @@ class HydroviewerTemplate(TethysAppBase):
                 controller=f'{self.package}.manage_uploaded_observations.upload_new_observations'
             ),
             UrlMap(
-                name='correctBias',
+                name='correct_bias',
                 url=f'{self.root_url}/correctBias',
                 controller=f'{self.package}.controllers.correct_bias'
             ),
 
             # some other utilities
             UrlMap(
-                name='findReachID',
+                name='find_reach_id',
                 url=f'{self.root_url}/findReachID',
                 controller=f'{self.package}.controllers.find_reach_id'
             ),
 
             # Gauge Networks
             UrlMap(
-                name='getGaugeGeoJSON',
+                name='get_gauge_geojson',
                 url=f'{self.root_url}/getGaugeGeoJSON',
                 controller=f'{self.package}.controllers.get_gauge_geojson'
             )
