@@ -16,14 +16,14 @@ resource_files += find_resource_files('tethysapp/' + app_package + '/workspaces'
 
 setup(
     name=release_package,
-    version='0.0.1',
-    description='',
+    version='1.0.0',
+    description='A tool for interfacing with the GEOGloWS ECMWF Streamflow model developed by the BYU Hydroinformatics lab',
     long_description='',
-    keywords='',
+    keywords='GEOGloWS',
     author='Riley Hales',
     author_email='',
     url='',
-    license='MIT',
+    license='BSD 3-Clause',
     packages=find_namespace_packages(),
     package_data={'': resource_files},
     include_package_data=True,
