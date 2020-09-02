@@ -19,39 +19,6 @@
 {# The name you provided in your app.py is accessible through the tethys_app.name context variable #}
 {% block app_title %}{{ tethys_app.name }}{% endblock %}
 
-{% block app_navigation_items %}
-  <li class="title">App controls</li>
-  <label class="control-label" for="time-slider">Map Animation</label>
-  <input type="range" min="0" max="40" value="0" class="slider" id="time-slider">
-  <li id="current-map-date" style="text-align: center"></li>
-  <div style="text-align: center;">
-    <button class="header-button glyphicon-button" id="animationBack1"><span class="glyphicon glyphicon-chevron-left"></span></button>
-    <button class="header-button glyphicon-button" id="animationPlay"><span class="glyphicon glyphicon-play"></span></button>
-    <button class="header-button glyphicon-button" id="animationStop"><span class="glyphicon glyphicon-stop"></span></button>
-    <button class="header-button glyphicon-button" id="animationPlus1"><span class="glyphicon glyphicon-chevron-right"></span></button>
-  </div>
-
-  <li class="separator"></li>
-  <label class="control-label" for="search_reachid_input">Search for a Reach ID</label>
-  <input id="search_reachid_input" placeholder="Search for a Reach ID" style="width: 100%" class="input">
-  <a class="btn btn-default" role="button" style="width: 100%" onclick="findReachID()">Find A Reach ID</a>
-
-  <li class="separator"></li>
-  <label class="control-label" for="search_latlon_input">Search for a Latitude/Longitude</label>
-  <input id="search_latlon_input" placeholder="Enter 'latitude, longitude'" style="width: 100%" class="input">
-  <a class="btn btn-default" role="button" style="width: 100%" onclick="findLatLon()">Find A Lat/Lon Location</a>
-
-  <li class="separator"></li>
-  <a class="btn btn-default" role="button" data-toggle="modal" data-target="#viirs_modal" style="width: 100%">About
-    VIIRS Imagery</a>
-
-  <li class="title">Bias Correction</li>
-  <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New Observation</a>
-  <li class="separator"></li>
-  {% gizmo select_input gauge_networks %}
-
-{% endblock %}
-
 {% block app_content %}
   <div id="map" class="map"></div>
 {% endblock %}

@@ -1,0 +1,209 @@
+{% extends "geoglows_hydroviewer/base.html" %}
+{% load tethys_gizmos %}
+{% load static %}
+
+{% block app_content %}
+  <h1>Project: {{ project_title }}</h1>
+  <div>
+    <div style="float: left; width: 40%">
+      <ol>
+        <h3><li>Define Hydroviewer Boundaries</li></h3>
+        <div class="content">
+          <form id="boundaries-form" action="{% url 'geoglows_hydroviewer:draw_boundaries' %}" method="get">
+            <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+            <div class="btn-group ">
+              <button class="btn btn-success" role="button" form="boundaries-form" submit="True">
+                <span class="glyphicon glyphicon-globe"></span> Draw Project Boundaries on a Map</button>
+            </div>
+          </form>
+          <form id="esri-layer-form" action="{% url 'geoglows_hydroviewer:choose_boundaries' %}" method="get">
+            <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+            <div class="btn-group ">
+              <button class="btn btn-success" role="button" form="esri-layer-form" submit="True">
+                <span class="glyphicon glyphicon-check"></span> Choose Country or Region Boundaries</button>
+            </div>
+          </form>
+
+          <button class="btn btn-success" role="button" data-toggle="modal" data-target="#shapefile-upload">
+            <span class="glyphicon glyphicon-cloud-upload"></span> Upload a Shapefile (beta)</button>
+          {% if boundaries %}
+            <p>Project Boundaries Already Defined</p>
+          {% endif %}
+        </div>
+
+        {% if boundaries %}
+          <h3><li>Create and Export Shapefiles</li></h3>
+          <button class="btn btn-success" role="button" id="process-shapefiles" onclick="processShapefiles()">
+            <span class="glyphicon glyphicon-cog"></span> Create Custom Shapefiles
+          </button>
+          <div id="loading-bar-div" style="display: none"><img src="{% static 'geoglows_hydroviewer/images/progress_bar.gif' %}"></div>
+          <p><ul id="process-callback-list"></ul>
+        {% endif %}
+
+        {% if shapefiles %}
+          <a href="{% url 'geoglows_hydroviewer:shapefile_export_zipfile' %}?project={{ project }}"
+             role="button" class="btn btn-success" download><span class="glyphicon glyphicon-download"></span>
+            Download Zipfiles</a>
+          <br>
+          <button class="btn btn-success" role="button" data-toggle="modal" data-target="#geoserver-options">
+            <span class="glyphicon glyphicon-cloud-upload"></span> Export to a Geoserver
+          </button>
+          {% if geoserver %}
+            <p>Data already successfully uploaded to a geoserver
+          {% endif %}
+        {% endif %}
+
+        {% if geoserver %}
+          <h3>
+            <li>Download Hydroviewer</li>
+          </h3>
+          <form id="interface-form" action="{% url 'geoglows_hydroviewer:project_export_html' %}" method="get">
+            <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+            <div class="btn-group ">
+              <button class="btn btn-success" role="button" form="interface-form" submit="True">
+                <span class="glyphicon glyphicon-download"></span> Download HTML Hydroviewer
+              </button>
+            </div>
+          </form>
+        {% endif %}
+      </ol>
+    </div>
+
+    <div style="float: left; width: 60%; height: 75vh" id="preview-map"></div>
+  </div>
+{% endblock %}
+
+{% block content_dependent_styles %}
+  {{ block.super }}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css">
+  <link href="{% static 'geoglows_hydroviewer/css/main.css' %}" rel="stylesheet"/>
+{% endblock %}
+
+{% block after_app_content %}
+  <div class="modal fade" id="geoserver-options" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h5 class="modal-title" id="help-modal-label">Geoserver Configuration Options</h5>
+        </div>
+        <div class="modal-body">
+          <form id="geoserver-form" action="{% url 'geoglows_hydroviewer:shapefile_export_geoserver' %}">
+            <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+            <label style="width: 40%; float: left" for="gs_url">Geoserver Rest Endpoint
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588z"/>
+                <circle cx="8" cy="4.5" r="1"/>
+              </svg>
+            </label>
+            <input style="width: 60%; float: left" type="text" id="gs_url" name="gs_url" value="https://domain.com/geoserver/rest" style="width: 100%" required>
+
+            <label style="width: 40%; float: left" for="gs_username">Username
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588z"/>
+                <circle cx="8" cy="4.5" r="1"/>
+              </svg>
+            </label>
+            <input style="width: 60%; float: left" type="text" id="gs_username" name="gs_username" value="admin" style="width: 100%" required>
+
+            <label style="width: 40%; float: left" for="gs_password">Password
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588z"/>
+                <circle cx="8" cy="4.5" r="1"/>
+              </svg>
+            </label>
+            <input style="width: 60%; float: left" type="password" id="gs_password" name="gs_password" value="geoserver" style="width: 100%" required>
+
+            <label style="width: 40%; float: left" for="workspace">Geoserver Workspace
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588z"/>
+                <circle cx="8" cy="4.5" r="1"/>
+              </svg>
+            </label>
+            <input style="width: 60%; float: left" type="text" id="workspace" name="workspace" style="width: 100%" required>
+
+            <label style="width: 40%; float: left" for="dl_name">Drainage Line Layer Name
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588z"/>
+                <circle cx="8" cy="4.5" r="1"/>
+              </svg>
+            </label>
+            <input style="width: 60%; float: left" type="text" id="dl_name" name="dl_name" value="{{ project }} drainagelines" style="width: 100%" required>
+
+            <label style="width: 40%; float: left" for="ct_name">Catchment Layer Name
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588z"/>
+                <circle cx="8" cy="4.5" r="1"/>
+              </svg>
+            </label>
+            <input style="width: 60%; float: left" type="text" id="ct_name" name="ct_name" value="{{ project }} catchments" style="width: 100%" required>
+
+            <input type="submit" value="Submit">
+          </form>
+          <div id="geoserver-upload-loading" style="text-align: center; display: none"><img src="{% static 'geoglows_hydroviewer/images/progress_bar.gif' %}"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="shapefile-upload" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h5 class="modal-title" id="help-modal-label">Define Boundaries via Shapefile</h5>
+        </div>
+        <div class="modal-body">
+          <form id="shapefile-form" action="{% url 'geoglows_hydroviewer:upload_boundaries' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+            <input class="form-group" type="file" name="files" accept="*.shp,*.shx,*.dbf,*.prj" multiple>
+            <br>
+            <input type="submit">
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script>
+      const project = "{{ project }}";
+      const boundaries = {{ boundariesJS }};
+      const shapefiles = {{ shapefilesJS }};
+      const geoserver = {{ geoserverJS }};
+
+      const geoserver_wms = "{{ geoserver_url }}"
+      const workspace = "{{ workspace }}"
+      const drainagelinesLayer = "{{ drainagelines_layer }}"
+      const catchmentLayer = "{{ catchment_layer }}"
+
+      const URLgetBoundary = "{% url 'geoglows_hydroviewer:retrieve_boundaries' %}";
+      const URLidRegion = "{% url 'geoglows_hydroviewer:geoprocess_idregion' %}";
+      const URLclip = "{% url 'geoglows_hydroviewer:geoprocess_clip' %}";
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/jquery-form/form@4.3.0/dist/jquery.form.min.js" integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn" crossorigin="anonymous"></script>
+  <script src="{% static 'geoglows_hydroviewer/js/ajax_cookie_stuff.js' %}" type="text/javascript"></script>
+  <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/esri-leaflet@2.4.1/dist/esri-leaflet.js"
+          integrity="sha512-xY2smLIHKirD03vHKDJ2u4pqeHA7OQZZ27EjtqmuhDguxiUvdsOuXMwkg16PQrm9cgTmXtoxA6kwr8KBy3cdcw=="
+          crossorigin=""></script>
+  <script src="{% static 'geoglows_hydroviewer/js/projectOverview.js' %}" type="text/javascript"></script>
+  <script src="{% static 'geoglows_hydroviewer/js/geoprocessShapefiles.js' %}" type="text/javascript"></script>
+  <script src="{% static 'geoglows_hydroviewer/js/geoserverForm.js' %}" type="text/javascript"></script>
+  <script src="{% static 'geoglows_hydroviewer/js/shapefileForm.js' %}" type="text/javascript"></script>
+{% endblock %}

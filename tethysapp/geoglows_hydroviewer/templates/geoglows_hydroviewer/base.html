@@ -9,6 +9,60 @@
   <img src="{% if 'http' in tethys_app.icon %}{{ tethys_app.icon }}{% else %}{% static tethys_app.icon %}{% endif %}"/>
 {% endblock %}
 
+{% block app_navigation_items %}
+  {% url 'geoglows_hydroviewer:home' as hydroviewer %}
+  {% url 'geoglows_hydroviewer:geoglows_hydroviewer_creator' as creator %}
+  {% url 'geoglows_hydroviewer:project_overview' as overview %}
+
+  {% if request.path == hydroviewer %}
+  <li class="title">Map controls</li>
+  <label class="control-label" for="time-slider">Map Animation</label>
+    <input type="range" min="0" max="40" value="0" class="slider" id="time-slider">
+    <li id="current-map-date" style="text-align: center"></li>
+    <div style="text-align: center;">
+      <button class="header-button glyphicon-button" id="animationBack1"><span class="glyphicon glyphicon-chevron-left"></span></button>
+      <button class="header-button glyphicon-button" id="animationPlay"><span class="glyphicon glyphicon-play"></span></button>
+      <button class="header-button glyphicon-button" id="animationStop"><span class="glyphicon glyphicon-stop"></span></button>
+      <button class="header-button glyphicon-button" id="animationPlus1"><span class="glyphicon glyphicon-chevron-right"></span></button>
+    </div>
+  
+    <li class="separator"></li>
+    <label class="control-label" for="search_reachid_input">Search for a Reach ID</label>
+    <input id="search_reachid_input" placeholder="Search for a Reach ID" style="width: 100%" class="input">
+    <a class="btn btn-default" role="button" style="width: 100%" onclick="findReachID()">Find A Reach ID</a>
+  
+    <li class="separator"></li>
+    <label class="control-label" for="search_latlon_input">Search for a Latitude/Longitude</label>
+    <input id="search_latlon_input" placeholder="Enter 'latitude, longitude'" style="width: 100%" class="input">
+    <a class="btn btn-default" role="button" style="width: 100%" onclick="findLatLon()">Find A Lat/Lon Location</a>
+  
+    <li class="separator"></li>
+    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#viirs_modal" style="width: 100%">About VIIRS Imagery</a>
+  
+    <li class="title">Bias Correction</li>
+    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New Observation</a>
+    <li class="separator"></li>
+    {% gizmo select_input gauge_networks %}
+  {# todo add a button to switch to the creator page #}
+  {% else %}
+    {# todo add the html for the creator pages #}
+    <li class="title">Hydroviewer Creation Tools</li>
+    <li class="{% if request.path == creator %}active{% endif %}"><a href="{{ creator }}">Select A Project</a></li>
+    {% if request.path == overview %}
+      <li class="active"><a href="{{ overview }}">Hydroviewer Project Overview</a></li>
+      <li class="separator"></li>
+      <li><strong>Steps to create a hydroviewer</strong></li>
+      <li>1. Define Project Boundaries</li>
+      <li>2. Create and Export Shapefiles</li>
+      <li>3. Export Hydroviewer</li>
+    {% else %}
+      <li class=""><a href="{{ overview }}">Edit Hydroviewer</a></li>
+    {% endif %}
+  {% endif %}
+
+
+{% endblock %}
+
 {% block app_content %}
 {% endblock %}
 

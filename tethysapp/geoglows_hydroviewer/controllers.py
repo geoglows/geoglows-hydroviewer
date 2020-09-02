@@ -69,7 +69,7 @@ def home(request):
         'gauge_networks': gauge_networks,
     }
 
-    return render(request, 'geoglows_hydroviewer/home.html', context)
+    return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer.html', context)
 
 
 def get_streamflow(request):
