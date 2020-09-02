@@ -37,13 +37,15 @@
     <a class="btn btn-default" role="button" style="width: 100%" onclick="findLatLon()">Find A Lat/Lon Location</a>
   
     <li class="separator"></li>
-    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#viirs_modal" style="width: 100%">About VIIRS Imagery</a>
+    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#viirs_modal" style="width: 100%">About
+      VIIRS Imagery</a>
   
     <li class="title">Bias Correction</li>
-    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New Observation</a>
+    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New
+      Observation</a>
     <li class="separator"></li>
     {% gizmo select_input gauge_networks %}
-  {# todo add a button to switch to the creator page #}
+    {# todo add a button to switch to the creator page (warn them that log in is required to access these pages) #}
   {% else %}
     {# todo add the html for the creator pages #}
     <li class="title">Hydroviewer Creation Tools</li>

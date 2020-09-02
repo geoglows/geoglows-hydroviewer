@@ -1,20 +1,19 @@
+import geomatics
+import geopandas as gpd
+import geoserver.util
 import glob
+import jinja2
 import json
 import os
 import shutil
 import urllib.parse
-from zipfile import ZipFile
-
-import geopandas as gpd
-import geoserver.util
-import jinja2
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from geoserver.catalog import Catalog
 from tethys_sdk.gizmos import SelectInput
 from tethys_sdk.permissions import login_required
-import geomatics
+from zipfile import ZipFile
 
 from .app import HydroviewerTemplate as App
 from .hydroviewer_creator_tools import get_project_directory
@@ -22,8 +21,23 @@ from .hydroviewer_creator_tools import get_project_directory
 SHAPE_DIR = os.path.join(App.get_app_workspace().path, 'shapefiles')
 
 
+# todo add an empty shapefiles directory to the app workspace, put a .gitkeep file in it which you add to git tracking
+# todo fix the upload your own shapefile option
+# todo add ability to upload to hydroshare (requires logging in to tethys via a hydroshare account- maybe warn about that)
+# todo add more dependencies to the app's install.yml (combine the dependencies of hydroviewer and creator apps)
+
+
 @login_required()
 def home(request):
+    """
+    TODO
+    check if there are shapefiles downloaded in the right directories in workspace
+
+    probably give a warning like: "contact the tethys portal administrator to get this data downloaded"
+
+    if not
+        return render(request, 'geoglows_hydroviewer/404_page.html', context)
+    """
     projects = []
     projects_path = os.path.join(App.get_app_workspace().path, 'projects')
     prjs = os.listdir(projects_path)
