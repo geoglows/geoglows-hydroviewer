@@ -20,10 +20,6 @@ from .app import GeoglowsHydroviewer as App
 from .hydroviewer_creator_tools import get_project_directory, shapefiles_downloaded
 
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
-
-
-# todo fix the upload your own shapefile option
-# todo upload to hydroshare (requires logging in to tethys via a hydroshare account- maybe warn about that)
 # todo add more dependencies to the app's install.yml (combine the dependencies of hydroviewer and creator apps)
 
 
@@ -82,7 +78,7 @@ def add_new_project(request):
     try:
         os.mkdir(new_proj_dir)
         messages.success(request, 'Project Successfully Created')
-        return redirect(f'../project_overview/?{urllib.parse.urlencode(dict(project=project))}')
+        return redirect(f'../project/?{urllib.parse.urlencode(dict(project=project))}')
     except Exception as e:
         messages.error(request, f'Failed to Create Project: {project} ({e})')
         return redirect('..')

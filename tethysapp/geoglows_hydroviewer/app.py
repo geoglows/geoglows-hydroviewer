@@ -6,7 +6,7 @@ from tethys_sdk.base import TethysAppBase, url_map_maker
 
 class GeoglowsHydroviewer(TethysAppBase):
     """
-    Tethys app class for GEOGloWS Hydroviewer Template.
+    Tethys app class for the GEOGloWS ECMWF Streamflow Hydroviewer
     """
 
     name = 'GEOGloWS ECMWF Streamflow Hydroviewer'
@@ -31,13 +31,13 @@ class GeoglowsHydroviewer(TethysAppBase):
 
             # handles the requests to get the various plots in the app modals
             UrlMap(name='get_streamflow',
-                   url=f'{self.root_url}/getStreamflow',
+                   url=f'{self.root_url}/hydroviewer/getStreamflow',
                    controller=f'{self.package}.controllers.get_streamflow'),
             UrlMap(name='upload_new_observations',
-                   url=f'{self.root_url}/upload_new_observations',
+                   url=f'{self.root_url}/hydroviewer/upload_new_observations',
                    controller=f'{self.package}.manage_uploaded_observations.upload_new_observations'),
             UrlMap(name='correct_bias',
-                   url=f'{self.root_url}/correctBias',
+                   url=f'{self.root_url}/hydroviewer/correctBias',
                    controller=f'{self.package}.controllers.correct_bias'),
 
             # some other utilities
@@ -50,11 +50,14 @@ class GeoglowsHydroviewer(TethysAppBase):
                    url=f'{self.root_url}/getGaugeGeoJSON',
                    controller=f'{self.package}.controllers.get_gauge_geojson'),
 
-            # geoglows hydroviewer creator main page
+            # geoglows hydroviewer creator main pages
             UrlMap(name='geoglows_hydroviewer_creator',
                    url=f'{self.root_url}/creator',
                    controller=f'{self.package}.controllers_creator.home'),
-            # creator pages and urls for forms
+            UrlMap(name='project_overview',
+                   url=f'{self.root_url}/creator/project',
+                   controller=f'{self.package}.controllers_creator.project_overview'),
+            # creator pages and urls for adding/deleting projects
             UrlMap(name='add_new_project',
                    url=f'{self.root_url}/creator/add-new-project',
                    controller=f'{self.package}.controllers_creator.add_new_project'),
@@ -62,41 +65,40 @@ class GeoglowsHydroviewer(TethysAppBase):
                    url=f'{self.root_url}/creator/delete_existing_project',
                    controller=f'{self.package}.controllers_creator.delete_existing_project'),
 
+            # geoprocessing shapefiles urls
             UrlMap(name='geoprocess_idregion',
-                   url=f'{self.root_url}/creator/geoprocessing/geoprocess_idregion',
+                   url=f'{self.root_url}/creator/project/geoprocessing/geoprocess_idregion',
                    controller=f'{self.package}.controllers_creator.geoprocess_hydroviewer_idregion'),
             UrlMap(name='geoprocess_clip',
-                   url=f'{self.root_url}/creator/geoprocessing/geoprocess_clip',
+                   url=f'{self.root_url}/creator/project/geoprocessing/geoprocess_clip',
                    controller=f'{self.package}.controllers_creator.geoprocess_hydroviewer_clip'),
 
-            UrlMap(name='project_overview',
-                   url=f'{self.root_url}/creator/project_overview',
-                   controller=f'{self.package}.controllers_creator.project_overview'),
-
+            # project editing urls and pages
             UrlMap(name='draw_boundaries',
-                   url=f'{self.root_url}/creator/edit-hydroviewer/draw_boundaries',
+                   url=f'{self.root_url}/creator/project/edit/draw_boundaries',
                    controller=f'{self.package}.controllers_creator.draw_hydroviewer_boundaries'),
             UrlMap(name='choose_boundaries',
-                   url=f'{self.root_url}/creator/edit-hydroviewer/choose_boundaries',
+                   url=f'{self.root_url}/creator/project/edit/choose_boundaries',
                    controller=f'{self.package}.controllers_creator.choose_hydroviewer_boundaries'),
             UrlMap(name='upload_boundaries',
-                   url=f'{self.root_url}/creator/edit-hydroviewer/upload_boundaries',
+                   url=f'{self.root_url}/creator/project/edit/upload_boundaries',
                    controller=f'{self.package}.controllers_creator.upload_boundary_shapefile'),
             UrlMap(name='save_boundaries',
-                   url=f'{self.root_url}/creator/edit-hydroviewer/save_boundaries',
+                   url=f'{self.root_url}/creator/project/edit/save_boundaries',
                    controller=f'{self.package}.controllers_creator.save_drawn_boundaries'),
             UrlMap(name='retrieve_boundaries',
-                   url=f'{self.root_url}/creator/edit-hydroviewer/retrieve_boundaries',
+                   url=f'{self.root_url}/creator/project/edit/retrieve_boundaries',
                    controller=f'{self.package}.controllers_creator.retrieve_hydroviewer_boundaries'),
 
+            # project exporting options
             UrlMap(name='shapefile_export_zipfile',
-                   url=f'{self.root_url}/creator/project_overview/shapefile_export_zipfile',
+                   url=f'{self.root_url}/creator/project/export/shapefile_export_zipfile',
                    controller=f'{self.package}.controllers_creator.shapefile_export_zipfile'),
             UrlMap(name='shapefile_export_geoserver',
-                   url=f'{self.root_url}/creator/edit-hydroviewer/shapefile_export_geoserver',
+                   url=f'{self.root_url}/creator/project/export/shapefile_export_geoserver',
                    controller=f'{self.package}.controllers_creator.shapefile_export_geoserver'),
             UrlMap(name='project_export_html',
-                   url=f'{self.root_url}/creator/project_export_html',
+                   url=f'{self.root_url}/creator/project/export/project_export_html',
                    controller=f'{self.package}.controllers_creator.project_export_html'),
         )
 

@@ -17,13 +17,15 @@ resource_files += find_resource_files('tethysapp/' + app_package + '/workspaces'
 setup(
     name=release_package,
     version='1.0.0',
-    description='A tool for interfacing with the GEOGloWS ECMWF Streamflow model developed by the BYU Hydroinformatics lab',
-    long_description='',
+    description='Interfaced with the GEOGloWS ECMWF Streamflow model developed by the BYU Hydroinformatics lab.',
+    long_description='Contains an interactive map interface for retrieving data using the ESRI Dynamic Mapping Service '
+                     'retrieved from the Living Atlas. Includes tools for extracting a subset of the delineated '
+                     ' shapefiles and creating a customized hydroviewer interface.',
     keywords='GEOGloWS',
-    author='Riley Hales',
+    author='Riley Hales, Kyler Ashby',
     author_email='',
     url='',
-    license='BSD 3-Clause',
+    license='BSD 3-Clause Clear',
     packages=find_namespace_packages(),
     package_data={'': resource_files},
     include_package_data=True,
