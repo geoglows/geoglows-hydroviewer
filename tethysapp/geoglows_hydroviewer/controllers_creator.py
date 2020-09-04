@@ -30,29 +30,42 @@ SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 @login_required()
 def home(request):
     if not shapefiles_downloaded():
-        messages.error(request, 'GEOGloWS Shapefile data not found. You can continue to work on projects who have '
-                                'created shapefiles but will be unable to create shapefiles for new projects. Check '
-                                'the custom settings and contact the server admin for help downloading this data.')
+        messages.warning(request, 'GEOGloWS Shapefile data not found. You can continue to work on projects who have '
+                                  'created shapefiles but will be unable to create shapefiles for new projects. Check '
+                                  'the custom settings and contact the server admin for help downloading this data.')
 
-    projects = []
     projects_path = os.path.join(App.get_app_workspace().path, 'projects')
-    prjs = os.listdir(projects_path)
-    prjs = [prj for prj in prjs if os.path.isdir(os.path.join(projects_path, prj))]
-    for prj in prjs:
-        if os.path.isdir(os.path.join(projects_path, prj)):
-            projects.append((prj.replace('_', ' '), prj))
-    if len(projects) == 0:
-        projects_to_show = False
+    projects = os.listdir(projects_path)
+
+    projects = [prj for prj in projects if os.path.isdir(os.path.join(projects_path, prj))]
+    finished_prjs = [prj for prj in projects if os.path.exists(os.path.join(projects_path, prj, 'hydroviewer.html'))]
+
+    projects = [(prj.replace('_', ' '), prj) for prj in projects]
+    finished_prjs = [(prj.replace('_', ' '), prj) for prj in finished_prjs]
+
+    if len(projects) > 0:
+        show_projects = True
     else:
-        projects_to_show = True
+        show_projects = False
+    if len(finished_prjs) > 0:
+        show_finished_projects = True
+    else:
+        show_finished_projects = False
 
     projects = SelectInput(display_text='Existing Hydroviewer Projects',
                            name='project',
                            multiple=False,
                            options=projects)
+    downloadable_projects = SelectInput(display_text='Download Finished Hydroviewer',
+                                        name='downloadable_projects',
+                                        multiple=False,
+                                        options=finished_prjs)
+
     context = {
         'projects': projects,
-        'projects_to_show': projects_to_show
+        'downloadable_projects': downloadable_projects,
+        'show_projects': show_projects,
+        'show_finished_projects': show_finished_projects,
     }
 
     return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer_creator.html', context)
@@ -70,8 +83,8 @@ def add_new_project(request):
         os.mkdir(new_proj_dir)
         messages.success(request, 'Project Successfully Created')
         return redirect(f'../project_overview/?{urllib.parse.urlencode(dict(project=project))}')
-    except:
-        messages.error(request, 'Unable to create the project')
+    except Exception as e:
+        messages.error(request, f'Failed to Create Project: {project} ({e})')
         return redirect('..')
 
 
@@ -83,9 +96,9 @@ def delete_existing_project(request):
     else:
         try:
             shutil.rmtree(os.path.join(App.get_app_workspace().path, 'projects', project))
-            messages.success(request, 'Project Deleted Successfully')
-        except:
-            messages.error(request, 'Failed to delete the project')
+            messages.success(request, f'Successfully Deleted Project: {project}')
+        except Exception as e:
+            messages.error(request, f'Failed to Delete Project: {project} ({e})')
     return redirect('..')
 
 

@@ -4,6 +4,9 @@
 
 {% block title %}{{ tethys_app.name }}{% endblock %}
 
+{% block header_buttons %}
+{% endblock %}
+
 {% block app_icon %}
   {# The path you provided in your app.py is accessible through the tethys_app.icon context variable #}
   <img src="{% if 'http' in tethys_app.icon %}{{ tethys_app.icon }}{% else %}{% static tethys_app.icon %}{% endif %}"/>

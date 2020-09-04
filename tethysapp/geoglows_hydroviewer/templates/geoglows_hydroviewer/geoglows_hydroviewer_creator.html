@@ -2,9 +2,6 @@
 {% load tethys_gizmos %}
 
 {% block header_buttons %}
-  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Help">
-    <a data-toggle="modal" data-target="#help-modal"><span class="glyphicon glyphicon-question-sign"></span></a>
-  </div>
 {% endblock %}
 
 {% block app_content %}
@@ -18,7 +15,7 @@
       </button>
     </div>
   </form>
-  {% if projects_to_show %}
+  {% if show_projects %}
     <h1>Edit An Existing Hydroviewer Projects</h1>
     <form id="select_existing_form" action="{% url 'geoglows_hydroviewer:project_overview' %}" method="get">
       {% gizmo select_input projects %}
@@ -28,15 +25,17 @@
         </button>
       </div>
     </form>
+    {% if show_finished_projects %}
       <h1>Download Existing Hydroviewer HTML</h1>
       <form id="interface-form" action="{% url 'geoglows_hydroviewer:project_export_html' %}" method="get">
-        {% gizmo select_input projects %}
+        {% gizmo select_input downloadable_projects %}
         <div class="btn-group ">
           <button class="btn btn-success" role="button" form="interface-form" submit="True">
-            <span class="glyphicon glyphicon-download"></span> Download HTML Hydroviewer
+            <span class="glyphicon glyphicon-download"></span> Download Hydroviewer HTML
           </button>
         </div>
       </form>
+    {% endif %}
     {% if user.is_superuser %}
       <h1>Delete Existing Hydroviewer Project</h1>
       <form id="remove_existing_form" action="{% url 'geoglows_hydroviewer:delete_existing_project' %}" method="get">
