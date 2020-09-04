@@ -8,7 +8,7 @@ import pandas as pd
 import requests
 import xmltodict
 
-from .app import HydroviewerTemplate as App
+from .app import GeoglowsHydroviewer as App
 
 
 def list_gauge_networks():

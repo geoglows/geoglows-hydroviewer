@@ -16,8 +16,8 @@ from geoserver.catalog import Catalog
 from tethys_sdk.gizmos import SelectInput
 from tethys_sdk.permissions import login_required
 
-from .app import HydroviewerTemplate as App
-from .hydroviewer_creator_tools import get_project_directory
+from .app import GeoglowsHydroviewer as App
+from .hydroviewer_creator_tools import get_project_directory, shapefiles_downloaded
 
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
@@ -29,15 +29,11 @@ SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
 @login_required()
 def home(request):
-    """
-    TODO
-    check if there are shapefiles downloaded in the right directories in workspace
+    if not shapefiles_downloaded():
+        messages.error(request, 'GEOGloWS Shapefile data not found. You can continue to work on projects who have '
+                                'created shapefiles but will be unable to create shapefiles for new projects. Check '
+                                'the custom settings and contact the server admin for help downloading this data.')
 
-    probably give a warning like: "contact the tethys portal administrator to get this data downloaded"
-
-    if not
-        return render(request, 'geoglows_hydroviewer/404_page.html', context)
-    """
     projects = []
     projects_path = os.path.join(App.get_app_workspace().path, 'projects')
     prjs = os.listdir(projects_path)

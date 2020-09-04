@@ -1,10 +1,11 @@
 import datetime
 import glob
 import os
+
 import pandas as pd
 from django.http import JsonResponse
 
-from .app import HydroviewerTemplate as App
+from .app import GeoglowsHydroviewer as App
 
 
 def delete_old_observations():
