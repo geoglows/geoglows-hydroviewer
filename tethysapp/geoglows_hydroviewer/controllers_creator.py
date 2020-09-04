@@ -20,7 +20,6 @@ from .app import GeoglowsHydroviewer as App
 from .hydroviewer_creator_tools import get_project_directory, shapefiles_downloaded
 
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
-# todo add more dependencies to the app's install.yml (combine the dependencies of hydroviewer and creator apps)
 
 
 @login_required()
@@ -373,9 +372,6 @@ def shapefile_export_geoserver(request):
 
         # identify the geoserver stores
         workspace = cat.get_workspace(workspace_name)
-
-        # todo verify that the workspace exists (script will complete w/o uploading files if workspace doesn't exist)
-        # todo what if the catchments are too large -- common problem preventing shapefile upload
 
         try:
             # create geoserver store and upload the catchments
