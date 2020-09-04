@@ -1,0 +1,51 @@
+{% extends "geoglows_hydroviewer/base.html" %}
+{% load tethys_gizmos %}
+
+{% block header_buttons %}
+{% endblock %}
+
+{% block app_content %}
+  <h1>Start A New Hydroviewer Project</h1>
+  <form id="create_new_form" action="{% url 'geoglows_hydroviewer:add_new_project' %}" method="get">
+    <input class="form-group" type="text" id="new_project_name" name="new_project_name"
+           placeholder="Enter New Hydroviewer Project Name" style="width: 100%">
+    <div class="btn-group ">
+      <button class="btn btn-success" role="button" form="create_new_form" submit="True">
+        <span class="glyphicon glyphicon-plus"></span> Create New Hydroviewer
+      </button>
+    </div>
+  </form>
+  {% if show_projects %}
+    <h1>Edit An Existing Hydroviewer Projects</h1>
+    <form id="select_existing_form" action="{% url 'geoglows_hydroviewer:project_overview' %}" method="get">
+      {% gizmo select_input projects %}
+      <div class="btn-group ">
+        <button class="btn btn-success" role="button" form="select_existing_form" submit="True">
+          <span class="glyphicon glyphicon-pencil"></span> Edit Existing Hydroviewer
+        </button>
+      </div>
+    </form>
+    {% if show_finished_projects %}
+      <h1>Download Existing Hydroviewer HTML</h1>
+      <form id="interface-form" action="{% url 'geoglows_hydroviewer:project_export_html' %}" method="get">
+        {% gizmo select_input downloadable_projects %}
+        <div class="btn-group ">
+          <button class="btn btn-success" role="button" form="interface-form" submit="True">
+            <span class="glyphicon glyphicon-download"></span> Download Hydroviewer HTML
+          </button>
+        </div>
+      </form>
+    {% endif %}
+    {% if user.is_superuser %}
+      <h1>Delete Existing Hydroviewer Project</h1>
+      <form id="remove_existing_form" action="{% url 'geoglows_hydroviewer:delete_existing_project' %}" method="get">
+        {% gizmo select_input projects %}
+        <div class="btn-group ">
+          <button class="btn btn-danger" role="button" form="remove_existing_form" submit="True">
+            <span class="glyphicon glyphicon-remove"></span> Delete Existing Hydroviewer
+          </button>
+        </div>
+      </form>
+    {% endif %}
+  {% endif %}
+{% endblock %}

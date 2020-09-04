@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 import geoglows.bias as gbc
 import geoglows.plots as gpp
@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from tethys_sdk.gizmos import SelectInput, Button
 
-from .app import HydroviewerTemplate as App
+from .app import GeoglowsHydroviewer as App
 from .manage_gauge_networks import list_gauge_networks, get_observed_station_flow
 from .manage_uploaded_observations import delete_old_observations, list_uploaded_observations
 
@@ -69,7 +69,7 @@ def home(request):
         'gauge_networks': gauge_networks,
     }
 
-    return render(request, 'geoglows_hydroviewer/home.html', context)
+    return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer.html', context)
 
 
 def get_streamflow(request):

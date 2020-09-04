@@ -14,7 +14,10 @@ requirements:
       - xmltodict
       - pandas
       - requests
+      - geopandas
+      - jinja2
+      - geomatics
 
   pip:
-
+    - geoserver-restconfig
 post:
