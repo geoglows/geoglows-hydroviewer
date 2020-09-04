@@ -1,3 +1,6 @@
+import os
+
+from tethys_sdk.app_settings import CustomSetting
 from tethys_sdk.base import TethysAppBase, url_map_maker
 
 
@@ -12,15 +15,12 @@ class HydroviewerTemplate(TethysAppBase):
     package = 'geoglows_hydroviewer'
     root_url = 'geoglows-hydroviewer'
     color = '#2980b9'
-    description = ''
-    tags = 'geoglows, streamflow, animations, timeseries, hydrograph'
+    description = 'A tool for viewing the GEOGloWS ECMWF Streamflow Model and creating subset shapefiles.',
+    tags = 'geoglows, streamflow, animations, timeseries, hydrograph, geoprocessing, esri'
     enable_feedback = False
     feedback_emails = []
 
     def url_maps(self):
-        """
-        Add controllers
-        """
         UrlMap = url_map_maker(self.root_url)
 
         return (
@@ -50,7 +50,7 @@ class HydroviewerTemplate(TethysAppBase):
                    url=f'{self.root_url}/getGaugeGeoJSON',
                    controller=f'{self.package}.controllers.get_gauge_geojson'),
 
-            # geoglows hydroviewer creator page
+            # geoglows hydroviewer creator main page
             UrlMap(name='geoglows_hydroviewer_creator',
                    url=f'{self.root_url}/creator',
                    controller=f'{self.package}.controllers_creator.home'),
@@ -98,4 +98,15 @@ class HydroviewerTemplate(TethysAppBase):
             UrlMap(name='project_export_html',
                    url=f'{self.root_url}/creator/project_export_html',
                    controller=f'{self.package}.controllers_creator.project_export_html'),
+        )
+
+    def custom_settings(self):
+        return (
+            CustomSetting(
+                name='global_delineation_shapefiles_directory',
+                type=CustomSetting.TYPE_STRING,
+                description="Absolute file path to a directory containing shapefiles (see app documentation)",
+                required=False,
+                default=f"{os.path.join(self.get_app_workspace().path, 'shapefiles')}",
+            ),
         )

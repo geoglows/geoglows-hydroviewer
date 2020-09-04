@@ -1,29 +1,29 @@
-import geomatics
-import geopandas as gpd
-import geoserver.util
 import glob
-import jinja2
 import json
 import os
 import shutil
 import urllib.parse
+from zipfile import ZipFile
+
+import geomatics
+import geopandas as gpd
+import geoserver.util
+import jinja2
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from geoserver.catalog import Catalog
 from tethys_sdk.gizmos import SelectInput
 from tethys_sdk.permissions import login_required
-from zipfile import ZipFile
 
 from .app import HydroviewerTemplate as App
 from .hydroviewer_creator_tools import get_project_directory
 
-SHAPE_DIR = os.path.join(App.get_app_workspace().path, 'shapefiles')
+SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
 
-# todo add an empty shapefiles directory to the app workspace, put a .gitkeep file in it which you add to git tracking
 # todo fix the upload your own shapefile option
-# todo add ability to upload to hydroshare (requires logging in to tethys via a hydroshare account- maybe warn about that)
+# todo upload to hydroshare (requires logging in to tethys via a hydroshare account- maybe warn about that)
 # todo add more dependencies to the app's install.yml (combine the dependencies of hydroviewer and creator apps)
 
 
@@ -214,33 +214,32 @@ def choose_hydroviewer_boundaries(request):
         name='regions',
         multiple=False,
         original=True,
-        options=(
-            ('None', ''),
-            ('Antarctica', 'Antarctica'),
-            ('Asiatic Russia', 'Asiatic Russia'),
-            ('Australia/New Zealand', 'Australia/New Zealand'),
-            ('Caribbean', 'Caribbean'),
-            ('Central America', 'Central America'),
-            ('Central Asia', 'Central Asia'),
-            ('Eastern Africa', 'Eastern Africa'),
-            ('Eastern Asia', 'Eastern Asia'),
-            ('Eastern Europe', 'Eastern Europe'),
-            ('European Russia', 'European Russia'),
-            ('Melanesia', 'Melanesia'),
-            ('Micronesia', 'Micronesia'),
-            ('Middle Africa', 'Middle Africa'),
-            ('Northern Africa', 'Northern Africa'),
-            ('Northern America', 'Northern America'),
-            ('Northern Europe', 'Northern Europe'),
-            ('Polynesia', 'Polynesia'),
-            ('South America', 'South America'),
-            ('Southeastern Asia', 'Southeastern Asia'),
-            ('Southern Africa', 'Southern Africa'),
-            ('Southern Asia', 'Southern Asia'),
-            ('Southern Europe', 'Southern Europe'),
-            ('Western Africa', 'Western Africa'),
-            ('Western Asia', 'Western Asia'),
-            ('Western Europe', 'Western Europe'),)
+        options=(('None', ''),
+                 ('Antarctica', 'Antarctica'),
+                 ('Asiatic Russia', 'Asiatic Russia'),
+                 ('Australia/New Zealand', 'Australia/New Zealand'),
+                 ('Caribbean', 'Caribbean'),
+                 ('Central America', 'Central America'),
+                 ('Central Asia', 'Central Asia'),
+                 ('Eastern Africa', 'Eastern Africa'),
+                 ('Eastern Asia', 'Eastern Asia'),
+                 ('Eastern Europe', 'Eastern Europe'),
+                 ('European Russia', 'European Russia'),
+                 ('Melanesia', 'Melanesia'),
+                 ('Micronesia', 'Micronesia'),
+                 ('Middle Africa', 'Middle Africa'),
+                 ('Northern Africa', 'Northern Africa'),
+                 ('Northern America', 'Northern America'),
+                 ('Northern Europe', 'Northern Europe'),
+                 ('Polynesia', 'Polynesia'),
+                 ('South America', 'South America'),
+                 ('Southeastern Asia', 'Southeastern Asia'),
+                 ('Southern Africa', 'Southern Africa'),
+                 ('Southern Asia', 'Southern Asia'),
+                 ('Southern Europe', 'Southern Europe'),
+                 ('Western Africa', 'Western Africa'),
+                 ('Western Asia', 'Western Asia'),
+                 ('Western Europe', 'Western Europe'),)
     )
 
     context = {

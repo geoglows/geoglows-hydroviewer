@@ -45,17 +45,17 @@
       Observation</a>
     <li class="separator"></li>
     {% gizmo select_input gauge_networks %}
-    {# todo add a button to switch to the creator page (warn them that log in is required to access these pages) #}
-      {% if request.user.is_authenticated %}
-        <a href="{{ creator }}" class="btn btn-default" role="button" style="width: 100%">Go to Hydroviewer Creator</a>
-      {% else %}
-        <a class="btn btn-default" role="button" data-toggle="modal" data-target="#warn_modal" style="width: 100%">Go to Hydroviewer Creator</a>
-      {% endif %}
+    {% if request.user.is_authenticated %}
+      <a href="{{ creator }}" class="btn btn-default" role="button" style="width: 100%">Go to Hydroviewer Creator</a>
+    {% else %}
+      <a class="btn btn-default" role="button" data-toggle="modal" data-target="#warn_modal" style="width: 100%">Go to
+        Hydroviewer Creator</a>
+    {% endif %}
   {% else %}
-    {# todo add the html for the creator pages #}
     <!-- <li class="title">Hydroviewer Creation Tools</li> -->
     <li class="separator"></li>
-    <a href="{{ hydroviewer }}" class="btn btn-default" role="button" style="width: 100%">Return to Hydroviewer Main Page</a>
+    <a href="{{ hydroviewer }}" class="btn btn-default" role="button" style="width: 100%">Return to Hydroviewer Main
+      Page</a>
     <li class="separator"></li>
     <li class="{% if request.path == creator %}active{% endif %}"><a href="{{ creator }}">Select A Project</a></li>
     {% if request.path == overview %}
