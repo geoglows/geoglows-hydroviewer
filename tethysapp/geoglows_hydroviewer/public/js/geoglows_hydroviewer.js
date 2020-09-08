@@ -86,7 +86,7 @@ const startDateTime = new Date(layerAnimationTime);
 const endDateTime = new Date(layerAnimationTime.setUTCHours(5 * 24));
 layerAnimationTime = new Date(startDateTime);
 currentDate.html(layerAnimationTime);
-const slider = $("#time-slider")
+const slider = $("#time-slider");
 slider.change(function () {
     refreshLayerAnimation()
 })
@@ -109,7 +109,7 @@ function playAnimation(once = false) {
         animate = false;
         return
     }
-    setTimeout(playAnimation, 500);
+    setTimeout(playAnimation, 750);
 }
 $("#animationPlay").click(function () {
     animate = true;
