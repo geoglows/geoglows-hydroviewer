@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////  SETUP THE MAP
-let reachid;
+let REACHID;
 let marker = null;
 const mapObj = L.map('map', {
         zoom: 3,
@@ -43,13 +43,21 @@ latlon.onAdd = function () {
 latlon.addTo(mapObj);
 mapObj.on("mousemove", function (event) {$("#mouse-position").html('Lat: ' + event.latlng.lat.toFixed(5) + ', Lon: ' + event.latlng.lng.toFixed(5));});
 mapObj.on("click", function (event) {
-    if (mapObj.getZoom()<=8){mapObj.flyTo(event.latlng, 9); return}
-    else {mapObj.flyTo(event.latlng)}
-    if (marker) {mapObj.removeLayer(marker)}
+    if (mapObj.getZoom() <= 8.5) {
+        mapObj.flyTo(event.latlng, 9);
+        return
+    } else {
+        mapObj.flyTo(event.latlng)
+    }
+    if (marker) {
+        mapObj.removeLayer(marker)
+    }
     marker = L.marker(event.latlng).addTo(mapObj);
-    for (let i in chart_divs) {chart_divs[i].html('')}
-    updateStatusIcons('load');
-    $("#chart_modal").modal('show')
+    for (let i in chart_divs) {
+        chart_divs[i].html('')
+    }
+    updateStatusIcons('identify');
+    $("#chart_modal").modal('show');
     L.esri.identifyFeatures({
         url: 'https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
     })
@@ -58,10 +66,11 @@ mapObj.on("click", function (event) {
         .run(function (error, featureCollection) {
             if (error) {
                 updateStatusIcons('fail');
-                alert('Error finding the reach_id')
-                return;
+                alert('Error finding the reach_id');
+                return
             }
-            reachid = featureCollection.features[0].properties["COMID (Stream Identifier)"];
+            REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"];
+            updateStatusIcons('load');
             getStreamflowPlots();
         })
 });
@@ -155,7 +164,7 @@ function getStreamflowPlots() {
     $.ajax({
         type: 'GET',
         async: true,
-        data: {reach_id: reachid},
+        data: {reach_id: REACHID},
         url: URL_get_streamflow,
         success: function (html) {
             // forecast tab
@@ -194,16 +203,16 @@ function getBiasCorrectedPlots(gauge_metadata) {
     if (gauge_metadata !== false) {
         data = gauge_metadata;
         data['gauge_network'] = $("#gauge_networks").val();
-    } else if (!reachid) {
+    } else if (!REACHID) {
         alert('No reach-id found');
         return
     } else {
         let csv = $("#uploaded_observations").val();
         data = {
-            reach_id: reachid,
+            reach_id: REACHID,
             observation: csv
         }
-        if (!confirm('You are about to perform bias correction on reach_id "' + String(reachid) + '" with uploaded ' +
+        if (!confirm('You are about to perform bias correction on reach_id "' + String(REACHID) + '" with uploaded ' +
             'observed steamflow file "' + csv + '". Are you sure you want to continue?')) {
             return
         }
@@ -247,17 +256,20 @@ function getBiasCorrectedPlots(gauge_metadata) {
 }
 function updateStatusIcons(type) {
     let statusObj = $("#request-status");
-    if (type === 'load') {
-        statusObj.html(' (loading)');
+    if (type === 'identify') {
+        statusObj.html(' (Getting stream ID)');
+        statusObj.css('color', 'orange');
+    } else if (type === 'load') {
+        statusObj.html(' (Loading ID ' + REACHID + ')');
         statusObj.css('color', 'orange');
     } else if (type === 'ready') {
-        statusObj.html(' (ready)');
+        statusObj.html(' (Ready)');
         statusObj.css('color', 'green');
     } else if (type === 'fail') {
-        statusObj.html(' (failed)');
+        statusObj.html(' (Failed)');
         statusObj.css('color', 'red');
     } else if (type === 'cleared') {
-        statusObj.html(' (cleared)');
+        statusObj.html(' (Cleared)');
         statusObj.css('color', 'grey');
     }
 }
@@ -267,10 +279,10 @@ function updateDownloadLinks(type) {
         $("#download-historical-btn").attr('href', '');
         $("#download-seasonal-btn").attr('href', '');
     } else if (type === 'set') {
-        $("#download-forecast-btn").attr('href', endpoint + 'ForecastStats/?reach_id=' + reachid);
-        $("#download-records-btn").attr('href', endpoint + 'ForecastRecords/?reach_id=' + reachid);
-        $("#download-historical-btn").attr('href', endpoint + 'HistoricSimulation/?reach_id=' + reachid);
-        $("#download-seasonal-btn").attr('href', endpoint + 'SeasonalAverage/?reach_id=' + reachid);
+        $("#download-forecast-btn").attr('href', endpoint + 'ForecastStats/?reach_id=' + REACHID);
+        $("#download-records-btn").attr('href', endpoint + 'ForecastRecords/?reach_id=' + REACHID);
+        $("#download-historical-btn").attr('href', endpoint + 'HistoricSimulation/?reach_id=' + REACHID);
+        $("#download-seasonal-btn").attr('href', endpoint + 'SeasonalAverage/?reach_id=' + REACHID);
     }
 }
 function fix_buttons(tab) {

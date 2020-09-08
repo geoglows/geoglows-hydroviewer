@@ -18,15 +18,19 @@
   {% url 'geoglows_hydroviewer:project_overview' as overview %}
 
   {% if request.path == hydroviewer %}
-  <li class="title">Map controls</li>
-  <label class="control-label" for="time-slider">Map Animation</label>
+    <li class="title">Map Controls</li>
+    <label class="control-label" for="time-slider">Map Animation</label>
     <input type="range" min="0" max="40" value="0" class="slider" id="time-slider">
     <li id="current-map-date" style="text-align: center"></li>
     <div style="text-align: center;">
-      <button class="header-button glyphicon-button" id="animationBack1"><span class="glyphicon glyphicon-chevron-left"></span></button>
-      <button class="header-button glyphicon-button" id="animationPlay"><span class="glyphicon glyphicon-play"></span></button>
-      <button class="header-button glyphicon-button" id="animationStop"><span class="glyphicon glyphicon-stop"></span></button>
-      <button class="header-button glyphicon-button" id="animationPlus1"><span class="glyphicon glyphicon-chevron-right"></span></button>
+      <button class="header-button glyphicon-button" id="animationBack1"><span
+              class="glyphicon glyphicon-chevron-left"></span></button>
+      <button class="header-button glyphicon-button" id="animationPlay"><span class="glyphicon glyphicon-play"></span>
+      </button>
+      <button class="header-button glyphicon-button" id="animationStop"><span class="glyphicon glyphicon-stop"></span>
+      </button>
+      <button class="header-button glyphicon-button" id="animationPlus1"><span
+              class="glyphicon glyphicon-chevron-right"></span></button>
     </div>
   
     <li class="separator"></li>

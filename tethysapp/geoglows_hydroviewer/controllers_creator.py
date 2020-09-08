@@ -21,13 +21,15 @@ from .hydroviewer_creator_tools import get_project_directory, shapefiles_downloa
 
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
+WARN_DOWNLOAD_SHAPEFILES = 'GEOGloWS Shapefile data not found. You can continue to work on projects who have created ' \
+                           'shapefiles but will be unable to create shapefiles for new projects. Check the custom ' \
+                           'settings and contact the server admin for help downloading this data.'
+
 
 @login_required()
 def home(request):
     if not shapefiles_downloaded():
-        messages.warning(request, 'GEOGloWS Shapefile data not found. You can continue to work on projects who have '
-                                  'created shapefiles but will be unable to create shapefiles for new projects. Check '
-                                  'the custom settings and contact the server admin for help downloading this data.')
+        messages.warning(request, WARN_DOWNLOAD_SHAPEFILES)
 
     projects_path = os.path.join(App.get_app_workspace().path, 'projects')
     projects = os.listdir(projects_path)
