@@ -90,16 +90,22 @@ class GeoglowsHydroviewer(TethysAppBase):
                    url=f'{self.root_url}/creator/project/edit/retrieve_boundaries',
                    controller=f'{self.package}.controllers_creator.retrieve_hydroviewer_boundaries'),
 
-            # project exporting options
-            UrlMap(name='shapefile_export_zipfile',
-                   url=f'{self.root_url}/creator/project/export/shapefile_export_zipfile',
-                   controller=f'{self.package}.controllers_creator.shapefile_export_zipfile'),
-            UrlMap(name='shapefile_export_geoserver',
-                   url=f'{self.root_url}/creator/project/export/shapefile_export_geoserver',
-                   controller=f'{self.package}.controllers_creator.shapefile_export_geoserver'),
-            UrlMap(name='project_export_html',
-                   url=f'{self.root_url}/creator/project/export/project_export_html',
-                   controller=f'{self.package}.controllers_creator.project_export_html'),
+            # project and shapefile exporting options
+            UrlMap(name='export_zipfile',
+                   url=f'{self.root_url}/creator/project/export/zipfile',
+                   controller=f'{self.package}.controllers_creator_export.export_zipfile'),
+            UrlMap(name='export_geoserver',
+                   url=f'{self.root_url}/creator/project/export/geoserver',
+                   controller=f'{self.package}.controllers_creator_export.export_geoserver'),
+            UrlMap(name='export_hydroshare_page',
+                   url=f'{self.root_url}/creator/project/export/hydroshare',
+                   controller=f'{self.package}.controllers_creator_export.export_hydroshare_page'),
+            UrlMap(name='export_hydroshare',
+                   url=f'{self.root_url}/creator/project/export/hydroshare/submit',
+                   controller=f'{self.package}.controllers_creator_export.export_hydroshare'),
+            UrlMap(name='export_html',
+                   url=f'{self.root_url}/creator/project/export/html',
+                   controller=f'{self.package}.controllers_creator_export.export_html'),
         )
 
     def custom_settings(self):

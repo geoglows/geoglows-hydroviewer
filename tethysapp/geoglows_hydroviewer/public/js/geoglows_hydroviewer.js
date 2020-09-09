@@ -179,7 +179,6 @@ function getStreamflowPlots() {
             $("#avg_flow_tab_link").tab('show');
             $("#daily-avg-chart").html(html['dp']);
             $("#monthly-avg-chart").html(html['mp']);
-            // $("#monthly-avg-chart").html(html['sp']);
             // flow duration tab
             $("#flow_duration_tab_link").tab('show');
             $("#flowduration-chart").html(html['fdp']);

@@ -1,11 +1,7 @@
-if (shapefiles) {
-    $("#process-callback-list").html('<li>Shapefiles already created</li>')
-}
 function processShapefiles() {
     let load_bar = $("#loading-bar-div");
     let progress_list = $("#process-callback-list");
     if (shapefiles) {
-        progress_list.html('<li>Shapefiles already created</li>')
         if (!confirm('Shapefiles have already been created for this project, would you like to delete them then, ' +
             'recreate them for the current project boundaries?')) {
             return

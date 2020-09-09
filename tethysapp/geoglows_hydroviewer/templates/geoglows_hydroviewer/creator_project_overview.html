@@ -3,53 +3,69 @@
 {% load static %}
 
 {% block app_content %}
-  <h1>Project: {{ project_title }}</h1>
-  <div>
-    <div style="float: left; width: 40%">
+  <div style="padding: 12px">
+    <h1>Project: {{ project_title }}</h1>
+    <div style="float: left; width: 40%; overflow-y: scroll">
       <ol>
-        <h3><li>Define Hydroviewer Boundaries</li></h3>
+        <h3>
+          <li>Define Boundaries {% if boundaries %}
+            <span class="glyphicon glyphicon-check" style="color: green"></span>{% endif %}</li>
+        </h3>
         <div class="content">
           <form id="boundaries-form" action="{% url 'geoglows_hydroviewer:draw_boundaries' %}" method="get">
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <div class="btn-group ">
               <button class="btn btn-success" role="button" form="boundaries-form" submit="True">
-                <span class="glyphicon glyphicon-globe"></span> Draw Project Boundaries on a Map</button>
+                <span class="glyphicon glyphicon-globe"></span> Draw Project Boundaries on a Map
+              </button>
             </div>
           </form>
           <form id="esri-layer-form" action="{% url 'geoglows_hydroviewer:choose_boundaries' %}" method="get">
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <div class="btn-group ">
               <button class="btn btn-success" role="button" form="esri-layer-form" submit="True">
-                <span class="glyphicon glyphicon-check"></span> Choose Country or Region Boundaries</button>
+                <span class="glyphicon glyphicon-check"></span> Choose Country or Region Boundaries
+              </button>
             </div>
           </form>
 
           <button class="btn btn-success" role="button" data-toggle="modal" data-target="#shapefile-upload">
-            <span class="glyphicon glyphicon-cloud-upload"></span> Upload a Shapefile (beta)</button>
-          {% if boundaries %}
-            <p>Project Boundaries Already Defined</p>
-          {% endif %}
+            <span class="glyphicon glyphicon-cloud-upload"></span> Upload a Shapefile (beta)
+          </button>
         </div>
 
         {% if boundaries %}
-          <h3><li>Create and Export Shapefiles</li></h3>
+          <h3>
+            <li>Create Shapefiles {% if shapefiles %}
+              <span class="glyphicon glyphicon-check" style="color: green"></span> {% endif %}</li>
+          </h3>
           <button class="btn btn-success" role="button" id="process-shapefiles" onclick="processShapefiles()">
             <span class="glyphicon glyphicon-cog"></span> Create Custom Shapefiles
           </button>
-          <div id="loading-bar-div" style="display: none"><img src="{% static 'geoglows_hydroviewer/images/progress_bar.gif' %}"></div>
-          <p><ul id="process-callback-list"></ul>
+          <p>
+          <ul id="process-callback-list"></ul>
         {% endif %}
 
         {% if shapefiles %}
-          <a href="{% url 'geoglows_hydroviewer:shapefile_export_zipfile' %}?project={{ project }}"
+          <h3>
+            <li>Export Shapefiles {% if exported %}
+              <span class="glyphicon glyphicon-check" style="color: green"></span> {% endif %}</li>
+          </h3>
+          <a href="{% url 'geoglows_hydroviewer:export_zipfile' %}?project={{ project }}"
              role="button" class="btn btn-success" download><span class="glyphicon glyphicon-download"></span>
             Download Zipfiles</a>
           <br>
           <button class="btn btn-success" role="button" data-toggle="modal" data-target="#geoserver-options">
             <span class="glyphicon glyphicon-cloud-upload"></span> Export to a Geoserver
           </button>
+
+          <a href="{% url 'geoglows_hydroviewer:export_hydroshare_page' %}?project={{ project }}"
+             role="button" class="btn btn-success"><span class="glyphicon glyphicon-plus-sign"></span>
+            Create New HydroShare Resource</a>
+          <br>
+
           {% if geoserver %}
-            <p>Data already successfully uploaded to a geoserver
+            <p>Data already successfully uploaded to a geoserver</p>
           {% endif %}
         {% endif %}
 
@@ -57,7 +73,7 @@
           <h3>
             <li>Download Hydroviewer</li>
           </h3>
-          <form id="interface-form" action="{% url 'geoglows_hydroviewer:project_export_html' %}" method="get">
+          <form id="interface-form" action="{% url 'geoglows_hydroviewer:export_html' %}" method="get">
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <div class="btn-group ">
               <button class="btn btn-success" role="button" form="interface-form" submit="True">
@@ -66,6 +82,11 @@
             </div>
           </form>
         {% endif %}
+
+        <div id="loading-bar-div" style="display: none"><img alt="loading gif"
+                                                             src="{% static 'geoglows_hydroviewer/images/progress_bar.gif' %}">
+        </div>
+
       </ol>
     </div>
 
@@ -84,29 +105,34 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
           <h5 class="modal-title" id="help-modal-label">Geoserver Configuration Options</h5>
         </div>
         <div class="modal-body">
-          <form id="geoserver-form" action="{% url 'geoglows_hydroviewer:shapefile_export_geoserver' %}">
+          <form id="geoserver-form" action="{% url 'geoglows_hydroviewer:export_geoserver' %}">
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <label style="width: 40%; float: left" for="gs_url">Geoserver Rest Endpoint
-              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue"
+                   xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                 <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588z"/>
                 <circle cx="8" cy="4.5" r="1"/>
               </svg>
             </label>
-            <input style="width: 60%; float: left" type="text" id="gs_url" name="gs_url" value="https://domain.com/geoserver/rest" style="width: 100%" required>
+            <input style="width: 60%; float: left" type="text" id="gs_url" name="gs_url"
+                   value="https://domain.com/geoserver/rest" style="width: 100%" required>
 
             <label style="width: 40%; float: left" for="gs_username">Username
-              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue"
+                   xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                 <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588z"/>
                 <circle cx="8" cy="4.5" r="1"/>
               </svg>
             </label>
-            <input style="width: 60%; float: left" type="text" id="gs_username" name="gs_username" value="admin" style="width: 100%" required>
+            <input style="width: 60%; float: left" type="text" id="gs_username" name="gs_username" value="admin"
+                   style="width: 100%" required>
 
             <label style="width: 40%; float: left" for="gs_password">Password
               <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">

@@ -59,21 +59,20 @@
         Hydroviewer Creator</a>
     {% endif %}
   {% else %}
-    <!-- <li class="title">Hydroviewer Creation Tools</li> -->
     <li class="separator"></li>
     <a href="{{ hydroviewer }}" class="btn btn-default" role="button" style="width: 100%">Return to Hydroviewer Main
       Page</a>
     <li class="separator"></li>
+    <li class="title">Hydroviewer Creation Tools</li>
     <li class="{% if request.path == creator %}active{% endif %}"><a href="{{ creator }}">Select A Project</a></li>
     {% if request.path == overview %}
       <li class="active"><a href="{{ overview }}">Hydroviewer Project Overview</a></li>
       <li class="separator"></li>
       <li><strong>Steps to create a hydroviewer</strong></li>
       <li>1. Define Project Boundaries</li>
-      <li>2. Create and Export Shapefiles</li>
-      <li>3. Export Hydroviewer</li>
-    {% else %}
-      <li class=""><a href="{{ overview }}">Edit Hydroviewer</a></li>
+      <li>2. Create Shapefiles</li>
+      <li>3. Export Shapefiles to Service</li>
+      <li>4. Download Hydroviewer</li>
     {% endif %}
   {% endif %}
 
