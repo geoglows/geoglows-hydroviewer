@@ -58,33 +58,28 @@
           <button class="btn btn-success" role="button" data-toggle="modal" data-target="#geoserver-options">
             <span class="glyphicon glyphicon-cloud-upload"></span> Export to a Geoserver
           </button>
-
-          <a href="{% url 'geoglows_hydroviewer:export_hydroshare_page' %}?project={{ project }}"
-             role="button" class="btn btn-success"><span class="glyphicon glyphicon-plus-sign"></span>
-            Create New HydroShare Resource</a>
           <br>
-
-          {% if geoserver %}
-            <p>Data already successfully uploaded to a geoserver</p>
-          {% endif %}
+          <button class="btn btn-success" role="button" data-toggle="modal" data-target="#hydroshare-export">
+            <span class="glyphicon glyphicon-plus-sign"></span> Export to HydroShare
+          </button>
         {% endif %}
 
-        {% if geoserver %}
+        {% if exported %}
           <h3>
             <li>Download Hydroviewer</li>
           </h3>
-          <form id="interface-form" action="{% url 'geoglows_hydroviewer:export_html' %}" method="get">
+          <form id="render_existing_form" action="{% url 'geoglows_hydroviewer:render_hydroviewer' %}" method="get">
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <div class="btn-group ">
-              <button class="btn btn-success" role="button" form="interface-form" submit="True">
-                <span class="glyphicon glyphicon-download"></span> Download HTML Hydroviewer
+              <button class="btn btn-block btn-success" role="button" form="render_existing_form" submit="True">
+                <span class="glyphicon glyphicon-circle-arrow-down"></span> Export Hydroviewer
               </button>
             </div>
           </form>
         {% endif %}
 
-        <div id="loading-bar-div" style="display: none"><img alt="loading gif"
-                                                             src="{% static 'geoglows_hydroviewer/images/progress_bar.gif' %}">
+        <div id="loading-bar-div" style="display: none">
+          <img alt="loading gif" src="{% static 'geoglows_hydroviewer/images/progress_bar.gif' %}">
         </div>
 
       </ol>
@@ -135,44 +130,53 @@
                    style="width: 100%" required>
 
             <label style="width: 40%; float: left" for="gs_password">Password
-              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue"
+                   xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                 <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588z"/>
                 <circle cx="8" cy="4.5" r="1"/>
               </svg>
             </label>
-            <input style="width: 60%; float: left" type="password" id="gs_password" name="gs_password" value="geoserver" style="width: 100%" required>
+            <input style="width: 60%; float: left" type="password" id="gs_password" name="gs_password" value="geoserver"
+                   style="width: 100%" required>
 
             <label style="width: 40%; float: left" for="workspace">Geoserver Workspace
-              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue"
+                   xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                 <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588z"/>
                 <circle cx="8" cy="4.5" r="1"/>
               </svg>
             </label>
-            <input style="width: 60%; float: left" type="text" id="workspace" name="workspace" style="width: 100%" required>
+            <input style="width: 60%; float: left" type="text" id="workspace" name="workspace" style="width: 100%"
+                   required>
 
             <label style="width: 40%; float: left" for="dl_name">Drainage Line Layer Name
-              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue"
+                   xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                 <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588z"/>
                 <circle cx="8" cy="4.5" r="1"/>
               </svg>
             </label>
-            <input style="width: 60%; float: left" type="text" id="dl_name" name="dl_name" value="{{ project }} drainagelines" style="width: 100%" required>
+            <input style="width: 60%; float: left" type="text" id="dl_name" name="dl_name"
+                   value="{{ project }} drainagelines" style="width: 100%" required>
 
             <label style="width: 40%; float: left" for="ct_name">Catchment Layer Name
-              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue" xmlns="http://www.w3.org/2000/svg">
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue"
+                   xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                 <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588z"/>
                 <circle cx="8" cy="4.5" r="1"/>
               </svg>
             </label>
-            <input style="width: 60%; float: left" type="text" id="ct_name" name="ct_name" value="{{ project }} catchments" style="width: 100%" required>
+            <input style="width: 60%; float: left" type="text" id="ct_name" name="ct_name"
+                   value="{{ project }} catchments" style="width: 100%" required>
 
             <input type="submit" value="Submit">
           </form>
-          <div id="geoserver-upload-loading" style="text-align: center; display: none"><img src="{% static 'geoglows_hydroviewer/images/progress_bar.gif' %}"></div>
+          <div id="geoserver-upload-loading" style="text-align: center; display: none"><img
+                  src="{% static 'geoglows_hydroviewer/images/progress_bar.gif' %}"></div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
@@ -184,16 +188,66 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
           <h5 class="modal-title" id="help-modal-label">Define Boundaries via Shapefile</h5>
         </div>
         <div class="modal-body">
-          <form id="shapefile-form" action="{% url 'geoglows_hydroviewer:upload_boundaries' %}" method="post" enctype="multipart/form-data">
+          <form id="shapefile-form" action="{% url 'geoglows_hydroviewer:upload_boundaries' %}" method="post"
+                enctype="multipart/form-data">
             {% csrf_token %}
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <input class="form-group" type="file" name="files" accept="*.shp,*.shx,*.dbf,*.prj" multiple>
             <br>
             <input type="submit">
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="hydroshare-export" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">x</span>
+          </button>
+          <h5 class="modal-title" id="help-modal-label">Export Shapefiles to Hydroshare</h5>
+        </div>
+        <div class="modal-body">
+          <form id="hydroshare-form" action="{% url 'geoglows_hydroviewer:export_hydroshare' %}" method="post">
+            {% csrf_token %}
+            <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+            <h3>1. Log in to Hydroshare</h3>
+            {% if is_authenticated %}
+              <li><h4>You are already logged in to Hydroshare via your Tethys Portal Log in</h4></li>
+            {% else %}
+              <p>You are not logged in to Tethys using Hydroshare Credentials. If enabled on this portal, it is strongly
+                recommended that you log out then log in again using the Hydroshare Oauth log in option. If it is not
+                available, you may provide your hydroshare log in here. Only use this option if this tethys portal has
+                enabled SSL (e.g. the url shows https instead of http) AND you trust the portal administrators.</p>
+              <input class="form-group input" type="text" name="username" placeholder="Username" required>
+              <input class="form-group input" type="password" name="password" placeholder="Password" required>
+            {% endif %}
+            <h3>2. Provide Metadata For The New Resource</h3>
+            <p>Provide information describing these shapefiles which will get passed to HydroShare. This is the minimum
+              information required to upload a resource and make it public. Add more information by visiting the page
+              for this resource on HydroShare after completing the upload. Sample Values are provided for you.</p>
+            <label for="title-input" class="control-label">Name/Title</label>
+            <input id="title-input" class="form-control input" type="text" name="title"
+                   value="GEOGloWS ECMWF Streamflow Delineation Subset - {{ project }}">
+            <label for="keywords-input" class="control-label">Keywords</label>
+            <input id="keywords-input" class="form-control input" type="text" name="keywords"
+                   value="geoglows, ecmwf, hydrography, etc">
+            <label for="abstract-input" class="control-label">Abstract</label>
+            <input id="abstract-input" class="form-control input" type="text" name="abstract"
+                   value="DEM delineated catchments and drainage line shapefiles subset from the GEOGloWS ECMWF Streamflow Model">
+            <hr>
+            <button class="btn btn-success" role="button" form="hydroshare-form" submit="True">
+              <span class="glyphicon glyphicon-plus-sign"></span> Create New HydroShare Resource
+            </button>
           </form>
         </div>
         <div class="modal-footer">
@@ -210,7 +264,7 @@
       const project = "{{ project }}";
       const boundaries = {{ boundariesJS }};
       const shapefiles = {{ shapefilesJS }};
-      const geoserver = {{ geoserverJS }};
+      const exported = {{ exportedJS }};
 
       const geoserver_wms = "{{ geoserver_url }}"
       const workspace = "{{ workspace }}"
@@ -222,7 +276,9 @@
       const URLclip = "{% url 'geoglows_hydroviewer:geoprocess_clip' %}";
   </script>
   <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/jquery-form/form@4.3.0/dist/jquery.form.min.js" integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/gh/jquery-form/form@4.3.0/dist/jquery.form.min.js"
+          integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn"
+          crossorigin="anonymous"></script>
   <script src="{% static 'geoglows_hydroviewer/js/ajax_cookie_stuff.js' %}" type="text/javascript"></script>
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
   <script src="https://unpkg.com/esri-leaflet@2.4.1/dist/esri-leaflet.js"

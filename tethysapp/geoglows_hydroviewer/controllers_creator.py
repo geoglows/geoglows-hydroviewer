@@ -17,6 +17,9 @@ from .hydroviewer_creator_tools import get_project_directory, shapefiles_downloa
 
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
+EXPORT_CONFIGS_DICT = {'url': '', 'workspace': '', 'dl': '', 'ctch': '', 'resource_id': '', 'exported': False,
+                       'export_destination': '', 'exported_by_app': False}
+
 WARN_DOWNLOAD_SHAPEFILES = 'GEOGloWS Shapefile data not found. You can continue to work on projects who have created ' \
                            'shapefiles but will be unable to create shapefiles for new projects. Check the custom ' \
                            'settings and contact the server admin for help downloading this data.'
@@ -29,36 +32,21 @@ def home(request):
 
     projects_path = os.path.join(App.get_app_workspace().path, 'projects')
     projects = os.listdir(projects_path)
-
-    projects = [prj for prj in projects if os.path.isdir(os.path.join(projects_path, prj))]
-    finished_prjs = [prj for prj in projects if os.path.exists(os.path.join(projects_path, prj, 'hydroviewer.html'))]
-
-    projects = [(prj.replace('_', ' '), prj) for prj in projects]
-    finished_prjs = [(prj.replace('_', ' '), prj) for prj in finished_prjs]
+    projects = [(prj.replace('_', ' '), prj) for prj in projects if os.path.isdir(os.path.join(projects_path, prj))]
 
     if len(projects) > 0:
         show_projects = True
     else:
         show_projects = False
-    if len(finished_prjs) > 0:
-        show_finished_projects = True
-    else:
-        show_finished_projects = False
 
     projects = SelectInput(display_text='Existing Hydroviewer Projects',
                            name='project',
                            multiple=False,
                            options=projects)
-    downloadable_projects = SelectInput(display_text='Download Finished Hydroviewer',
-                                        name='downloadable_projects',
-                                        multiple=False,
-                                        options=finished_prjs)
 
     context = {
         'projects': projects,
-        'downloadable_projects': downloadable_projects,
         'show_projects': show_projects,
-        'show_finished_projects': show_finished_projects,
     }
 
     return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer_creator.html', context)
@@ -71,9 +59,13 @@ def add_new_project(request):
         messages.error(request, 'Please provide a name for the new project')
         return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
     project = str(project).replace(' ', '_')
-    new_proj_dir = os.path.join(App.get_app_workspace().path, 'projects', project)
+    new_proj_dir = get_project_directory(project)
     try:
+        # make a new folder
         os.mkdir(new_proj_dir)
+        # make the configs json
+        with open(os.path.join(new_proj_dir, 'export_configs.json'), 'w') as ec:
+            ec.write(json.dumps(EXPORT_CONFIGS_DICT))
         messages.success(request, 'Project Successfully Created')
         return redirect(
             reverse('geoglows_hydroviewer:project_overview') + f'?{urllib.parse.urlencode(dict(project=project))}')
@@ -104,27 +96,17 @@ def project_overview(request):
         return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
     proj_dir = get_project_directory(project)
 
-    # check to see what data has been created (i.e. which of the steps have been completed)
     boundaries_created = os.path.exists(os.path.join(proj_dir, 'boundaries.json'))
 
-    shapefiles_created = bool(
-        os.path.exists(os.path.join(proj_dir, 'selected_catchment')) and
-        os.path.exists(os.path.join(proj_dir, 'selected_drainageline'))
-    )
+    shapefiles_created = bool(os.path.exists(os.path.join(proj_dir, 'selected_catchment')) and
+                              os.path.exists(os.path.join(proj_dir, 'selected_drainageline')))
 
-    geoserver_configs = os.path.exists(os.path.join(proj_dir, 'geoserver_config.json'))
-    if geoserver_configs:
-        with open(os.path.join(proj_dir, 'geoserver_config.json')) as a:
-            configs = json.loads(a.read())
-        geoserver_url = configs['url']
-        workspace = configs['workspace']
-        drainagelines_layer = configs['dl_layer']
-        catchment_layer = configs['ctch_layer']
-    else:
-        geoserver_url = ''
-        workspace = ''
-        drainagelines_layer = ''
-        catchment_layer = ''
+    with open(os.path.join(proj_dir, 'export_configs.json')) as a:
+        configs = json.loads(a.read())
+    geoserver_url = configs['url']
+    workspace = configs['workspace']
+    drainagelines_layer = configs['dl']
+    catchment_layer = configs['ctch']
 
     context = {
         'project': project,
@@ -136,8 +118,9 @@ def project_overview(request):
         'shapefiles': shapefiles_created,
         'shapefilesJS': json.dumps(shapefiles_created),
 
-        'geoserver': geoserver_configs,
-        'geoserverJS': json.dumps(geoserver_configs),
+        'exported': configs['exported'],
+        'exportedJS': json.dumps(configs['exported']),
+
         'geoserver_url': geoserver_url,
         'workspace': workspace,
         'drainagelines_layer': drainagelines_layer,
@@ -145,6 +128,37 @@ def project_overview(request):
     }
 
     return render(request, 'geoglows_hydroviewer/creator_project_overview.html', context)
+
+
+@login_required()
+def render_hydroviewer(request):
+    project = request.GET.get('project', False)
+    project_title = False
+    url = ''
+    workspace = ''
+    dl = ''
+    ctch = ''
+
+    if project:
+        project_title = project.replace('_', ' ')
+
+        with open(os.path.join(get_project_directory(project), 'export_configs.json')) as ec:
+            configs = json.loads(ec.read())
+            url = configs['url']
+            workspace = configs['workspace']
+            dl = configs['dl']
+            ctch = configs['ctch']
+
+    context = {
+        'project': project,
+        'project_title': project_title,
+        'url': url,
+        'workspace': workspace,
+        'dl': dl,
+        'ctch': ctch,
+    }
+
+    return render(request, 'geoglows_hydroviewer/creator_render_hydroviewer.html', context)
 
 
 @login_required()

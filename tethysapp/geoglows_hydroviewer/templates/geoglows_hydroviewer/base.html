@@ -16,6 +16,7 @@
   {% url 'geoglows_hydroviewer:home' as hydroviewer %}
   {% url 'geoglows_hydroviewer:geoglows_hydroviewer_creator' as creator %}
   {% url 'geoglows_hydroviewer:project_overview' as overview %}
+  {% url 'geoglows_hydroviewer:render_hydroviewer' as render %}
 
   {% if request.path == hydroviewer %}
     <li class="title">Map Controls</li>
@@ -64,16 +65,10 @@
       Page</a>
     <li class="separator"></li>
     <li class="title">Hydroviewer Creation Tools</li>
-    <li class="{% if request.path == creator %}active{% endif %}"><a href="{{ creator }}">Select A Project</a></li>
-    {% if request.path == overview %}
-      <li class="active"><a href="{{ overview }}">Hydroviewer Project Overview</a></li>
-      <li class="separator"></li>
-      <li><strong>Steps to create a hydroviewer</strong></li>
-      <li>1. Define Project Boundaries</li>
-      <li>2. Create Shapefiles</li>
-      <li>3. Export Shapefiles to Service</li>
-      <li>4. Download Hydroviewer</li>
-    {% endif %}
+    <li class="{% if request.path == creator %}active{% endif %}"><a href="{{ creator }}">Project Selection</a></li>
+    <li class="separator"></li>
+    <li class="{% if request.path == overview %}active{% endif %}"><a>Project Overview</a></li>
+    <li class="{% if request.path == render %}active{% endif %}"><a href="{{ render }}">Render Hydroviewer</a></li>
   {% endif %}
 
 

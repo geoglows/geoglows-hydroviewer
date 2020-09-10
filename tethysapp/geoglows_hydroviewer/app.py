@@ -57,6 +57,10 @@ class GeoglowsHydroviewer(TethysAppBase):
             UrlMap(name='project_overview',
                    url=f'{self.root_url}/creator/project',
                    controller=f'{self.package}.controllers_creator.project_overview'),
+            UrlMap(name='render_hydroviewer',
+                   url=f'{self.root_url}/creator/render',
+                   controller=f'{self.package}.controllers_creator.render_hydroviewer'),
+
             # creator pages and urls for adding/deleting projects
             UrlMap(name='add_new_project',
                    url=f'{self.root_url}/creator/add-new-project',
@@ -97,11 +101,8 @@ class GeoglowsHydroviewer(TethysAppBase):
             UrlMap(name='export_geoserver',
                    url=f'{self.root_url}/creator/project/export/geoserver',
                    controller=f'{self.package}.controllers_creator_export.export_geoserver'),
-            UrlMap(name='export_hydroshare_page',
-                   url=f'{self.root_url}/creator/project/export/hydroshare',
-                   controller=f'{self.package}.controllers_creator_export.export_hydroshare_page'),
             UrlMap(name='export_hydroshare',
-                   url=f'{self.root_url}/creator/project/export/hydroshare/submit',
+                   url=f'{self.root_url}/creator/project/export/hydroshare',
                    controller=f'{self.package}.controllers_creator_export.export_hydroshare'),
             UrlMap(name='export_html',
                    url=f'{self.root_url}/creator/project/export/html',

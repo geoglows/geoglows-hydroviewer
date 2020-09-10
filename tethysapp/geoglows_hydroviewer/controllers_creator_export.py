@@ -2,6 +2,7 @@ import json
 import os
 import urllib.parse
 
+import geoglows
 import geoserver.util
 import hs_restclient
 import jinja2
@@ -55,15 +56,14 @@ def export_geoserver(request):
             print('failed to upload drainagelines')
             print(e)
 
-        # geoserver_configs keys to be added to geoserver_configs dictionary
-        geoserver_configs = {
-            'url': url.replace('/rest/', '/wms'),
-            'workspace': workspace_name,
-            'dl_layer': dl_name,
-            'ctch_layer': ct_name,
-        }
-
-        with open(os.path.join(proj_dir, 'geoserver_config.json'), 'w') as configfile:
+        # add keys to the export_configs.json
+        with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
+            geoserver_configs = json.loads(configfile.read())
+            geoserver_configs['url'] = url.replace('/rest/', '/wms')
+            geoserver_configs['workspace'] = workspace_name
+            geoserver_configs['dl'] = dl_name
+            geoserver_configs['ctch'] = ct_name
+        with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
             configfile.write(json.dumps(geoserver_configs))
     except Exception as e:
         print(e)
@@ -81,20 +81,15 @@ def export_zipfile(request):
     zip_path = os.path.join(proj_dir, 'hydroviewer_shapefiles.zip')
 
     # if there is already a zip file, serve it for download
-    if os.path.exists(zip_path):
-        zip_file = open(zip_path, 'rb')
-        response = HttpResponse(zip_file, content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename="hydroviewer_shapefiles.zip"'
-        return response
-
-    try:
-        zip_project_shapefiles(project)
-        zip_file = open(zip_path, 'rb')
-        response = HttpResponse(zip_file.read(), content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename="hydroviewer_shapefiles.zip"'
-        return response
-    except Exception as e:
-        raise e
+    if not os.path.exists(zip_path):
+        try:
+            zip_project_shapefiles(project)
+        except Exception as e:
+            raise e
+    zip_file = open(zip_path, 'rb')
+    response = HttpResponse(zip_file, content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename="hydroviewer_shapefiles.zip"'
+    return response
 
 
 # todo use `from django.conf import settings` to check if this tethys portal has enabled hydroshare log ins
@@ -144,10 +139,18 @@ def export_hydroshare(request):
 
         hs.setAccessRules(resource_id, public=True)
         messages.success(request, f'Successfully Exported To New Hydroshare Resource (ID: {resource_id})')
-        with open(os.path.join(proj_dir, 'export_hydroshare_details.json'), 'w') as configfile:
-            configfile.write(json.dumps({'resource_id': resource_id, 'exported_by_app': True}))
-        return redirect(
-            reverse('geoglows_hydroviewer:project_overview') + f'?{urllib.parse.urlencode(dict(project=project))}')
+
+        # add keys to the export_configs.json
+        with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
+            geoserver_configs = json.loads(configfile.read())
+            geoserver_configs['url'] = 'https://geoserver.hydroshare.org/geoserver/wms'
+            geoserver_configs['workspace'] = f'HS-{resource_id}'
+            geoserver_configs['dl'] = 'selected_drainageline drainageline_select'
+            geoserver_configs['ctch'] = 'selected_catchment catchment_select'
+        with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
+            configfile.write(json.dumps(geoserver_configs))
+            return redirect(reverse('geoglows_hydroviewer:project_overview') +
+                            f'?{urllib.parse.urlencode(dict(project=project))}')
     except hs_restclient.HydroShareArgumentException as e:
         print('invalid parameter')
         print(e)
@@ -164,31 +167,28 @@ def export_hydroshare(request):
 
 @login_required()
 def export_html(request):
-    project = request.GET.get('project', False)
-    if not project:
-        return JsonResponse({'error': 'unable to find the project'})
-    proj_dir = get_project_directory(project)
-    html_path = os.path.join(proj_dir, 'hydroviewer.html')
+    template_path = os.path.join(App.get_app_workspace().path, 'hydroviewer_interactive_template.html')
 
-    with open(os.path.join(proj_dir, 'geoserver_config.json')) as configfile:
-        geoserver_configs = json.loads(configfile.read())
-    with open(os.path.join(proj_dir, 'boundaries.json')) as bndsgj:
-        boundaries_json = json.loads(bndsgj.read())
-    with open(os.path.join(App.get_app_workspace().path, 'hydroviewer_interactive.html'), 'r') as template:
+    title = request.GET.get('title')
+    html_path = os.path.join(App.get_app_workspace().path, f'{title}.html')
+
+    with open(template_path) as template:
         with open(html_path, 'w') as hydrohtml:
             hydrohtml.write(
                 jinja2.Template(template.read()).render(
-                    title=project.replace('_', ' '),
-                    api_endpoint='https://tethys2.byu.edu/localsptapi/api/',
-                    geoserver_wms_url=geoserver_configs['url'],
-                    workspace=geoserver_configs['workspace'],
-                    catchment_layer=geoserver_configs['ctch_layer'],
-                    drainage_layer=geoserver_configs['dl_layer'],
-                    boundaries_json=json.dumps(boundaries_json),
+                    title=title,
+                    api_endpoint=geoglows.streamflow.ENDPOINT,
+                    geoserver_wms_url=request.GET.get('url'),
+                    workspace=request.GET.get('workspace'),
+                    catchment_layer=request.GET.get('ctch'),
+                    drainage_layer=request.GET.get('dl'),
+                    boundaries_json=request.GET.get('bounds', ''),
                 )
             )
 
     with open(html_path, 'r') as htmlfile:
         response = HttpResponse(htmlfile, content_type='text/html')
-        response['Content-Disposition'] = f'attachment; filename="{project}_hydroviewer.html"'
-        return response
+        response['Content-Disposition'] = f'attachment; filename="{title}_hydroviewer.html"'
+
+    os.remove(html_path)
+    return response

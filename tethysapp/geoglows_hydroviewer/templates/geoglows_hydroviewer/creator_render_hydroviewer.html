@@ -1,0 +1,60 @@
+{% extends "geoglows_hydroviewer/base.html" %}
+{% load tethys_gizmos %}
+{% load static %}
+
+{% block app_content %}
+  <div style="padding: 12px; overflow-y: scroll">
+    {% if project %}
+      <h1>Project: {{ project_title }}</h1>
+    {% else %}
+      <h1>Render Existing Sources as Hydroviewer</h1>
+    {% endif %}
+    <form id="render-configs-form" action="{% url 'geoglows_hydroviewer:export_html' %}" method="post">
+      {% csrf_token %}
+      <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+
+      <label for="wms-endpoint-input" class="control-label">Geoserver WMS Endpoint</label>
+      <input id="title-input" class="form-control input" type="text" name="url"
+             placeholder="geoserver.host.com/geoserver/wms" value="{{ url }}">
+      <label for="workspace-input" class="control-label">Workspace</label>
+      <input id="workspace-input" class="form-control input" type="text" name="workspace"
+             placeholder="workspace" value="{{ workspace }}">
+      <label for="dl-input" class="control-label">Drainage Line Layer Name</label>
+      <input id="dl-input" class="form-control input" type="text" name="dl"
+             placeholder="selected_drainagelines" value="{{ dl }}">
+      <label for="ctch-input" class="control-label">Drainage Line Layer Name</label>
+      <input id="ctch-input" class="form-control input" type="text" name="ctch"
+             placeholder="selected_catchments" value="{{ ctch }}">
+      <hr>
+      <button class="btn btn-success" role="button" form="render-configs-form" submit="True">
+        <span class="glyphicon glyphicon-circle-arrow-down"></span> Render Hydroviewer HTML
+      </button>
+    </form>
+  </div>
+{% endblock %}
+
+{% block app_actions %}
+  <form id="overview-form" action="{% url 'geoglows_hydroviewer:project_overview' %}" method="get">
+    <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+    <div class="btn-group ">
+      <button class="btn btn-success" role="button" form="overview-form" submit="True">
+        <span class="glyphicon glyphicon-home"></span> Return to Overview Without Uploading
+      </button>
+    </div>
+  </form>
+{% endblock %}
+
+{% block content_dependent_styles %}
+  {{ block.super }}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css">
+  <link href="{% static 'geoglows_hydroviewer/css/main.css' %}" rel="stylesheet"/>
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script>
+      let URL_saveboundaries = "{% url 'geoglows_hydroviewer:save_boundaries' %}";
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+  <script src="{% static 'geoglows_hydroviewer/js/ajax_cookie_stuff.js' %}" type="text/javascript"></script>
+{% endblock %}
