@@ -5,29 +5,40 @@
 {% block app_content %}
   <div style="padding: 12px; overflow-y: scroll">
     {% if project %}
-      <h1>Project: {{ project_title }}</h1>
+      <h1>Render Hydroviewer Project: {{ project_title }}</h1>
     {% else %}
       <h1>Render Existing Sources as Hydroviewer</h1>
     {% endif %}
+
+    <hr>
+    <form id="fill-values-form" action="{% url 'geoglows_hydroviewer:render_hydroviewer' %}" method="post">
+      {% csrf_token %}
+      {% gizmo select_input projects %}
+      <button class="btn btn-success" role="button" form="fill-values-form" submit="True">
+        <span class="glyphicon glyphicon-circle-arrow-down"></span> Get Hydroviewer Values
+      </button>
+    </form>
+    <hr>
+
     <form id="render-configs-form" action="{% url 'geoglows_hydroviewer:export_html' %}" method="post">
       {% csrf_token %}
       <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
 
       <label for="wms-endpoint-input" class="control-label">Geoserver WMS Endpoint</label>
       <input id="title-input" class="form-control input" type="text" name="url"
-             placeholder="geoserver.host.com/geoserver/wms" value="{{ url }}">
+             placeholder="https://geoserver.host.com/geoserver/wms" value="{{ url }}" required>
       <label for="workspace-input" class="control-label">Workspace</label>
       <input id="workspace-input" class="form-control input" type="text" name="workspace"
-             placeholder="workspace" value="{{ workspace }}">
+             placeholder="workspace" value="{{ workspace }}" required>
       <label for="dl-input" class="control-label">Drainage Line Layer Name</label>
       <input id="dl-input" class="form-control input" type="text" name="dl"
-             placeholder="selected_drainagelines" value="{{ dl }}">
-      <label for="ctch-input" class="control-label">Drainage Line Layer Name</label>
+             placeholder="selected_drainagelines" value="{{ dl }}" required>
+      <label for="ctch-input" class="control-label">Catchments Layer Name</label>
       <input id="ctch-input" class="form-control input" type="text" name="ctch"
-             placeholder="selected_catchments" value="{{ ctch }}">
+             placeholder="selected_catchments" value="{{ ctch }}" required>
       <hr>
       <button class="btn btn-success" role="button" form="render-configs-form" submit="True">
-        <span class="glyphicon glyphicon-circle-arrow-down"></span> Render Hydroviewer HTML
+        <span class="glyphicon glyphicon-save"></span> Download Rendered Hydroviewer HTML
       </button>
     </form>
   </div>

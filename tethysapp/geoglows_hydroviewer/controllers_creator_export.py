@@ -57,7 +57,7 @@ def export_geoserver(request):
             print(e)
 
         # add keys to the export_configs.json
-        with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
+        with open(os.path.join(proj_dir, 'export_configs.json'), 'r') as configfile:
             geoserver_configs = json.loads(configfile.read())
             geoserver_configs['url'] = url.replace('/rest/', '/wms')
             geoserver_configs['workspace'] = workspace_name
@@ -92,7 +92,6 @@ def export_zipfile(request):
     return response
 
 
-# todo use `from django.conf import settings` to check if this tethys portal has enabled hydroshare log ins
 @login_required()
 def export_hydroshare_page(request):
     project = request.GET.get('project', False)

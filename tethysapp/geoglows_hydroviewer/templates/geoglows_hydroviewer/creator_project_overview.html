@@ -37,7 +37,7 @@
         {% if boundaries %}
           <h3>
             <li>Create Shapefiles {% if shapefiles %}
-              <span class="glyphicon glyphicon-check" style="color: green"></span> {% endif %}</li>
+              <span class="glyphicon glyphicon-check" style="color: green"></span>{% endif %}</li>
           </h3>
           <button class="btn btn-success" role="button" id="process-shapefiles" onclick="processShapefiles()">
             <span class="glyphicon glyphicon-cog"></span> Create Custom Shapefiles
@@ -49,7 +49,7 @@
         {% if shapefiles %}
           <h3>
             <li>Export Shapefiles {% if exported %}
-              <span class="glyphicon glyphicon-check" style="color: green"></span> {% endif %}</li>
+              <span class="glyphicon glyphicon-check" style="color: green"></span>{% endif %}</li>
           </h3>
           <a href="{% url 'geoglows_hydroviewer:export_zipfile' %}?project={{ project }}"
              role="button" class="btn btn-success" download><span class="glyphicon glyphicon-download"></span>
@@ -68,7 +68,8 @@
           <h3>
             <li>Download Hydroviewer</li>
           </h3>
-          <form id="render_existing_form" action="{% url 'geoglows_hydroviewer:render_hydroviewer' %}" method="get">
+          <form id="render_existing_form" action="{% url 'geoglows_hydroviewer:render_hydroviewer' %}" method="post">
+            {% csrf_token %}
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <div class="btn-group ">
               <button class="btn btn-block btn-success" role="button" form="render_existing_form" submit="True">

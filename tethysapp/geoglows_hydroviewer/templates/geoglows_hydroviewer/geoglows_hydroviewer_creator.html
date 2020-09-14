@@ -5,11 +5,11 @@
 {% endblock %}
 
 {% block app_content %}
-  <h3>Use Existing Shapefiles and WMS Provider</h3>
+  <h3>Render Hydroviewer With Existing Data and Services</h3>
   <form id="render_existing_form" action="{% url 'geoglows_hydroviewer:render_hydroviewer' %}" method="get">
     <div class="btn-group ">
-      <button class="btn btn-block btn-success" role="button" form="render_existing_form" submit="True">
-        <span class="glyphicon glyphicon-plus"></span> Generate Hydroviewer With Existing Data Sources
+      <button class="btn btn-block btn-primary" role="button" form="render_existing_form" submit="True">
+        <span class="glyphicon glyphicon-plus"></span> Render Hydroviewer
       </button>
     </div>
   </form>
@@ -24,7 +24,7 @@
     </div>
   </form>
   {% if show_projects %}
-    <h3>Edit An Existing Hydroviewer Projects</h3>
+    <h3>Edit An Existing Hydroviewer Project</h3>
     <form id="select_existing_form" action="{% url 'geoglows_hydroviewer:project_overview' %}" method="get">
       {% gizmo select_input projects %}
       <div class="btn-group ">

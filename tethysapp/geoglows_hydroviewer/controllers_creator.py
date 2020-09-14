@@ -132,25 +132,35 @@ def project_overview(request):
 
 @login_required()
 def render_hydroviewer(request):
-    project = request.GET.get('project', False)
+    project = request.POST.get('project', False)
     project_title = False
     url = ''
     workspace = ''
     dl = ''
     ctch = ''
 
-    if project:
-        project_title = project.replace('_', ' ')
+    projects_path = os.path.join(App.get_app_workspace().path, 'projects')
+    projects = os.listdir(projects_path)
+    projects = [(prj.replace('_', ' '), prj) for prj in projects if os.path.isdir(os.path.join(projects_path, prj))]
+    projects = SelectInput(display_text='Get values from a Hydroviewer project',
+                           name='project',
+                           multiple=False,
+                           options=projects)
 
-        with open(os.path.join(get_project_directory(project), 'export_configs.json')) as ec:
-            configs = json.loads(ec.read())
-            url = configs['url']
-            workspace = configs['workspace']
-            dl = configs['dl']
-            ctch = configs['ctch']
+    if project:
+        exports_config_file_path = os.path.join(get_project_directory(project), 'export_configs.json')
+        if os.path.exists(exports_config_file_path):
+            project_title = project.replace('_', ' ')
+            with open(exports_config_file_path, 'r') as ec:
+                configs = json.loads(ec.read())
+                url = configs['url']
+                workspace = configs['workspace']
+                dl = configs['dl']
+                ctch = configs['ctch']
 
     context = {
         'project': project,
+        'projects': projects,
         'project_title': project_title,
         'url': url,
         'workspace': workspace,
