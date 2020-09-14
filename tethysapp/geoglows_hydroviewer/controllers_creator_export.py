@@ -8,7 +8,7 @@ import hs_restclient
 import jinja2
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render, redirect, reverse
+from django.shortcuts import redirect, reverse
 from geoserver.catalog import Catalog
 from tethys_sdk.permissions import login_required
 
@@ -90,20 +90,6 @@ def export_zipfile(request):
     response = HttpResponse(zip_file, content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename="hydroviewer_shapefiles.zip"'
     return response
-
-
-@login_required()
-def export_hydroshare_page(request):
-    project = request.GET.get('project', False)
-    if not project:
-        messages.error(request, 'Project not found. Please pick a valid project.')
-        return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
-
-    context = {
-        'project': project,
-        'project_title': project.replace('_', ' '),
-    }
-    return render(request, 'geoglows_hydroviewer/creator_export_hydroshare.html', context)
 
 
 @login_required()
