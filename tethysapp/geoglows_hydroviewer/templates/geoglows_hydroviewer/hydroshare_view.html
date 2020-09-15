@@ -24,8 +24,8 @@
 {% endblock %}
 
 {% block app_actions %}
-  {% url 'geoglows_hydroviewer:hydroshare_view' as hydroshare %}
-  <a href="{{ hydroshare }}" class="btn btn-default" role="button">Switch to Hydroshare layers</a>
+  {% url 'geoglows_hydroviewer:home' as hydroviewer %}
+  <a href="{{ hydroviewer }}" class="btn btn-default" role="button">Switch to default layers</a>
 {% endblock %}
 
 {% block after_app_content %}
@@ -259,5 +259,6 @@
   <script src="https://unpkg.com/esri-leaflet@2.2.3/dist/esri-leaflet.js"></script>
   {# Plotly #}
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script type="text/javascript" src="{% static 'geoglows_hydroviewer/js/geoglows_hydroviewer.js' %}"></script>
+  <script type="text/javascript" src="{% static 'geoglows_hydroviewer/js/hydroshare.js' %}"></script>
+  <script type="text/javascript" src="{% static 'geoglows_hydroviewer/js/geoglowshydroviewerutilities.js' %}"></script>
 {% endblock %}
