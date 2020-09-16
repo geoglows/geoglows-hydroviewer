@@ -69,6 +69,20 @@ function getWatershedComponent(layername) {
         opacity: .5,
     })
 }
+
+function getDrainageLine(layername) {
+    let region = layername.replace('-drainageline','');
+    return L.tileLayer.wms('https://geoserver.hydroshare.org/geoserver/wms', {
+        version: '1.1.0',
+        layers: 'HS-' + watersheds_hydroshare_ids[region] + ':' + layername + ' ' + layername,
+        useCache: true,
+        crossOrigin: false,
+        format: 'image/png',
+        transparent: true,
+        opacity: 1,
+    })
+}
+// ADD PART AFTER THIS IN THE FUNCTION PAGE
 let listlayers = [];
 let ctrllayers = {};
 let boundary_layer;
@@ -81,6 +95,38 @@ let bc_threshold = 6;
 let cd_threshold = 8;
 mapObj.on("mousemove", function (event) {
     $("#mouse-position").html('Lat: ' + event.latlng.lat.toFixed(5) + ', Lon: ' + event.latlng.lng.toFixed(5));
+});
+mapObj.on("click", function (event) {
+    if (mapObj.getZoom() <= 8.5) {
+        mapObj.flyTo(event.latlng, 9);
+        return
+    } else {
+        mapObj.flyTo(event.latlng)
+    }
+    if (marker) {
+        mapObj.removeLayer(marker)
+    }
+    marker = L.marker(event.latlng).addTo(mapObj);
+    for (let i in chart_divs) {
+        chart_divs[i].html('')
+    }
+    updateStatusIcons('identify');
+    $("#chart_modal").modal('show');
+    L.esri.identifyFeatures({
+        url: 'https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
+    })
+        .on(mapObj).tolerance(30)
+        .at([event.latlng['lat'], event.latlng['lng']])
+        .run(function (error, featureCollection) {
+            if (error) {
+                updateStatusIcons('fail');
+                alert('Error finding the reach_id');
+                return
+            }
+            REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"];
+            updateStatusIcons('load');
+            getStreamflowPlots();
+        })
 });
 mapObj.on('zoomstart', function (event) {
     startzoom = event.target.getZoom();
@@ -123,7 +169,7 @@ $("#watersheds_select_input").change(function () {
     }
     boundary_layer = getWatershedComponent(waterselect + '-boundary').addTo(mapObj);
     catchment_layer = getWatershedComponent(waterselect + '-catchment');
-    drainage_layer = getWatershedComponent(waterselect + '-drainageline');
+    drainage_layer = getDrainageLine(waterselect + '-drainageline');
     ctrllayers = {
         'Watershed Boundary': boundary_layer,
         'Catchment Boundaries': catchment_layer,
