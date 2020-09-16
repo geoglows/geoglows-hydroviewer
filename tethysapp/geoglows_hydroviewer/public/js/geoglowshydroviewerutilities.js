@@ -1,6 +1,66 @@
-let latlonMarker;
 let REACHID;
+let latlonMarker;
+let reachMarker;
+let marker = null;
 
+let gaugeNetwork = L.geoJSON(false, {
+    onEachFeature: function (feature, layer) {
+        REACHID = feature.properties.GEOGLOWSID;
+        layer.on('click', function (event) {L.DomEvent.stopPropagation(event);getBiasCorrectedPlots(feature.properties)});
+    },
+    pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, {radius: 6, fillColor: "#ff0000", color: "#000000", weight: 1, opacity: 1, fillOpacity: 1});
+    }
+});
+////////////////////////////////////////////////////////////////////////  OTHER UTILITIES ON THE LEFT COLUMN
+function findReachID() {
+    $.ajax({
+        type: 'GET',
+        async: true,
+        url: URL_find_reach_id + L.Util.getParamString({reach_id: $("#search_reachid_input").val()}),
+        success: function (response) {
+            if (reachMarker) {mapObj.removeLayer(reachMarker)}
+            reachMarker = L.marker(L.latLng(response['lat'], response['lon'])).addTo(mapObj);
+            mapObj.flyTo(L.latLng(response['lat'], response['lon']), 9);
+
+        },
+        error: function () {alert('Unable to find the reach_id specified')}
+    })
+}
+function findLatLon() {
+    if (latlonMarker) {mapObj.removeLayer(latlonMarker)}
+    let ll = $("#search_latlon_input").val().replace(' ', '').split(',')
+    latlonMarker = L.marker(L.latLng(ll[0], ll[1])).addTo(mapObj);
+    mapObj.flyTo(L.latLng(ll[0], ll[1]), 9);
+}
+////////////////////////////////////////////////////////////////////////  GAUGE NETWORKS STUFF
+function getGaugeGeoJSON() {
+    gaugeNetwork.clearLayers();
+    let network = $("#gauge_networks").val();
+    if (network === '') {return}
+    $.ajax({
+        type: 'GET',
+        async: true,
+        url: URL_get_gauge_geojson + L.Util.getParamString({network: network}),
+        success: function (geojson) {gaugeNetwork.addData(geojson).addTo(mapObj);mapObj.flyToBounds(gaugeNetwork.getBounds());},
+        error: function () {alert('Error retrieving the locations of the gauge network')}
+    })
+}
+$("#gauge_networks").change(function () {getGaugeGeoJSON()})
+//////////////////////////////////////////////////////////////////////// UPDATE DOWNLOAD LINKS FUNCTION
+function updateDownloadLinks(type) {
+    if (type === 'clear') {
+        $("#download-forecast-btn").attr('href', '');
+        $("#download-historical-btn").attr('href', '');
+        $("#download-seasonal-btn").attr('href', '');
+    } else if (type === 'set') {
+        $("#download-forecast-btn").attr('href', endpoint + 'ForecastStats/?reach_id=' + REACHID);
+        $("#download-records-btn").attr('href', endpoint + 'ForecastRecords/?reach_id=' + REACHID);
+        $("#download-historical-btn").attr('href', endpoint + 'HistoricSimulation/?reach_id=' + REACHID);
+        $("#download-seasonal-btn").attr('href', endpoint + 'SeasonalAverage/?reach_id=' + REACHID);
+    }
+}
+//////////////////////////////////////////////////////////////////////// GET BIAS CORRECTED PLOTS FUNCTION
 function getBiasCorrectedPlots(gauge_metadata) {
     let data;
     if (gauge_metadata !== false) {
@@ -57,7 +117,7 @@ function getBiasCorrectedPlots(gauge_metadata) {
         }
     })
 }
-
+//////////////////////////////////////////////////////////////////////// UPDATE STATUS ICONS FUNCTION
 function updateStatusIcons(type) {
     let statusObj = $("#request-status");
     if (type === 'identify') {
@@ -77,64 +137,6 @@ function updateStatusIcons(type) {
         statusObj.css('color', 'grey');
     }
 }
-
-function updateDownloadLinks(type) {
-    if (type === 'clear') {
-        $("#download-forecast-btn").attr('href', '');
-        $("#download-historical-btn").attr('href', '');
-        $("#download-seasonal-btn").attr('href', '');
-    } else if (type === 'set') {
-        $("#download-forecast-btn").attr('href', endpoint + 'ForecastStats/?reach_id=' + REACHID);
-        $("#download-records-btn").attr('href', endpoint + 'ForecastRecords/?reach_id=' + REACHID);
-        $("#download-historical-btn").attr('href', endpoint + 'HistoricSimulation/?reach_id=' + REACHID);
-        $("#download-seasonal-btn").attr('href', endpoint + 'SeasonalAverage/?reach_id=' + REACHID);
-    }
-}
-
-let gaugeNetwork = L.geoJSON(false, {
-    onEachFeature: function (feature, layer) {
-        layer.on('click', function (event) {L.DomEvent.stopPropagation(event);getBiasCorrectedPlots(feature.properties)});
-    },
-    pointToLayer: function (feature, latlng) {
-        return L.circleMarker(latlng, {radius: 6, fillColor: "#ff0000", color: "#000000", weight: 1, opacity: 1, fillOpacity: 1});
-    }
-});
-let VIIRSlayer = L.tileLayer('https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png', {layers: 'RIVER-FLDglobal-composite: Latest', crossOrigin: true, pane: 'viirs',});
-
-function findReachID() {
-    $.ajax({
-        type: 'GET',
-        async: true,
-        url: URL_find_reach_id + L.Util.getParamString({reach_id: $("#search_reachid_input").val()}),
-        success: function (response) {
-            if (reachMarker) {mapObj.removeLayer(reachMarker)}
-            reachMarker = L.marker(L.latLng(response['lat'], response['lon'])).addTo(mapObj);
-            mapObj.flyTo(L.latLng(response['lat'], response['lon']), 9);
-
-        },
-        error: function () {alert('Unable to find the reach_id specified')}
-    })
-}
-function findLatLon() {
-    if (latlonMarker) {mapObj.removeLayer(latlonMarker)}
-    let ll = $("#search_latlon_input").val().replace(' ', '').split(',')
-    latlonMarker = L.marker(L.latLng(ll[0], ll[1])).addTo(mapObj);
-    mapObj.flyTo(L.latLng(ll[0], ll[1]), 9);
-}
-////////////////////////////////////////////////////////////////////////  GAUGE NETWORKS STUFF
-function getGaugeGeoJSON() {
-    gaugeNetwork.clearLayers();
-    let network = $("#gauge_networks").val();
-    if (network === '') {return}
-    $.ajax({
-        type: 'GET',
-        async: true,
-        url: URL_get_gauge_geojson + L.Util.getParamString({network: network}),
-        success: function (geojson) {gaugeNetwork.addData(geojson).addTo(mapObj);mapObj.flyToBounds(gaugeNetwork.getBounds());},
-        error: function () {alert('Error retrieving the locations of the gauge network')}
-    })
-}
-$("#gauge_networks").change(function () {getGaugeGeoJSON()})
 ////////////////////////////////////////////////////////////////////////  UPLOAD OBSERVATIONAL DATA
 $("#hydrograph-csv-form").on('submit', function (e) {
     e.preventDefault();
@@ -163,3 +165,97 @@ $("#hydrograph-csv-form").on('submit', function (e) {
     });
 });
 $("#start-bias-correction-btn").click(function (e) {getBiasCorrectedPlots(false)})
+
+////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
+const chart_divs = [$("#forecast-chart"), $("#corrected-forecast-chart"), $("#forecast-table"), $("#historical-chart"), $("#historical-table"), $("#daily-avg-chart"), $("#monthly-avg-chart"), $("#flowduration-chart"), $("#volume_plot"), $("#scatters"), $("#stats_table")];
+function getStreamflowPlots() {
+    updateStatusIcons('load');
+    updateDownloadLinks('clear');
+    for (let i in chart_divs) {chart_divs[i].html('')}  // clear the contents of old chart divs
+    let ftl = $("#forecast_tab_link");  // select divs with jquery so we can reuse them
+    let fc = chart_divs[0];
+    ftl.tab('show')
+    fc.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
+    fc.css('text-align', 'center');
+    $.ajax({
+        type: 'GET',
+        async: true,
+        data: {reach_id: REACHID},
+        url: URL_get_streamflow,
+        success: function (html) {
+            // forecast tab
+            ftl.tab('show');
+            fc.html(html['fp']);
+            $("#forecast-table").html(html['prob_table']);
+            // historical tab
+            $("#historical_tab_link").tab('show');
+            $("#historical-chart").html(html['hp']);
+            $("#historical-table").html(html['rp_table']);
+            // average flows tab
+            $("#avg_flow_tab_link").tab('show');
+            $("#daily-avg-chart").html(html['dp']);
+            $("#monthly-avg-chart").html(html['mp']);
+            // $("#monthly-avg-chart").html(html['sp']);
+            // flow duration tab
+            $("#flow_duration_tab_link").tab('show');
+            $("#flowduration-chart").html(html['fdp']);
+            // update other messages and links
+            ftl.tab('show');
+            updateStatusIcons('ready');
+            updateDownloadLinks('set');
+            $("#bias_correction_tab_link").show()
+        },
+        error: function () {
+            updateStatusIcons('fail');
+            $("#bias_correction_tab_link").hide()
+            for (let i in chart_divs) {
+                chart_divs[i].html('')
+            }
+        }
+    })
+}
+function fix_buttons(tab) {
+    let buttons = [$("#download-forecast-btn"), $("#download-historical-btn"), $("#download-averages-btn"), $("#start-bias-correction-btn")]
+    for (let i in buttons) {
+        buttons[i].hide()
+    }
+    if (tab === 'forecast') {
+        buttons[0].show()
+    } else if (tab === 'historical') {
+        buttons[1].show()
+    } else if (tab === 'averages') {
+        buttons[2].show()
+    } else if (tab === 'biascorrection') {
+        buttons[3].show()
+    }
+    fix_chart_sizes(tab);
+    $("#resize_charts").attr({'onclick': "fix_chart_sizes('" + tab + "')"})
+}
+function fix_chart_sizes(tab) {
+    let divs = [];
+    if (tab === 'forecast') {
+        divs = [$("#forecast-chart .js-plotly-plot")]
+    } else if (tab === 'records') {
+        divs = [$("#records-chart .js-plotly-plot")]
+    } else if (tab === 'historical') {
+        divs = [$("#historical-5-chart .js-plotly-plot")]
+    } else if (tab === 'averages') {
+        divs = [$("#daily-avg-chart .js-plotly-plot"), $("#monthly-avg-chart .js-plotly-plot")]
+    } else if (tab === 'flowduration') {
+        divs = [$("#flowduration-5-chart .js-plotly-plot")]
+    } else if (tab === 'biascorrection') {
+        divs = [$("#volume_plot .js-plotly-plot"), $("#scatters .js-plotly-plot")];
+    }
+    for (let i in divs) {
+        try {
+            divs[i].css('height', 500);
+            Plotly.Plots.resize(divs[i][0]);
+        } catch (e) {
+        }
+    }
+}
+$("#forecast_tab_link").on('click', function () {fix_buttons('forecast')})
+$("#historical_tab_link").on('click', function () {fix_buttons('historical')})
+$("#avg_flow_tab_link").on('click', function () {fix_buttons('averages')})
+$("#flow_duration_tab_link").on('click', function () {fix_buttons('flowduration')})
+$("#bias_correction_tab_link").on('click', function () {fix_buttons('biascorrection')})
