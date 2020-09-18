@@ -1,23 +1,8 @@
-////////////////////////////////////////////////////////////////////////  SETUP THE MAP
-const mapObj = L.map('map', {
-        zoom: 3,
-        minZoom: 2,
-        boxZoom: true,
-        maxBounds: L.latLngBounds(L.latLng(-100, -225), L.latLng(100, 225)),
-        center: [20, 0],
-    });
-// add basemaps
-const basemapsJson = {
-    "ESRI Topographic": L.esri.basemapLayer('Topographic').addTo(mapObj),
-    "ESRI Terrain": L.layerGroup([L.esri.basemapLayer('Terrain'), L.esri.basemapLayer('TerrainLabels')]),
-    "ESRI Grey": L.esri.basemapLayer('Gray'),
-}
-// create map panes which help sort layer drawing order
 mapObj.createPane('watershedlayers');
 mapObj.getPane('watershedlayers').style.zIndex = 250;
 mapObj.createPane('viirs');
 mapObj.getPane('viirs').style.zIndex = 200;
-// add the legends and latlon box to the map
+// add the legends box to the map
 let legend = L.control({position: 'bottomright'});
 legend.onAdd = function () {
     let div = L.DomUtil.create('div', 'legend');
@@ -31,47 +16,6 @@ legend.onAdd = function () {
     return div
 };
 legend.addTo(mapObj);
-// lat/lon tracking box on the bottom left of the map
-let latlon = L.control({position: 'bottomleft'});
-latlon.onAdd = function () {
-    let div = L.DomUtil.create('div', 'well well-sm');
-    div.innerHTML = '<div id="mouse-position" style="text-align: center"></div>';
-    return div;
-};
-latlon.addTo(mapObj);
-mapObj.on("mousemove", function (event) {$("#mouse-position").html('Lat: ' + event.latlng.lat.toFixed(5) + ', Lon: ' + event.latlng.lng.toFixed(5));});
-mapObj.on("click", function (event) {
-    if (mapObj.getZoom() <= 8.5) {
-        mapObj.flyTo(event.latlng, 9);
-        return
-    } else {
-        mapObj.flyTo(event.latlng)
-    }
-    if (marker) {
-        mapObj.removeLayer(marker)
-    }
-    marker = L.marker(event.latlng).addTo(mapObj);
-    for (let i in chart_divs) {
-        chart_divs[i].html('')
-    }
-    updateStatusIcons('identify');
-    $("#chart_modal").modal('show');
-    L.esri.identifyFeatures({
-        url: 'https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
-    })
-        .on(mapObj).tolerance(30)
-        .at([event.latlng['lat'], event.latlng['lng']])
-        .run(function (error, featureCollection) {
-            if (error) {
-                updateStatusIcons('fail');
-                alert('Error finding the reach_id');
-                return
-            }
-            REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"];
-            updateStatusIcons('load');
-            getStreamflowPlots();
-        })
-});
 ////////////////////////////////////////////////////////////////////////  ESRI LAYER ANIMATION CONTROLS
 let layerAnimationTime = new Date();
 layerAnimationTime = new Date(layerAnimationTime.toISOString())
