@@ -2,6 +2,21 @@ let REACHID;
 let latlonMarker;
 let reachMarker;
 let marker = null;
+let controlsObj;
+
+const mapObj = L.map('map', {
+    zoom: 3,
+    minZoom: 2,
+    boxZoom: true,
+    maxBounds: L.latLngBounds(L.latLng(-100, -225), L.latLng(100, 225)),
+    center: [20, 0],
+});
+
+const basemapsJson = {
+    "ESRI Topographic": L.esri.basemapLayer('Topographic').addTo(mapObj),
+    "ESRI Terrain": L.layerGroup([L.esri.basemapLayer('Terrain'), L.esri.basemapLayer('TerrainLabels')]),
+    "ESRI Grey": L.esri.basemapLayer('Gray'),
+}
 
 let gaugeNetwork = L.geoJSON(false, {
     onEachFeature: function (feature, layer) {
@@ -12,7 +27,49 @@ let gaugeNetwork = L.geoJSON(false, {
         return L.circleMarker(latlng, {radius: 6, fillColor: "#ff0000", color: "#000000", weight: 1, opacity: 1, fillOpacity: 1});
     }
 });
-////////////////////////////////////////////////////////////////////////  OTHER UTILITIES ON THE LEFT COLUMN
+//////////////////////////////////////////////////////////////////////// ADD LEGEND LAT LON BOX
+// lat/lon tracking box on the bottom left of the map
+let latlon = L.control({position: 'bottomleft'});
+latlon.onAdd = function () {
+    let div = L.DomUtil.create('div', 'well well-sm');
+    div.innerHTML = '<div id="mouse-position" style="text-align: center"></div>';
+    return div;
+};
+latlon.addTo(mapObj);
+mapObj.on("mousemove", function (event) {$("#mouse-position").html('Lat: ' + event.latlng.lat.toFixed(5) + ', Lon: ' + event.latlng.lng.toFixed(5));});
+mapObj.on("click", function (event) {
+    if (mapObj.getZoom() <= 8.5) {
+        mapObj.flyTo(event.latlng, 9);
+        return
+    } else {
+        mapObj.flyTo(event.latlng)
+    }
+    if (marker) {
+        mapObj.removeLayer(marker)
+    }
+    marker = L.marker(event.latlng).addTo(mapObj);
+    for (let i in chart_divs) {
+        chart_divs[i].html('')
+    }
+    updateStatusIcons('identify');
+    $("#chart_modal").modal('show');
+    L.esri.identifyFeatures({
+        url: 'https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
+    })
+        .on(mapObj).tolerance(30)
+        .at([event.latlng['lat'], event.latlng['lng']])
+        .run(function (error, featureCollection) {
+            if (error) {
+                updateStatusIcons('fail');
+                alert('Error finding the reach_id');
+                return
+            }
+            REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"];
+            updateStatusIcons('load');
+            getStreamflowPlots();
+        })
+});
+//////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
 function findReachID() {
     $.ajax({
         type: 'GET',
@@ -259,3 +316,43 @@ $("#historical_tab_link").on('click', function () {fix_buttons('historical')})
 $("#avg_flow_tab_link").on('click', function () {fix_buttons('averages')})
 $("#flow_duration_tab_link").on('click', function () {fix_buttons('flowduration')})
 $("#bias_correction_tab_link").on('click', function () {fix_buttons('biascorrection')})
+
+function showBoundaryLayers() {
+    mapObj.setMaxZoom(3);
+    ctrllayers = {};
+    for (let i = 0; i < watersheds.length; i++) {
+        ctrllayers[watersheds[i][0] + ' Boundary'] = getWatershedComponent(watersheds[i][1] + '-boundary').addTo(mapObj);
+    }
+    controlsObj = L.control.layers(basemaps, ctrllayers).addTo(mapObj);
+}
+function getWatershedComponent(layername) {
+    let region = layername.replace('-boundary','').replace('-catchment','');
+    return L.tileLayer.wms('https://geoserver.hydroshare.org/geoserver/wms', {
+        version: '1.1.0',
+        layers: 'HS-' + watersheds_hydroshare_ids[region] + ':' + layername + ' ' + layername,
+        useCache: true,
+        crossOrigin: false,
+        format: 'image/png',
+        transparent: true,
+        opacity: .5,
+    })
+}
+
+function getDrainageLine(layername) {
+    let region = layername.replace('-drainageline','');
+    return L.tileLayer.wms('https://geoserver.hydroshare.org/geoserver/wms', {
+        version: '1.1.0',
+        layers: 'HS-' + watersheds_hydroshare_ids[region] + ':' + layername + ' ' + layername,
+        useCache: true,
+        crossOrigin: false,
+        format: 'image/png',
+        transparent: true,
+        opacity: 1,
+    })
+}
+
+let listlayers = [];
+let ctrllayers = {};
+let boundary_layer;
+let catchment_layer;
+let drainage_layer;
