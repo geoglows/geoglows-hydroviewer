@@ -317,14 +317,14 @@ $("#avg_flow_tab_link").on('click', function () {fix_buttons('averages')})
 $("#flow_duration_tab_link").on('click', function () {fix_buttons('flowduration')})
 $("#bias_correction_tab_link").on('click', function () {fix_buttons('biascorrection')})
 
-function showBoundaryLayers() {
-    mapObj.setMaxZoom(3);
+function showBoundaryLayersHS() {
     ctrllayers = {};
     for (let i = 0; i < watersheds.length; i++) {
         ctrllayers[watersheds[i][0] + ' Boundary'] = getWatershedComponent(watersheds[i][1] + '-boundary').addTo(mapObj);
     }
     controlsObj = L.control.layers(basemaps, ctrllayers).addTo(mapObj);
 }
+
 function getWatershedComponent(layername) {
     let region = layername.replace('-boundary','').replace('-catchment','');
     return L.tileLayer.wms('https://geoserver.hydroshare.org/geoserver/wms', {
