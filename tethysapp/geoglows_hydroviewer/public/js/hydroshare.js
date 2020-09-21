@@ -21,7 +21,7 @@ const basemaps = {
 }
 
 ////////////////////////////////////////////////////////////////////////  MAP FUNCTIONS AND VARIABLES
-showBoundaryLayers();
+showBoundaryLayersHS();
 ////////////////////////////////////////////////////////////////////////  LISTENERS FOR MAP LAYERS
 let startzoom;
 let bc_threshold = 6;
@@ -66,7 +66,7 @@ $("#watersheds_select_input").change(function () {
     }
     mapObj.removeControl(controlsObj);
     if (waterselect === '') {
-        showBoundaryLayers();
+        showBoundaryLayersHS();
         return
     }
     boundary_layer = getWatershedComponent(waterselect + '-boundary').addTo(mapObj);
