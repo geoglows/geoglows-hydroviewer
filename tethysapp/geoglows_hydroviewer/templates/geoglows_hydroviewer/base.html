@@ -16,6 +16,7 @@
   {% url 'geoglows_hydroviewer:home' as hydroviewer %}
   {% url 'geoglows_hydroviewer:geoglows_hydroviewer_creator' as creator %}
   {% url 'geoglows_hydroviewer:project_overview' as overview %}
+  {% url 'geoglows_hydroviewer:hydroshare_view' as hydroshare %}
 
   {% if request.path == hydroviewer %}
     <li class="title">Map Controls</li>
@@ -47,6 +48,33 @@
     <a class="btn btn-default" role="button" data-toggle="modal" data-target="#viirs_modal" style="width: 100%">About
       VIIRS Imagery</a>
   
+    <li class="title">Bias Correction</li>
+    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New
+      Observation</a>
+    <li class="separator"></li>
+    {% gizmo select_input gauge_networks %}
+    {% if request.user.is_authenticated %}
+      <a href="{{ creator }}" class="btn btn-default" role="button" style="width: 100%">Go to Hydroviewer Creator</a>
+    {% else %}
+      <a class="btn btn-default" role="button" data-toggle="modal" data-target="#warn_modal" style="width: 100%">Go to
+        Hydroviewer Creator</a>
+    {% endif %}
+  {% elif request.path == hydroshare %}
+    <li>{% gizmo select_input watersheds_select_input %}</li>
+    <li class="separator"></li>
+    <label class="control-label" for="search_reachid_input">Search for a Reach ID</label>
+    <input id="search_reachid_input" placeholder="Search for a Reach ID" style="width: 100%" class="input">
+    <a class="btn btn-default" role="button" style="width: 100%" onclick="findReachID()">Find A Reach ID</a>
+
+    <li class="separator"></li>
+    <label class="control-label" for="search_latlon_input">Search for a Latitude/Longitude</label>
+    <input id="search_latlon_input" placeholder="Enter 'latitude, longitude'" style="width: 100%" class="input">
+    <a class="btn btn-default" role="button" style="width: 100%" onclick="findLatLon()">Find A Lat/Lon Location</a>
+
+    <li class="separator"></li>
+    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#viirs_modal" style="width: 100%">About
+      VIIRS Imagery</a>
+
     <li class="title">Bias Correction</li>
     <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New
       Observation</a>

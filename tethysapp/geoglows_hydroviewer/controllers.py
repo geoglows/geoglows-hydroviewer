@@ -71,6 +71,69 @@ def home(request):
 
     return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer.html', context)
 
+def hydroshare_view(request):
+    """
+    Controller for the Hydroshare view page.
+    """
+    watersheds_select_input = SelectInput(
+        display_text='Select A Watershed',
+        name='watersheds_select_input',
+        multiple=False,
+        original=True,
+        options=[['View All Watersheds', ''],
+                 ["Islands", "islands-geoglows"],
+                 ["Australia", "australia-geoglows"],
+                 ["Japan", "japan-geoglows"],
+                 ["East Asia", "east_asia-geoglows"],
+                 ["South Asia", "south_asia-geoglows"],
+                 ["Central Asia", "central_asia-geoglows"],
+                 ["West Asia", "west_asia-geoglows"],
+                 ["Middle East", "middle_east-geoglows"],
+                 ["Europe", "europe-geoglows"],
+                 ["Africa", "africa-geoglows"],
+                 ["South America", "south_america-geoglows"],
+                 ["Central America", "central_america-geoglows"],
+                 ["North America", "north_america-geoglows"]],
+        initial=''
+    )
+
+    delete_old_observations()
+
+    uploaded_observations = SelectInput(
+        display_text='Uploaded Observational Data',
+        name='uploaded_observations',
+        multiple=False,
+        original=True,
+        options=list_uploaded_observations(),
+    )
+    gauge_networks = SelectInput(
+        display_text='Stream Gauge Networks',
+        name='gauge_networks',
+        multiple=False,
+        original=True,
+        options=list_gauge_networks(),
+    )
+    upload_new_observation = Button(
+        name='Upload New Observation',
+        display_text='Upload New Observation',
+    )
+
+    context = {
+        # constants
+        'endpoint': gsf.ENDPOINT,
+
+        # uploaded data
+        'uploaded_observations': uploaded_observations,
+        'upload_new_observation': upload_new_observation,
+
+        # gauge_networks
+        'gauge_networks': gauge_networks,
+
+        'watersheds_select_input': watersheds_select_input,
+    }
+
+    return render(request, 'geoglows_hydroviewer/hydroshare_view.html', context)
+
 
 def get_streamflow(request):
     reach_id = request.GET['reach_id']
