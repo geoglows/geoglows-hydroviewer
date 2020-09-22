@@ -88,6 +88,19 @@ function getWatershedComponent(layername) {
         opacity: .5,
     })
 }
+
+function getDrainageLine(layername) {
+    let region = layername.replace('-drainageline','');
+    return L.tileLayer.wms('https://geoserver.hydroshare.org/geoserver/wms', {
+        version: '1.1.0',
+        layers: 'HS-' + watersheds_hydroshare_ids[region] + ':' + layername + ' ' + layername,
+        useCache: true,
+        crossOrigin: false,
+        format: 'image/png',
+        transparent: true,
+        opacity: 1,
+    })
+}
 let listlayers = [];
 let ctrllayers = {};
 let boundary_layer;
@@ -142,7 +155,7 @@ $("#watersheds_select_input").change(function () {
     }
     boundary_layer = getWatershedComponent(waterselect + '-boundary').addTo(mapObj);
     catchment_layer = getWatershedComponent(waterselect + '-catchment');
-    drainage_layer = getWatershedComponent(waterselect + '-drainageline');
+    drainage_layer = getDrainageLine(waterselect + '-drainageline');
     ctrllayers = {
         'Watershed Boundary': boundary_layer,
         'Catchment Boundaries': catchment_layer,
