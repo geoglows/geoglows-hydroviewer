@@ -31,7 +31,7 @@ if (boundaries) {
 
 let drainagelines;
 let catchments;
-if (geoserver) {
+if (exported) {
     catchments = L.tileLayer.wms(geoserver_wms,
         {"format": "image/png", "transparent": true, "layers": workspace + ":" + catchmentLayer});
     drainagelines = L.tileLayer.wms(geoserver_wms,

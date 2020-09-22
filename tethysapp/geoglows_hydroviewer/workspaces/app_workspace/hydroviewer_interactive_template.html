@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.js"></script>
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
+  <style>
+      html, body {
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          padding: 0;
+          cursor: pointer;
+      }
+
+      #map {
+          position: relative;
+          top: 0;
+          bottom: 0;
+          right: 0;
+          left: 0;
+          cursor: pointer;
+      }
+  </style>
+</head>
+<body>
+<div class="modal fade bd-example-modal-lg" id="chart_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                aria-hidden="true">&times;</span></button>
+        <div class="row"><h2 style="text-align: center">Streamflow Results <span id="request-status"
+                                                                                 class="load-status"></span></h2></div>
+      </div>
+
+      <div class="modal-body">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+          <li role="presentation"><a id="forecast_tab_link" href="#forecast" role="tab" data-toggle="tab">Forecasted
+            Flow</a></li>
+          <li role="presentation"><a id="historical_tab_link" href="#historical" role="tab" data-toggle="tab">Historical
+            Simulation</a></li>
+          <li role="presentation"><a id="daily_tab_link" href="#daily" role="tab" data-toggle="tab">Daily Average</a>
+          </li>
+          <li role="presentation"><a id="monthly_tab_link" href="#monthly" role="tab" data-toggle="tab">Monthly
+            Average</a></li>
+        </ul>
+        <!-- Tab panes -->
+        <div class="tab-content">
+          <div role="tabpanel" class="tab-pane active" id="forecast">
+            <div class="panel panel-default">
+              <div id="forecast-chart" style="text-align: center"></div>
+            </div>
+          </div> <!-- /.tab-pane -->
+          <div role="tabpanel" class="tab-pane" id="historical">
+            <div class="panel panel-default">
+              <div id="historical-chart" class="panel-body"></div>
+            </div>
+          </div><!-- /.tab-pane -->
+          <div role="tabpanel" class="tab-pane" id="daily">
+            <div class="panel panel-default">
+              <div id='daily-chart' class="panel-body"></div>
+            </div>
+          </div><!-- /.tab-pane -->
+          <div role="tabpanel" class="tab-pane" id="monthly">
+            <div class="panel panel-default">
+              <div id='monthly-chart' class="panel-body"></div>
+            </div>
+          </div><!-- /.tab-pane -->
+        </div><!-- /.tab-panes -->
+      </div><!-- /.modal-body -->
+      <div class="modal-footer">
+        <a class="btn btn-success" role="button" id="download-forecast-btn" target="_blank">Download Forecast</a>
+        <a class="btn btn-success" role="button" id="download-historical-btn" target="_blank">Download Historical
+          Data</a>
+        <a class="btn btn-success" role="button" id="download-daily-btn" target="_blank">Download Daily Average</a>
+        <a class="btn btn-success" role="button" id="download-monthly-btn" target="_blank">Download Monthly Average</a>
+        <button type="button" class="btn btn-info" id="resize_charts" onclick="fix_chart_sizes('forecasts')">Resize the
+          Chart
+        </button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade bd-example-modal-lg" id="instructions_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                aria-hidden="true">&times;</span></button>
+        <div class="row"><h2 style="text-align: center">Instructions</h2></div>
+      </div>
+
+      <div class="modal-body">
+        <ol>
+          <li>Use the layer control box on the top right of the map to turn on/off various layers.</li>
+          <li>Zoom and Pan to find a stream you're interested in.</li>
+          <li>Click on a stream you're interested in.</li>
+          <li>Wait while the charts load.</li>
+          <li>Use the tabs to switch between each chart.</li>
+          <li>Use the Download buttons to save a csv of the chart's data.</li>
+          <li>Click on other streams and repeat.</li>
+        </ol>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="map" style="width: 100%; height: 100vh"></div>
+
+<script>
+    const endpoint = '{{ api_endpoint }}'
+    const map = L.map("map", {center: [0, 0], crs: L.CRS.EPSG3857, zoom: 4, zoomControl: false, preferCanvas: false});
+    const stamen_basemap = L.tileLayer("https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg",
+        {
+            "attribution": "Map tiles by \u003ca href=\"http://stamen.com\"\u003eStamen Design\u003c/a\u003e, under \u003ca href=\"http://creativecommons.org/licenses/by/3.0\"\u003eCC BY 3.0\u003c/a\u003e. Data by \u0026copy; \u003ca href=\"http://openstreetmap.org\"\u003eOpenStreetMap\u003c/a\u003e, under \u003ca href=\"http://creativecommons.org/licenses/by-sa/3.0\"\u003eCC BY SA\u003c/a\u003e.",
+            "detectRetina": false,
+            "maxNativeZoom": 18,
+            "maxZoom": 18,
+            "minZoom": 0,
+            "noWrap": false,
+            "opacity": 1,
+            "subdomains": "abc",
+            "tms": false
+        }).addTo(map);
+    const project_bounds = L.geoJSON({{ boundaries_json }}, {
+        fillColor: 'rgba(0,0,0,0)',
+        fillOpacity: 'rgba(0,0,0,0)'
+    }).addTo(map);
+    map.fitBounds(project_bounds.getBounds())
+    const catchment_layer = L.tileLayer.wms(
+        "{{ geoserver_wms_url }}", {
+            "format": "image/png",
+            "transparent": true,
+            "layers": "{{ workspace }}:{{ catchment_layer }}"
+        }
+    );
+    const drainageline_layer = L.tileLayer.wms(
+        "{{ geoserver_wms_url }}", {
+            "format": "image/png",
+            "transparent": true,
+            "layers": "{{ workspace }}:{{ drainage_layer }}"
+        }
+    ).addTo(map);
+    L.control.layers(
+        {"Stamen Terrain Basemap": stamen_basemap},
+        {"Project Boundaries": project_bounds, "Drainage Lines": drainageline_layer, "Catchments": catchment_layer},
+        {"autoZIndex": true, "collapsed": false, "position": "topright"}
+    ).addTo(map);
+    ////////////////////////////////////////////////////////////////////////  MAP FUNCTIONS AND VARIABLES
+    const modal_toggles = L.control({position: 'bottomright'});
+    modal_toggles.onAdd = function () {
+        let div = L.DomUtil.create('div');
+        div.innerHTML = '<div id="modal_toggles" style="text-align: right;">' + '<button id="show_modal_btn" class="btn btn-lg btn-warning" data-toggle="modal" data-target="#instructions_modal">Instructions</button><br>' + '<button id="show_modal_btn" class="btn btn-lg btn-warning" data-toggle="modal" data-target="#chart_modal">Open Charts Window</button>' + '</div>';
+        return div
+    };
+    modal_toggles.addTo(map);
+    const mt = $("#modal_toggles");
+    mt.mouseover(function () {
+        map.off('click')
+    })
+    mt.mouseout(function () {
+        map.on("click", function (event) {
+            mapClickEvent(event)
+        })
+    })
+    const latlon = L.control({position: 'bottomleft'});
+    latlon.onAdd = function () {
+        let div = L.DomUtil.create('div', 'well');
+        div.innerHTML = '<div id="mouse-position" style="text-align: center"></div>';
+        return div;
+    };
+    latlon.addTo(map);
+    const title = L.control({position: 'topleft'});
+    title.onAdd = function () {
+        let div = L.DomUtil.create('div', 'well well-sm');
+        div.innerHTML = '<h1>{{ title }}</h1>';
+        return div;
+    };
+    title.addTo(map);
+    L.control.zoom().addTo(map);
+    ////////////////////////////////////////////////////////////////////////  LISTENERS FOR MAP LAYERS
+    let marker = null;
+
+    function mapClickEvent(event) {
+        if (marker) {
+            map.removeLayer(marker)
+        }
+        marker = L.marker(event.latlng).addTo(map);
+        updateStatusIcons('cleared');
+        $("#chart_modal").modal('show');
+        updateStatusIcons('load');
+        updateDownloadLinks('clear');
+        clearChartDivs();
+        ftl.tab('show')
+        fc.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
+        $.ajax({
+            type: 'GET',
+            async: true,
+            url: endpoint + 'GetReachID/?lat=' + event.latlng['lat'] + '&lon=' + event.latlng['lng'],
+            success: function (data) {
+                console.log('reach_id success');
+                reach_id = data['reach_id'];
+                plotForecastStats(reach_id);
+                plotHistoricalSimulation(reach_id);
+                plotDailyAverages(reach_id);
+                plotMonthlyAverages(reach_id);
+            },
+            error: function () {
+                console.log('reach_id fail');
+                updateStatusIcons('fail');
+                clearChartDivs();
+            }
+        })
+    }
+
+    map.on("click", function (event) {
+        mapClickEvent(event)
+    })
+    map.on("mousemove", function (event) {
+        $("#mouse-position").html('Lat: ' + event.latlng.lat.toFixed(5) + ', Lon: ' + event.latlng.lng.toFixed(5));
+    });
+    ////////////////////////////////////////////////////////////////////////  GET DATA FROM API
+    const fc = $("#forecast-chart");
+    const hc = $("#historical-chart");
+    const dc = $("#daily-chart");
+    const mc = $("#monthly-chart");
+    const ftl = $("#forecast_tab_link");
+    const htl = $("#historical_tab_link");
+    const dtl = $("#daily_tab_link");
+    const mtl = $("#monthly_tab_link");
+
+    function clearChartDivs() {
+        fc.html('');
+        hc.html('');
+        dc.html('');
+        mc.html('')
+    }
+
+    function updateStatusIcons(status) {
+        let statusObj = $("#request-status");
+        if (status === 'load') {
+            statusObj.html(' (loading)');
+            statusObj.css('color', 'orange');
+        } else if (status === 'ready') {
+            statusObj.html(' (ready)');
+            statusObj.css('color', 'green');
+        } else if (status === 'fail') {
+            statusObj.html(' (failed)');
+            statusObj.css('color', 'red');
+        } else if (status === 'cleared') {
+            statusObj.html(' (cleared)');
+            statusObj.css('color', 'grey');
+        } else if (status === 'check') {
+            if (forecastsLoaded && historicalLoaded && dailyLoaded && monthlyLoaded) {
+                updateStatusIcons('ready')
+            }
+        }
+    }
+
+    function updateDownloadLinks(type) {
+        if (type === 'clear') {
+            $("#download-forecast-btn").attr('href', '');
+            $("#download-historical-btn").attr('href', '');
+            $("#download-daily-btn").attr('href', '');
+            $("#download-monthly-btn").attr('href', '');
+        } else if (type === 'set') {
+            $("#download-forecast-btn").attr('href', endpoint + 'ForecastStats/?reach_id=' + reach_id);
+            $("#download-historical-btn").attr('href', endpoint + 'HistoricSimulation/?reach_id=' + reach_id);
+            $("#download-daily-btn").attr('href', endpoint + 'DailyAverages/?reach_id=' + reach_id);
+            $("#download-monthly-btn").attr('href', endpoint + 'MonthlyAverages/?reach_id=' + reach_id);
+        }
+    }
+
+    function fix_chart_sizes(tab) {
+        let div;
+        if (tab === 'forecast') {
+            div = fc
+        } else if (tab === 'historical') {
+            div = hc
+        } else if (tab === 'daily') {
+            div = dc
+        } else if (tab === 'monthly') {
+            div = mc
+        }
+        div.css('height', 500);
+        Plotly.Plots.resize(div[0]);
+    }
+
+    function fix_buttons(tab) {
+        let buttons = [$("#download-forecast-btn"), $("#download-historical-btn"), $("#download-daily-btn"), $("#download-monthly-btn")]
+        buttons[0].hide();
+        buttons[1].hide();
+        buttons[2].hide();
+        buttons[3].hide();
+        if (tab === 'forecast') {
+            buttons[0].show()
+        } else if (tab === 'historical') {
+            buttons[1].show()
+        } else if (tab === 'daily') {
+            buttons[2].show()
+        } else if (tab === 'monthly') {
+            buttons[3].show()
+        }
+        fix_chart_sizes(tab);
+        $("#resize_charts").attr({'onclick': "fix_chart_sizes('" + tab + "')"})
+    }
+
+    fix_buttons('forecast');
+    ftl.on('click', function () {
+        fix_buttons('forecast')
+    });
+    htl.on('click', function () {
+        fix_buttons('historical')
+    });
+    dtl.on('click', function () {
+        fix_buttons('daily')
+    });
+    mtl.on('click', function () {
+        fix_buttons('monthly')
+    });
+
+    let forecastsLoaded, historicalLoaded, dailyLoaded, monthlyLoaded = false;
+    let reach_id;
+
+    function plotForecastStats(id) {
+        forecastsLoaded = false;
+        $.ajax({
+            type: 'GET',
+            async: true,
+            url: endpoint + 'ForecastStats/?return_format=json&reach_id=' + id,
+            success: function (data) {
+                console.log('forecast success');
+                ftl.tab('show')
+                fc.html('');
+                let ts = data['time_series']
+                let dt_rv = ts['datetime'].concat(ts['datetime'].slice().reverse());
+                let traces = [
+                    {
+                        name: 'Max/Min Flow (m^3/s)',
+                        x: dt_rv,
+                        y: ts['flow_max_m^3/s'].concat(ts['flow_min_m^3/s'].slice().reverse()),
+                        mode: 'lines',
+                        type: 'scatter',
+                        fill: 'toself',
+                        fillcolor: 'lightblue',
+                        line: {color: 'darkblue', dash: 'dash'},
+                    },
+                    {
+                        name: '25-75% Flow (m^3/s)',
+                        x: dt_rv,
+                        y: ts['flow_75%_m^3/s'].concat(ts['flow_25%_m^3/s'].slice().reverse()),
+                        mode: 'lines',
+                        type: 'scatter',
+                        fill: 'toself',
+                        fillcolor: 'lightgreen',
+                        line: {color: 'darkgreen', dash: 'dash'},
+                    },
+                    {
+                        name: 'Average Flow (m^3/s)',
+                        x: ts['datetime'],
+                        y: ts['flow_avg_m^3/s'],
+                        mode: 'lines',
+                        type: 'scatter',
+                        fill: 'none',
+                        line: {color: 'blue'},
+                    },
+                    {
+                        name: 'High Res Flow (m^3/s)',
+                        x: ts['datetime_high_res'],
+                        y: ts['high_res'],
+                        mode: 'lines',
+                        type: 'scatter',
+                        fill: 'none',
+                        line: {color: 'black'},
+                    },
+                ]
+                Plotly.newPlot('forecast-chart', traces, {title: 'Forecasted Flow<br>Reach ID: ' + reach_id});
+                forecastsLoaded = true;
+                updateStatusIcons('check');
+            },
+            error: function () {
+                console.log('forecast fail');
+                updateStatusIcons('fail');
+                clearChartDivs();
+            }
+        })
+    }
+
+    function plotHistoricalSimulation(id) {
+        historicalLoaded = false;
+        $.ajax({
+            type: 'GET',
+            async: true,
+            url: endpoint + 'HistoricSimulation/?return_format=json&reach_id=' + id,
+            success: function (data) {
+                console.log('historical success');
+                hc.html('');
+                let traces = [
+                    {
+                        x: data['time_series']['datetime'],
+                        y: data['time_series']['flow'],
+                        mode: 'lines',
+                        type: 'scatter',
+                        fill: 'none',
+                    },
+                ]
+                Plotly.newPlot('historical-chart', traces, {title: 'Historical Simulation Flow (m^3/s)<br>Reach ID: ' + id});
+                historicalLoaded = true;
+                updateStatusIcons('check');
+            },
+            error: function () {
+                console.log('historical fail');
+                updateStatusIcons('fail');
+                clearChartDivs();
+            }
+        })
+    }
+
+    function plotDailyAverages(id) {
+        dailyLoaded = false;
+        $.ajax({
+            type: 'GET',
+            async: true,
+            url: endpoint + 'DailyAverages/?return_format=json&reach_id=' + id,
+            success: function (data) {
+                console.log('daily success');
+                dc.html('');
+                let traces = [
+                    {
+                        x: data['time_series']['datetime'],
+                        y: data['time_series']['flow'],
+                        mode: 'lines',
+                        type: 'scatter',
+                        fill: 'none',
+                    },
+                ]
+                Plotly.newPlot('daily-chart', traces, {title: 'Simulated Daily Average Flow (m^3/s)<br>Reach ID: ' + id});
+                dailyLoaded = true;
+                updateDownloadLinks('set');
+                updateStatusIcons('check');
+            },
+            error: function () {
+                console.log('daily fail');
+                updateStatusIcons('fail');
+                clearChartDivs();
+            }
+        })
+    }
+
+    function plotMonthlyAverages(id) {
+        monthlyLoaded = false;
+        $.ajax({
+            type: 'GET',
+            async: true,
+            url: endpoint + 'MonthlyAverages/?return_format=json&reach_id=' + id,
+            success: function (data) {
+                console.log('monthly success');
+                mc.html('');
+                reach_id = data['comid'];
+                let traces = [
+                    {
+                        x: data['time_series']['datetime'],
+                        y: data['time_series']['flow'],
+                        mode: 'lines',
+                        type: 'scatter',
+                        fill: 'none',
+                    },
+                ]
+                Plotly.newPlot('monthly-chart', traces, {title: 'Simulated Monthly Average Flow (m^3/s)<br>Reach ID: ' + id});
+                monthlyLoaded = true;
+                updateDownloadLinks('set');
+                updateStatusIcons('check');
+            },
+            error: function () {
+                console.log('monthly fail');
+                updateStatusIcons('fail');
+                clearChartDivs();
+            }
+        })
+    }
+</script>
+</body>
+

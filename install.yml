@@ -17,6 +17,7 @@ requirements:
       - geopandas
       - jinja2
       - geomatics
+      - hs_restclient
 
   pip:
     - geoserver-restconfig

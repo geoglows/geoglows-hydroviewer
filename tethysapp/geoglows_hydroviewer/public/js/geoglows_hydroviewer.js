@@ -82,3 +82,4 @@ const globalLayer = L.esri.dynamicMapLayer({
     to: endDateTime,
 }).addTo(mapObj);
 L.control.layers(basemapsJson, {'Stream Network': globalLayer, 'Gauge Network': gaugeNetwork, 'VIIRS Imagery': VIIRSlayer}, {'collapsed': false}).addTo(mapObj);
+

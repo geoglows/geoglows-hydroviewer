@@ -3,16 +3,12 @@ import json
 import os
 import shutil
 import urllib.parse
-from zipfile import ZipFile
 
 import geomatics
 import geopandas as gpd
-import geoserver.util
-import jinja2
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render, redirect
-from geoserver.catalog import Catalog
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, reverse
 from tethys_sdk.gizmos import SelectInput
 from tethys_sdk.permissions import login_required
 
@@ -20,6 +16,9 @@ from .app import GeoglowsHydroviewer as App
 from .hydroviewer_creator_tools import get_project_directory, shapefiles_downloaded
 
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
+
+EXPORT_CONFIGS_DICT = {'url': '', 'workspace': '', 'dl': '', 'ctch': '', 'resource_id': '', 'exported': False,
+                       'export_destination': '', 'exported_by_app': False}
 
 WARN_DOWNLOAD_SHAPEFILES = 'GEOGloWS Shapefile data not found. You can continue to work on projects who have created ' \
                            'shapefiles but will be unable to create shapefiles for new projects. Check the custom ' \
@@ -33,36 +32,21 @@ def home(request):
 
     projects_path = os.path.join(App.get_app_workspace().path, 'projects')
     projects = os.listdir(projects_path)
-
-    projects = [prj for prj in projects if os.path.isdir(os.path.join(projects_path, prj))]
-    finished_prjs = [prj for prj in projects if os.path.exists(os.path.join(projects_path, prj, 'hydroviewer.html'))]
-
-    projects = [(prj.replace('_', ' '), prj) for prj in projects]
-    finished_prjs = [(prj.replace('_', ' '), prj) for prj in finished_prjs]
+    projects = [(prj.replace('_', ' '), prj) for prj in projects if os.path.isdir(os.path.join(projects_path, prj))]
 
     if len(projects) > 0:
         show_projects = True
     else:
         show_projects = False
-    if len(finished_prjs) > 0:
-        show_finished_projects = True
-    else:
-        show_finished_projects = False
 
     projects = SelectInput(display_text='Existing Hydroviewer Projects',
                            name='project',
                            multiple=False,
                            options=projects)
-    downloadable_projects = SelectInput(display_text='Download Finished Hydroviewer',
-                                        name='downloadable_projects',
-                                        multiple=False,
-                                        options=finished_prjs)
 
     context = {
         'projects': projects,
-        'downloadable_projects': downloadable_projects,
         'show_projects': show_projects,
-        'show_finished_projects': show_finished_projects,
     }
 
     return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer_creator.html', context)
@@ -73,16 +57,21 @@ def add_new_project(request):
     project = request.GET.get('new_project_name', False)
     if not project:
         messages.error(request, 'Please provide a name for the new project')
-        return redirect('..')
+        return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
     project = str(project).replace(' ', '_')
-    new_proj_dir = os.path.join(App.get_app_workspace().path, 'projects', project)
+    new_proj_dir = get_project_directory(project)
     try:
+        # make a new folder
         os.mkdir(new_proj_dir)
+        # make the configs json
+        with open(os.path.join(new_proj_dir, 'export_configs.json'), 'w') as ec:
+            ec.write(json.dumps(EXPORT_CONFIGS_DICT))
         messages.success(request, 'Project Successfully Created')
-        return redirect(f'../project/?{urllib.parse.urlencode(dict(project=project))}')
+        return redirect(
+            reverse('geoglows_hydroviewer:project_overview') + f'?{urllib.parse.urlencode(dict(project=project))}')
     except Exception as e:
         messages.error(request, f'Failed to Create Project: {project} ({e})')
-        return redirect('..')
+        return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
 
 
 @login_required()
@@ -96,7 +85,7 @@ def delete_existing_project(request):
             messages.success(request, f'Successfully Deleted Project: {project}')
         except Exception as e:
             messages.error(request, f'Failed to Delete Project: {project} ({e})')
-    return redirect('..')
+    return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
 
 
 @login_required()
@@ -104,30 +93,20 @@ def project_overview(request):
     project = request.GET.get('project', False)
     if not project:
         messages.error(request, 'Project not found, please pick from list of projects or make a new one')
-        return redirect('..')
+        return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
     proj_dir = get_project_directory(project)
 
-    # check to see what data has been created (i.e. which of the steps have been completed)
     boundaries_created = os.path.exists(os.path.join(proj_dir, 'boundaries.json'))
 
-    shapefiles_created = bool(
-        os.path.exists(os.path.join(proj_dir, 'selected_catchment')) and
-        os.path.exists(os.path.join(proj_dir, 'selected_drainageline'))
-    )
+    shapefiles_created = bool(os.path.exists(os.path.join(proj_dir, 'selected_catchment')) and
+                              os.path.exists(os.path.join(proj_dir, 'selected_drainageline')))
 
-    geoserver_configs = os.path.exists(os.path.join(proj_dir, 'geoserver_config.json'))
-    if geoserver_configs:
-        with open(os.path.join(proj_dir, 'geoserver_config.json')) as a:
-            configs = json.loads(a.read())
-        geoserver_url = configs['url']
-        workspace = configs['workspace']
-        drainagelines_layer = configs['dl_layer']
-        catchment_layer = configs['ctch_layer']
-    else:
-        geoserver_url = ''
-        workspace = ''
-        drainagelines_layer = ''
-        catchment_layer = ''
+    with open(os.path.join(proj_dir, 'export_configs.json')) as a:
+        configs = json.loads(a.read())
+    geoserver_url = configs['url']
+    workspace = configs['workspace']
+    drainagelines_layer = configs['dl']
+    catchment_layer = configs['ctch']
 
     context = {
         'project': project,
@@ -139,8 +118,9 @@ def project_overview(request):
         'shapefiles': shapefiles_created,
         'shapefilesJS': json.dumps(shapefiles_created),
 
-        'geoserver': geoserver_configs,
-        'geoserverJS': json.dumps(geoserver_configs),
+        'exported': configs['exported'],
+        'exportedJS': json.dumps(configs['exported']),
+
         'geoserver_url': geoserver_url,
         'workspace': workspace,
         'drainagelines_layer': drainagelines_layer,
@@ -151,11 +131,52 @@ def project_overview(request):
 
 
 @login_required()
+def render_hydroviewer(request):
+    project = request.POST.get('project', False)
+    project_title = False
+    url = ''
+    workspace = ''
+    dl = ''
+    ctch = ''
+
+    projects_path = os.path.join(App.get_app_workspace().path, 'projects')
+    projects = os.listdir(projects_path)
+    projects = [(prj.replace('_', ' '), prj) for prj in projects if os.path.isdir(os.path.join(projects_path, prj))]
+    projects = SelectInput(display_text='Get values from a Hydroviewer project',
+                           name='project',
+                           multiple=False,
+                           options=projects)
+
+    if project:
+        exports_config_file_path = os.path.join(get_project_directory(project), 'export_configs.json')
+        if os.path.exists(exports_config_file_path):
+            project_title = project.replace('_', ' ')
+            with open(exports_config_file_path, 'r') as ec:
+                configs = json.loads(ec.read())
+                url = configs['url']
+                workspace = configs['workspace']
+                dl = configs['dl']
+                ctch = configs['ctch']
+
+    context = {
+        'project': project,
+        'projects': projects,
+        'project_title': project_title,
+        'url': url,
+        'workspace': workspace,
+        'dl': dl,
+        'ctch': ctch,
+    }
+
+    return render(request, 'geoglows_hydroviewer/creator_render_hydroviewer.html', context)
+
+
+@login_required()
 def draw_hydroviewer_boundaries(request):
     project = request.GET.get('project', False)
     if not project:
         messages.error(request, 'Unable to find this project')
-        return redirect('../..')
+        return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
 
     watersheds_select_input = SelectInput(
         display_text='Select A Watershed',
@@ -185,7 +206,7 @@ def draw_hydroviewer_boundaries(request):
         'watersheds_select_input': watersheds_select_input,
         'geojson': bool(os.path.exists(os.path.join(get_project_directory(project), 'boundaries.json'))),
     }
-    return render(request, 'geoglows_hydroviewer/creator_draw_hydroviewer_boundaries.html', context)
+    return render(request, 'geoglows_hydroviewer/creator_boundaries_draw.html', context)
 
 
 @login_required()
@@ -213,7 +234,7 @@ def choose_hydroviewer_boundaries(request):
     project = request.GET.get('project', False)
     if not project:
         messages.error(request, 'Unable to find this project')
-        return redirect('../..')
+        return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
 
     regions = SelectInput(
         display_text='Pick A World Region (ESRI Living Atlas)',
@@ -254,7 +275,7 @@ def choose_hydroviewer_boundaries(request):
         'regions': regions,
         'geojson': bool(os.path.exists(os.path.join(get_project_directory(project), 'boundaries.json'))),
     }
-    return render(request, 'geoglows_hydroviewer/creator_choose_hydroviewer_boundaries.html', context)
+    return render(request, 'geoglows_hydroviewer/creator_boundaries_choose_predefined.html', context)
 
 
 @login_required()
@@ -354,129 +375,3 @@ def geoprocess_hydroviewer_clip(request):
 
     else:
         raise ValueError('illegal shapefile type specified')
-
-
-@login_required()
-def shapefile_export_geoserver(request):
-    project = request.GET.get('project', False)
-    url = request.GET.get('gs_url')
-    username = request.GET.get('gs_username', 'admin')
-    password = request.GET.get('gs_password', 'geoserver')
-    workspace_name = request.GET.get('workspace', 'geoglows_hydroviewer_creator')
-    dl_name = request.GET.get('dl_name', 'drainagelines')
-    ct_name = request.GET.get('ct_name', 'catchments')
-    if not project:
-        return JsonResponse({'error': 'unable to find the project'})
-    proj_dir = get_project_directory(project)
-
-    try:
-        cat = Catalog(url, username=username, password=password)
-
-        # identify the geoserver stores
-        workspace = cat.get_workspace(workspace_name)
-
-        try:
-            # create geoserver store and upload the catchments
-            shapefile_plus_sidecars = geoserver.util.shapefile_and_friends(
-                os.path.join(proj_dir, 'selected_catchment', 'catchment_select'))
-            cat.create_featurestore(ct_name, workspace=workspace, data=shapefile_plus_sidecars, overwrite=True)
-        except Exception as e:
-            print('failed to upload catchments')
-            print(e)
-
-        try:
-            # create geoserver store and upload the drainagelines
-            shapefile_plus_sidecars = geoserver.util.shapefile_and_friends(
-                os.path.join(proj_dir, 'selected_drainageline', 'drainageline_select'))
-            cat.create_featurestore(dl_name, workspace=workspace, data=shapefile_plus_sidecars, overwrite=True)
-        except Exception as e:
-            print('failed to upload drainagelines')
-            print(e)
-
-        # geoserver_configs keys to be added to geoserver_configs dictionary
-        geoserver_configs = {
-            'url': url.replace('/rest/', '/wms'),
-            'workspace': workspace_name,
-            'dl_layer': dl_name,
-            'ctch_layer': ct_name,
-        }
-
-        with open(os.path.join(proj_dir, 'geoserver_config.json'), 'w') as configfile:
-            configfile.write(json.dumps(geoserver_configs))
-    except Exception as e:
-        print(e)
-        return JsonResponse({'status': 'failed'})
-
-    return JsonResponse({'status': 'success'})
-
-
-@login_required()
-def shapefile_export_zipfile(request):
-    project = request.GET.get('project', False)
-    if not project:
-        return JsonResponse({'error': 'unable to find the project'})
-    proj_dir = get_project_directory(project)
-    zip_path = os.path.join(proj_dir, 'hydroviewer_shapefiles.zip')
-
-    # if there is already a zip file, serve it for download
-    if os.path.exists(zip_path):
-        zip_file = open(zip_path, 'rb')
-        response = HttpResponse(zip_file, content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename="hydroviewer_shapefiles.zip"'
-        return response
-
-    catchment_shapefile = os.path.join(proj_dir, 'selected_catchment', 'catchment_select.shp')
-    drainageline_shapefile = os.path.join(proj_dir, 'selected_drainageline', 'drainageline_select.shp')
-    if not os.path.exists(catchment_shapefile):
-        raise FileNotFoundError('selected catchment shapefile does not exist')
-    if not os.path.exists(drainageline_shapefile):
-        raise FileNotFoundError('selected drainageline shapefile does not exist')
-
-    try:
-        with ZipFile(zip_path, 'w') as zipfile:
-            catchment_components = glob.glob(os.path.join(proj_dir, 'selected_catchment', 'catchment_select.*'))
-            for component in catchment_components:
-                zipfile.write(component, arcname=os.path.join('selected_catchment', os.path.basename(component)))
-            dl_components = glob.glob(os.path.join(proj_dir, 'selected_drainageline', 'drainageline_select.*'))
-            for component in dl_components:
-                zipfile.write(component, arcname=os.path.join('selected_drainageline', os.path.basename(component)))
-    except Exception as e:
-        shutil.rmtree(zip_path)
-        raise e
-
-    zip_file = open(zip_path, 'rb')
-    response = HttpResponse(zip_file.read(), content_type='application/zip')
-    response['Content-Disposition'] = 'attachment; filename="hydroviewer_shapefiles.zip"'
-    return response
-
-
-@login_required()
-def project_export_html(request):
-    project = request.GET.get('project', False)
-    if not project:
-        return JsonResponse({'error': 'unable to find the project'})
-    proj_dir = get_project_directory(project)
-    html_path = os.path.join(proj_dir, 'hydroviewer.html')
-
-    with open(os.path.join(proj_dir, 'geoserver_config.json')) as configfile:
-        geoserver_configs = json.loads(configfile.read())
-    with open(os.path.join(proj_dir, 'boundaries.json')) as bndsgj:
-        boundaries_json = json.loads(bndsgj.read())
-    with open(os.path.join(App.get_app_workspace().path, 'hydroviewer_interactive.html'), 'r') as template:
-        with open(html_path, 'w') as hydrohtml:
-            hydrohtml.write(
-                jinja2.Template(template.read()).render(
-                    title=project.replace('_', ' '),
-                    api_endpoint='https://tethys2.byu.edu/localsptapi/api/',
-                    geoserver_wms_url=geoserver_configs['url'],
-                    workspace=geoserver_configs['workspace'],
-                    catchment_layer=geoserver_configs['ctch_layer'],
-                    drainage_layer=geoserver_configs['dl_layer'],
-                    boundaries_json=json.dumps(boundaries_json),
-                )
-            )
-
-    with open(html_path, 'r') as htmlfile:
-        response = HttpResponse(htmlfile, content_type='text/html')
-        response['Content-Disposition'] = f'attachment; filename="{project}_hydroviewer.html"'
-        return response
