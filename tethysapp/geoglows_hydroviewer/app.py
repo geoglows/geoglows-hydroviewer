@@ -28,7 +28,6 @@ class GeoglowsHydroviewer(TethysAppBase):
             UrlMap(name='home',
                    url=f'{self.root_url}',
                    controller=f'{self.package}.controllers.home'),
-            
             UrlMap(name='hydroshare_view',
                    url=f'{self.root_url}/hydroshare',
                    controller=f'{self.package}.controllers.hydroshare_view'),

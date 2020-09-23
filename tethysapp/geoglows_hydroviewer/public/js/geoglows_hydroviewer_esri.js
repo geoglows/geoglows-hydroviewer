@@ -83,3 +83,46 @@ const globalLayer = L.esri.dynamicMapLayer({
 }).addTo(mapObj);
 L.control.layers(basemapsJson, {'Stream Network': globalLayer, 'Gauge Network': gaugeNetwork, 'VIIRS Imagery': VIIRSlayer}, {'collapsed': false}).addTo(mapObj);
 
+mapObj.on("click", function (event) {
+    if (mapObj.getZoom() <= 9.5) {
+        mapObj.flyTo(event.latlng, 10);
+        return
+    } else {
+        mapObj.flyTo(event.latlng)
+    }
+    if (marker) {
+        mapObj.removeLayer(marker)
+    }
+    marker = L.marker(event.latlng).addTo(mapObj);
+    for (let i in chart_divs) {
+        chart_divs[i].html('')
+    }
+    updateStatusIcons('identify');
+    $("#chart_modal").modal('show');
+    L.esri.identifyFeatures({
+        url: 'https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
+    })
+        .on(mapObj)
+        // query bounding box
+        // .at(L.latLngBounds(
+        //     [event.latlng['lat'] - .05, event.latlng['lng'] - .05],
+        //     [event.latlng['lat'] + .05, event.latlng['lng'] + .05],))
+
+        // querying point with tolerance
+        .at([event.latlng['lat'], event.latlng['lng']])
+        .tolerance(10)  // map pixels to buffer search point
+        .precision(3)  // decimals in the returned coordinate pairs
+        // .returnGeometry(false)  // include geojson geometry
+        .run(function (error, featureCollection) {
+            if (error) {
+                updateStatusIcons('fail');
+                alert('Error finding the reach_id');
+                return
+            }
+            SelectedSegment.clearLayers();
+            SelectedSegment.addData(featureCollection.features[0].geometry)
+            REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"];
+            updateStatusIcons('load');
+            getStreamflowPlots();
+        })
+});

@@ -91,7 +91,7 @@ function getWatershedComponent(layername) {
 
 function getDrainageLine(layername) {
     let region = layername.replace('-drainageline','');
-    return L.tileLayer.wms('https://geoserver.hydroshare.org/geoserver/wms', {
+    return L.tileLayer.WMFS('https://geoserver.hydroshare.org/geoserver/wms', {
         version: '1.1.0',
         layers: 'HS-' + watersheds_hydroshare_ids[region] + ':' + layername + ' ' + layername,
         useCache: true,
