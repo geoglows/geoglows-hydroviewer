@@ -71,6 +71,7 @@ def home(request):
 
     return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer.html', context)
 
+
 def hydroshare_view(request):
     """
     Controller for the Hydroshare view page.
@@ -132,7 +133,7 @@ def hydroshare_view(request):
         'watersheds_select_input': watersheds_select_input,
     }
 
-    return render(request, 'geoglows_hydroviewer/hydroshare_view.html', context)
+    return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer.html', context)
 
 
 def get_streamflow(request):

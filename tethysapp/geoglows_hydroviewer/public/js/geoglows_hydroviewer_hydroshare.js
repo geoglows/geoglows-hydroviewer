@@ -1,3 +1,9 @@
+let listlayers = [];
+let ctrllayers = {};
+let boundary_layer;
+let catchment_layer;
+let drainage_layer;
+
 const watersheds_hydroshare_ids = {
     'islands-geoglows': 'e3910292be5e4fd79597c6c91cb084cf',
     'australia-geoglows': '9572eb7fa8744807962b9268593bd4ad',
@@ -21,6 +27,40 @@ const basemaps = {
 }
 
 ////////////////////////////////////////////////////////////////////////  MAP FUNCTIONS AND VARIABLES
+function showBoundaryLayersHS() {
+    ctrllayers = {};
+    for (let i = 0; i < watersheds.length; i++) {
+        ctrllayers[watersheds[i][0] + ' Boundary'] = getWatershedComponent(watersheds[i][1] + '-boundary').addTo(mapObj);
+    }
+    controlsObj = L.control.layers(basemaps, ctrllayers).addTo(mapObj);
+}
+
+function getWatershedComponent(layername) {
+    let region = layername.replace('-boundary', '').replace('-catchment', '');
+    return L.tileLayer.wms('https://geoserver.hydroshare.org/geoserver/wms', {
+        version: '1.1.0',
+        layers: 'HS-' + watersheds_hydroshare_ids[region] + ':' + layername + ' ' + layername,
+        useCache: true,
+        crossOrigin: false,
+        format: 'image/png',
+        transparent: true,
+        opacity: .5,
+    })
+}
+
+function getDrainageLine(layername) {
+    let region = layername.replace('-drainageline', '');
+    return L.tileLayer.wms('https://geoserver.hydroshare.org/geoserver/wms', {
+        version: '1.1.0',
+        layers: 'HS-' + watersheds_hydroshare_ids[region] + ':' + layername + ' ' + layername,
+        useCache: true,
+        crossOrigin: false,
+        format: 'image/png',
+        transparent: true,
+        opacity: 1,
+    })
+}
+
 showBoundaryLayersHS();
 ////////////////////////////////////////////////////////////////////////  LISTENERS FOR MAP LAYERS
 let startzoom;
@@ -58,6 +98,7 @@ mapObj.on('zoomend', function (event) {
         mapObj.removeLayer(drainage_layer);
     }
 });
+
 $("#watersheds_select_input").change(function () {
     let waterselect = $(this).val();
     for (let i in ctrllayers) {
@@ -79,4 +120,23 @@ $("#watersheds_select_input").change(function () {
     };
     controlsObj = L.control.layers(basemaps, ctrllayers).addTo(mapObj);
     mapObj.setMaxZoom(12);
+});
+
+// todo
+mapObj.on("click", function (event) {
+    if (mapObj.getZoom() >= cd_threshold) {
+        if (marker) {
+            mapObj.removeLayer(marker)
+        }
+        REACHID = drainage_layer.GetFeatureInfo(event);
+        marker = L.marker(event.latlng).addTo(mapObj);
+        marker.bindPopup('<b>Watershed/Region:</b> ' + $("#watersheds_select_input").val() + '<br><b>Reach ID:</b> ' + reachid);
+        updateStatusIcons('cleared');
+        for (let i in chart_divs) {
+            chart_divs[i].html('')
+        }
+        $("#forecast-table").html('');
+        $("#chart_modal").modal('show');
+        askAPI();
+    }
 });

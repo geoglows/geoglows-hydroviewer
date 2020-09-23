@@ -14,10 +14,10 @@
 
 {% block app_navigation_items %}
   {% url 'geoglows_hydroviewer:home' as hydroviewer %}
-  {% url 'geoglows_hydroviewer:geoglows_hydroviewer_creator' as creator %}
+  {% url 'geoglows_hydroviewer:hydroshare_view' as hydroshare %}
   {% url 'geoglows_hydroviewer:project_overview' as overview %}
   {% url 'geoglows_hydroviewer:render_hydroviewer' as render %}
-  {% url 'geoglows_hydroviewer:hydroshare_view' as hydroshare %}
+  {% url 'geoglows_hydroviewer:geoglows_hydroviewer_creator' as creator %}
 
   {% if request.path == hydroviewer %}
     <li class="title">Map Controls</li>

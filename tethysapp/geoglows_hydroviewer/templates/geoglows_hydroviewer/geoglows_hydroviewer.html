@@ -20,12 +20,20 @@
 {% block app_title %}{{ tethys_app.name }}{% endblock %}
 
 {% block app_content %}
+  {% if request.path == hydroshare %}
+    <h1>hello</h1>
+  {% endif %}
   <div id="map" class="map"></div>
 {% endblock %}
 
 {% block app_actions %}
+  {% url 'geoglows_hydroviewer:home' as hydroviewer %}
   {% url 'geoglows_hydroviewer:hydroshare_view' as hydroshare %}
-  <a href="{{ hydroshare }}" class="btn btn-default" role="button">Switch to Hydroshare layers</a>
+  {% if request.path == hydroshare %}
+    <a href="{{ hydroviewer }}" class="btn btn-default" role="button">Switch to ESRI layers</a>
+  {% else %}
+    <a href="{{ hydroshare }}" class="btn btn-default" role="button">Switch to HydroShare layers</a>
+  {% endif %}
 {% endblock %}
 
 {% block after_app_content %}
@@ -227,7 +235,6 @@
         <h1 style="text-align: center">WARNING</h1>
         <div class="modal-body">
           <h2 style="text-align: center">You need to be logged in to access the Hydroviewer Creator page</h2>
-          {% url 'geoglows_hydroviewer:geoglows_hydroviewer_creator' as creator %}
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           </div>
@@ -244,21 +251,30 @@
 {% endblock %}
 
 {% block scripts %}
+  {% url 'geoglows_hydroviewer:home' as hydroviewer %}
+  {% url 'geoglows_hydroviewer:hydroshare_view' as hydroshare %}
+
   {{ block.super }}
   <script>
-    let endpoint = "{{ endpoint }}";
-    // URLS
-    let URL_get_streamflow = "{% url 'geoglows_hydroviewer:get_streamflow' %}";
-    let URL_correct_bias = "{% url 'geoglows_hydroviewer:correct_bias' %}";
-    let URL_upload_new_observations = "{% url 'geoglows_hydroviewer:upload_new_observations' %}";
-    let URL_get_gauge_geojson = "{% url 'geoglows_hydroviewer:get_gauge_geojson' %}";
-    let URL_find_reach_id = "{% url 'geoglows_hydroviewer:find_reach_id' %}";
+      let endpoint = "{{ endpoint }}";
+      // URLS
+      let URL_get_streamflow = "{% url 'geoglows_hydroviewer:get_streamflow' %}";
+      let URL_correct_bias = "{% url 'geoglows_hydroviewer:correct_bias' %}";
+      let URL_upload_new_observations = "{% url 'geoglows_hydroviewer:upload_new_observations' %}";
+      let URL_get_gauge_geojson = "{% url 'geoglows_hydroviewer:get_gauge_geojson' %}";
+      let URL_find_reach_id = "{% url 'geoglows_hydroviewer:find_reach_id' %}";
   </script>
   {# Leaflet #}
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
   <script src="https://unpkg.com/esri-leaflet@2.2.3/dist/esri-leaflet.js"></script>
   {# Plotly #}
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script type="text/javascript" src="{% static 'geoglows_hydroviewer/js/geoglowshydroviewerutilities.js' %}"></script>
-  <script type="text/javascript" src="{% static 'geoglows_hydroviewer/js/geoglows_hydroviewer.js' %}"></script>
+  <script type="text/javascript" src="{% static 'geoglows_hydroviewer/js/geoglows_hydroviewer_core.js' %}"></script>
+  {% if request.path == hydroshare %}
+    <script type="text/javascript" src="{% static 'geoglows_hydroviewer/js/extensionWMFS.js' %}"></script>
+    <script type="text/javascript"
+            src="{% static 'geoglows_hydroviewer/js/geoglows_hydroviewer_hydroshare.js' %}"></script>
+  {% else %}
+    <script type="text/javascript" src="{% static 'geoglows_hydroviewer/js/geoglows_hydroviewer_esri.js' %}"></script>
+  {% endif %}
 {% endblock %}
