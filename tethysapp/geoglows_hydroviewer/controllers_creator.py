@@ -138,7 +138,10 @@ def render_hydroviewer(request):
     workspace = ''
     dl = ''
     ctch = ''
+    center = ''
+    zoom = ''
 
+    # contols to auto fill form values with project values
     projects_path = os.path.join(App.get_app_workspace().path, 'projects')
     projects = os.listdir(projects_path)
     projects = [(prj.replace('_', ' '), prj) for prj in projects if os.path.isdir(os.path.join(projects_path, prj))]
@@ -153,10 +156,12 @@ def render_hydroviewer(request):
             project_title = project.replace('_', ' ')
             with open(exports_config_file_path, 'r') as ec:
                 configs = json.loads(ec.read())
-                url = configs['url']
-                workspace = configs['workspace']
-                dl = configs['dl']
-                ctch = configs['ctch']
+                url = configs.get('url', '')
+                workspace = configs.get('workspace', '')
+                dl = configs.get('dl', '')
+                ctch = configs.get('ctch', '')
+                center = configs.get('center', '')
+                zoom = configs.get('zoom', '')
 
     context = {
         'project': project,
@@ -166,6 +171,8 @@ def render_hydroviewer(request):
         'workspace': workspace,
         'dl': dl,
         'ctch': ctch,
+        'center': center,
+        'zoom': zoom,
     }
 
     return render(request, 'geoglows_hydroviewer/creator_render_hydroviewer.html', context)

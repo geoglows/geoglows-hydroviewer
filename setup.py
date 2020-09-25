@@ -32,3 +32,7 @@ setup(
     zip_safe=False,
     install_requires=dependencies,
 )
+
+# todo
+# write the center and zoom to the export configs json
+# check that the html export works

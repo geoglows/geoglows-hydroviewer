@@ -154,7 +154,7 @@ def export_hydroshare(request):
 def export_html(request):
     template_path = os.path.join(App.get_app_workspace().path, 'hydroviewer_interactive_template.html')
 
-    title = request.GET.get('title')
+    title = request.POST.get('title')
     html_path = os.path.join(App.get_app_workspace().path, f'{title}.html')
 
     with open(template_path) as template:
@@ -163,11 +163,12 @@ def export_html(request):
                 jinja2.Template(template.read()).render(
                     title=title,
                     api_endpoint=geoglows.streamflow.ENDPOINT,
-                    geoserver_wms_url=request.GET.get('url'),
-                    workspace=request.GET.get('workspace'),
-                    catchment_layer=request.GET.get('ctch'),
-                    drainage_layer=request.GET.get('dl'),
-                    boundaries_json=request.GET.get('bounds', ''),
+                    geoserver_wms_url=request.POST.get('url'),
+                    workspace=request.POST.get('workspace'),
+                    catchment_layer=request.POST.get('ctch'),
+                    drainage_layer=request.POST.get('dl'),
+                    center=request.POST.get('center', '0, 0'),
+                    zoom=request.POST.get('zoom', 5)
                 )
             )
 

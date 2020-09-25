@@ -122,7 +122,13 @@
 
 <script>
     const endpoint = '{{ api_endpoint }}'
-    const map = L.map("map", {center: [0, 0], crs: L.CRS.EPSG3857, zoom: 4, zoomControl: false, preferCanvas: false});
+    const map = L.map("map", {
+        center: [{{ center }}],
+        crs: L.CRS.EPSG3857,
+        zoom: {{ zoom }},
+        zoomControl: false,
+        preferCanvas: false
+    });
     const stamen_basemap = L.tileLayer("https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg",
         {
             "attribution": "Map tiles by \u003ca href=\"http://stamen.com\"\u003eStamen Design\u003c/a\u003e, under \u003ca href=\"http://creativecommons.org/licenses/by/3.0\"\u003eCC BY 3.0\u003c/a\u003e. Data by \u0026copy; \u003ca href=\"http://openstreetmap.org\"\u003eOpenStreetMap\u003c/a\u003e, under \u003ca href=\"http://creativecommons.org/licenses/by-sa/3.0\"\u003eCC BY SA\u003c/a\u003e.",
@@ -135,11 +141,6 @@
             "subdomains": "abc",
             "tms": false
         }).addTo(map);
-    const project_bounds = L.geoJSON({{ boundaries_json }}, {
-        fillColor: 'rgba(0,0,0,0)',
-        fillOpacity: 'rgba(0,0,0,0)'
-    }).addTo(map);
-    map.fitBounds(project_bounds.getBounds())
     const catchment_layer = L.tileLayer.wms(
         "{{ geoserver_wms_url }}", {
             "format": "image/png",

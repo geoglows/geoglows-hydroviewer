@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block app_content %}
-  <div style="padding: 12px; overflow-y: scroll">
+  <div style="padding: 12px">
     {% if project %}
       <h1>Render Hydroviewer Project: {{ project_title }}</h1>
     {% else %}
@@ -36,6 +36,12 @@
       <label for="ctch-input" class="control-label">Catchments Layer Name</label>
       <input id="ctch-input" class="form-control input" type="text" name="ctch"
              placeholder="selected_catchments" value="{{ ctch }}" required>
+      <label for="center-input" class="control-label">Center of Map</label>
+      <input id="center-input" class="form-control input" type="text" name="center"
+             placeholder="selected_catchments" value="{{ center }}" required>
+      <label for="zoom-input" class="control-label">Zoom Level</label>
+      <input id="zoom-input" class="form-control input" type="text" name="zoom"
+             placeholder="selected_catchments" value="{{ zoom }}" required>
       <hr>
       <button class="btn btn-success" role="button" form="render-configs-form" submit="True">
         <span class="glyphicon glyphicon-save"></span> Download Rendered Hydroviewer HTML
