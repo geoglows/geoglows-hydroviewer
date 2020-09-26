@@ -157,24 +157,35 @@ def export_html(request):
     title = request.POST.get('title')
     html_path = os.path.join(App.get_app_workspace().path, f'{title}.html')
 
+    esridependency = any([request.POST.get('esri-imagery', False), request.POST.get('esri-hybrid', False)])
+
     with open(template_path) as template:
         with open(html_path, 'w') as hydrohtml:
             hydrohtml.write(
                 jinja2.Template(template.read()).render(
                     title=title,
+                    # geoglows data endpoint
                     api_endpoint=geoglows.streamflow.ENDPOINT,
+                    # data services and map configs
                     geoserver_wms_url=request.POST.get('url'),
                     workspace=request.POST.get('workspace'),
                     catchment_layer=request.POST.get('ctch'),
                     drainage_layer=request.POST.get('dl'),
                     center=request.POST.get('center', '0, 0'),
-                    zoom=request.POST.get('zoom', 5)
+                    zoom=request.POST.get('zoom', 5),
+                    # basemaps
+                    openstreetmap=bool(request.POST.get('openstreetmap', False)),
+                    stamenterrain=bool(request.POST.get('stamen-terrain', False)),
+                    stamenwatercolor=bool(request.POST.get('stamen-watercolor', False)),
+                    esridependency=esridependency,
+                    esriimagery=bool(request.POST.get('esri-imagery', False)),
+                    esrihybrid=bool(request.POST.get('esri-hybrid', False)),
                 )
             )
 
     with open(html_path, 'r') as htmlfile:
         response = HttpResponse(htmlfile, content_type='text/html')
-        response['Content-Disposition'] = f'attachment; filename="{title}_hydroviewer.html"'
+        response['Content-Disposition'] = f'attachment; filename="hydroviewer.html"'
 
     os.remove(html_path)
     return response

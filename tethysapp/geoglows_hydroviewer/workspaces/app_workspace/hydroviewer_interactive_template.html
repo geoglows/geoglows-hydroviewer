@@ -8,6 +8,11 @@
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.css"/>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
+  {% if esridependency %}
+    <script src="https://unpkg.com/esri-leaflet@2.5.0/dist/esri-leaflet.js"
+            integrity="sha512-ucw7Grpc+iEQZa711gcjgMBnmd9qju1CICsRaryvX7HJklK0pGl/prxKvtHwpgm5ZHdvAil7YPxI1oWPOWK3UQ=="
+            crossorigin=""></script>
+  {% endif %}
   <style>
       html, body {
           width: 100%;
@@ -129,18 +134,51 @@
         zoomControl: false,
         preferCanvas: false
     });
-    const stamen_basemap = L.tileLayer("https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg",
-        {
-            "attribution": "Map tiles by \u003ca href=\"http://stamen.com\"\u003eStamen Design\u003c/a\u003e, under \u003ca href=\"http://creativecommons.org/licenses/by/3.0\"\u003eCC BY 3.0\u003c/a\u003e. Data by \u0026copy; \u003ca href=\"http://openstreetmap.org\"\u003eOpenStreetMap\u003c/a\u003e, under \u003ca href=\"http://creativecommons.org/licenses/by-sa/3.0\"\u003eCC BY SA\u003c/a\u003e.",
-            "detectRetina": false,
-            "maxNativeZoom": 18,
-            "maxZoom": 18,
-            "minZoom": 0,
-            "noWrap": false,
-            "opacity": 1,
-            "subdomains": "abc",
-            "tms": false
-        }).addTo(map);
+    const basemaps = {
+        {% if openstreetmap %}
+            'OpenStreetMap': L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+                    "attribution": "\u003ca href=\"https://openstreetmap.org\"\u003eOpenStreetMap\u003c/a\u003e",
+                    "subdomains": "abc"
+                }),
+        {% endif %}
+        {% if stamenterrain %}
+            'Stamen Terrain': L.tileLayer("https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg",
+                {
+                    "attribution": "Map tiles by \u003ca href=\"http://stamen.com\"\u003eStamen Design\u003c/a\u003e, under \u003ca href=\"http://creativecommons.org/licenses/by/3.0\"\u003eCC BY 3.0\u003c/a\u003e. Data by \u0026copy; \u003ca href=\"http://openstreetmap.org\"\u003eOpenStreetMap\u003c/a\u003e, under \u003ca href=\"http://creativecommons.org/licenses/by-sa/3.0\"\u003eCC BY SA\u003c/a\u003e.",
+                    "detectRetina": false,
+                    "maxNativeZoom": 18,
+                    "maxZoom": 18,
+                    "minZoom": 0,
+                    "noWrap": false,
+                    "opacity": 1,
+                    "subdomains": "abc",
+                    "tms": false
+                }),
+        {% endif %}
+        {% if stamenwatercolor %}
+            'Stamen Watercolor': L.tileLayer("https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg",
+                {
+                    "attribution": "Map tiles by \u003ca href=\"http://stamen.com\"\u003eStamen Design\u003c/a\u003e, under \u003ca href=\"http://creativecommons.org/licenses/by/3.0\"\u003eCC BY 3.0\u003c/a\u003e. Data by \u0026copy; \u003ca href=\"http://openstreetmap.org\"\u003eOpenStreetMap\u003c/a\u003e, under \u003ca href=\"http://creativecommons.org/licenses/by-sa/3.0\"\u003eCC BY SA\u003c/a\u003e.",
+                    "detectRetina": false,
+                    "maxNativeZoom": 18,
+                    "maxZoom": 18,
+                    "minZoom": 0,
+                    "noWrap": false,
+                    "opacity": 1,
+                    "subdomains": "abc",
+                    "tms": false
+                }),
+        {% endif %}
+        {% if esriimagery %}
+            'ESRI World Imagery': L.esri.basemapLayer('Imagery'),
+        {% endif %}
+        {% if esrihybrid %}
+            'ESRI Labeled World Imagery': L.layerGroup([L.esri.basemapLayer('Imagery'), L.esri.basemapLayer('ImageryLabels')]),
+        {% endif %}
+    }
+    basemaps[Object.keys(basemaps)[0]].addTo(map);
+
     const catchment_layer = L.tileLayer.wms(
         "{{ geoserver_wms_url }}", {
             "format": "image/png",
@@ -156,8 +194,8 @@
         }
     ).addTo(map);
     L.control.layers(
-        {"Stamen Terrain Basemap": stamen_basemap},
-        {"Project Boundaries": project_bounds, "Drainage Lines": drainageline_layer, "Catchments": catchment_layer},
+        basemaps,
+        {"Drainage Lines": drainageline_layer, "Catchments": catchment_layer},
         {"autoZIndex": true, "collapsed": false, "position": "topright"}
     ).addTo(map);
     ////////////////////////////////////////////////////////////////////////  MAP FUNCTIONS AND VARIABLES
@@ -184,6 +222,7 @@
         return div;
     };
     latlon.addTo(map);
+    {% if title %}
     const title = L.control({position: 'topleft'});
     title.onAdd = function () {
         let div = L.DomUtil.create('div', 'well well-sm');
@@ -191,6 +230,7 @@
         return div;
     };
     title.addTo(map);
+    {% endif %}
     L.control.zoom().addTo(map);
     ////////////////////////////////////////////////////////////////////////  LISTENERS FOR MAP LAYERS
     let marker = null;

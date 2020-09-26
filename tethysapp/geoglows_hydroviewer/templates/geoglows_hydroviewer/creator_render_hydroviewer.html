@@ -3,59 +3,72 @@
 {% load static %}
 
 {% block app_content %}
-  <div style="padding: 12px">
-    {% if project %}
-      <h1>Render Hydroviewer Project: {{ project_title }}</h1>
-    {% else %}
-      <h1>Render Existing Sources as Hydroviewer</h1>
-    {% endif %}
+  {% if project %}
+    <h1>Render Hydroviewer Project: {{ project_title }}</h1>
+  {% else %}
+    <h1>Render Existing Sources as Hydroviewer</h1>
+  {% endif %}
+
+  <hr>
+  <form id="fill-values-form" action="{% url 'geoglows_hydroviewer:render_hydroviewer' %}" method="post">
+    {% csrf_token %}
+    {% gizmo select_input projects %}
+    <button class="btn btn-success" role="button" form="fill-values-form" submit="True">
+      <span class="glyphicon glyphicon-circle-arrow-down"></span> Get Hydroviewer Values
+    </button>
+  </form>
+  <hr>
+
+  <form id="render-configs-form" action="{% url 'geoglows_hydroviewer:export_html' %}" method="post">
+    {% csrf_token %}
+    <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+
+    <label for="wms-endpoint-input" class="control-label">Geoserver WMS Endpoint</label>
+    <input id="wms-endpoint-input" class="form-control input" type="text" name="url"
+           placeholder="https://geoserver.host.com/geoserver/wms" value="{{ url }}" required>
+    <label for="workspace-input" class="control-label">Workspace</label>
+    <input id="workspace-input" class="form-control input" type="text" name="workspace"
+           placeholder="workspace" value="{{ workspace }}" required>
+    <label for="dl-input" class="control-label">Drainage Line Layer Name</label>
+    <input id="dl-input" class="form-control input" type="text" name="dl"
+           placeholder="selected_drainagelines" value="{{ dl }}" required>
+    <label for="ctch-input" class="control-label">Catchments Layer Name</label>
+    <input id="ctch-input" class="form-control input" type="text" name="ctch"
+           placeholder="selected_catchments" value="{{ ctch }}" required>
+    <label for="center-input" class="control-label">Center of Map</label>
+    <input id="center-input" class="form-control input" type="text" name="center"
+           placeholder="latitude, longitude" value="{{ center }}" required>
+    <label for="zoom-input" class="control-label">Zoom Level</label>
+    <input id="zoom-input" class="form-control input" type="text" name="zoom"
+           placeholder="integer between 1 and 10" value="{{ zoom }}" required>
 
     <hr>
-    <form id="fill-values-form" action="{% url 'geoglows_hydroviewer:render_hydroviewer' %}" method="post">
-      {% csrf_token %}
-      {% gizmo select_input projects %}
-      <button class="btn btn-success" role="button" form="fill-values-form" submit="True">
-        <span class="glyphicon glyphicon-circle-arrow-down"></span> Get Hydroviewer Values
-      </button>
-    </form>
+
+    <h3>Optional: Choose Basemaps</h3>
+    <input type="checkbox" id="openstreetmap" name="openstreetmap" checked>
+    <label for="openstreetmap" class="control-label">OpenStreetMap</label><br>
+    <input type="checkbox" id="stamen-terrain" name="stamen-terrain">
+    <label for="stamen-terrain" class="control-label">Stamen Terrain</label><br>
+    <input type="checkbox" id="stamen-watercolor" name="stamen-watercolor">
+    <label for="stamen-watercolor" class="control-label">Stamen Watercolor</label><br>
+    <input type="checkbox" id="esri-imagery" name="esri-imagery">
+    <label for="esri-imagery" class="control-label">ESRI World Imagery</label><br>
+    <input type="checkbox" id="esri-hybrid" name="esri-hybrid">
+    <label for="esri-hybrid" class="control-label">ESRI World Imagery with Labels</label><br>
+
     <hr>
 
-    <form id="render-configs-form" action="{% url 'geoglows_hydroviewer:export_html' %}" method="post">
-      {% csrf_token %}
-      <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
-
-      <label for="wms-endpoint-input" class="control-label">Geoserver WMS Endpoint</label>
-      <input id="title-input" class="form-control input" type="text" name="url"
-             placeholder="https://geoserver.host.com/geoserver/wms" value="{{ url }}" required>
-      <label for="workspace-input" class="control-label">Workspace</label>
-      <input id="workspace-input" class="form-control input" type="text" name="workspace"
-             placeholder="workspace" value="{{ workspace }}" required>
-      <label for="dl-input" class="control-label">Drainage Line Layer Name</label>
-      <input id="dl-input" class="form-control input" type="text" name="dl"
-             placeholder="selected_drainagelines" value="{{ dl }}" required>
-      <label for="ctch-input" class="control-label">Catchments Layer Name</label>
-      <input id="ctch-input" class="form-control input" type="text" name="ctch"
-             placeholder="selected_catchments" value="{{ ctch }}" required>
-      <label for="center-input" class="control-label">Center of Map</label>
-      <input id="center-input" class="form-control input" type="text" name="center"
-             placeholder="selected_catchments" value="{{ center }}" required>
-      <label for="zoom-input" class="control-label">Zoom Level</label>
-      <input id="zoom-input" class="form-control input" type="text" name="zoom"
-             placeholder="selected_catchments" value="{{ zoom }}" required>
-      <hr>
-      <button class="btn btn-success" role="button" form="render-configs-form" submit="True">
-        <span class="glyphicon glyphicon-save"></span> Download Rendered Hydroviewer HTML
-      </button>
-    </form>
-  </div>
+    <button class="btn btn-success" role="button" form="render-configs-form" submit="True">
+      <span class="glyphicon glyphicon-save"></span> Download Rendered Hydroviewer HTML
+    </button>
+  </form>
 {% endblock %}
 
 {% block app_actions %}
-  <form id="overview-form" action="{% url 'geoglows_hydroviewer:project_overview' %}" method="get">
-    <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+  <form id="overview-form" action="{% url 'geoglows_hydroviewer:geoglows_hydroviewer_creator' %} }}" method="post">
     <div class="btn-group ">
       <button class="btn btn-success" role="button" form="overview-form" submit="True">
-        <span class="glyphicon glyphicon-home"></span> Return to Overview Without Uploading
+        <span class="glyphicon glyphicon-home"></span> Return to Creator
       </button>
     </div>
   </form>
@@ -64,7 +77,8 @@
 {% block content_dependent_styles %}
   {{ block.super }}
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css">
-  <link href="{% static 'geoglows_hydroviewer/css/main.css' %}" rel="stylesheet"/>
+  {#  <link href="{% static 'geoglows_hydroviewer/css/main.css' %}" rel="stylesheet"/>#}
+  <link href="{% static 'geoglows_hydroviewer/css/overflow.css' %}" rel="stylesheet"/>
 {% endblock %}
 
 {% block scripts %}
