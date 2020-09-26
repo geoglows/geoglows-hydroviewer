@@ -60,7 +60,9 @@
       <a class="btn btn-default" role="button" data-toggle="modal" data-target="#warn_modal" style="width: 100%">Go to
         Hydroviewer Creator</a>
     {% endif %}
+
   {% elif request.path == hydroshare %}
+    <li class="title">Map Controls</li>
     <li>{% gizmo select_input watersheds_select_input %}</li>
     <li class="separator"></li>
     <label class="control-label" for="search_reachid_input">Search for a Reach ID</label>
@@ -93,9 +95,9 @@
       Page</a>
     <li class="separator"></li>
     <li class="title">Hydroviewer Creation Tools</li>
-    <li class="{% if request.path == creator %}active{% endif %}"><a href="{{ creator }}">Project Selection</a></li>
-    <li class="{% if request.path == overview %}active{% endif %}"><a>Project Overview</a></li>
-    <li class="{% if request.path == render %}active{% endif %}"><a href="{{ render }}">Render Hydroviewer</a></li>
+    <li {% if request.path == creator %}class="active"{% endif %}><a href="{{ creator }}">Project Selection</a></li>
+    <li {% if request.path == overview %}class="active"{% endif %}><a>Project Overview</a></li>
+    <li {% if request.path == render %}class="active"{% endif %}><a href="{{ render }}">Render Hydroviewer</a></li>
   {% endif %}
 
 
