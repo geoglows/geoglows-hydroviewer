@@ -37,10 +37,24 @@ function processShapefiles() {
                         dataType: 'json',
                         success: function () {
                             progress_list.append('<li>Clipped</li>');
-                            progress_list.append('<li>DONE!</li>');
-                            load_bar.hide();
-                            alert('Your shapefiles were created successfully. This page will now refresh.')
-                            window.location.reload(true)
+                            progress_list.append('<li>Zipping Shapefiles</li>');
+                            $.ajax({
+                                type: 'GET',
+                                url: URLzipshapes,
+                                data: {'project': project},
+                                dataType: 'json',
+                                success: function () {
+                                    progress_list.append('<li>Zipped</li>');
+                                    progress_list.append('<li>Geoprocessing finished!</li>');
+                                    load_bar.hide();
+                                    alert('Your shapefiles were created successfully. This page will now refresh.')
+                                    location.reload(true)
+                                },
+                                error: function () {
+                                    progress_list.append('<li>FAILED</li>');
+                                    load_bar.hide();
+                                },
+                            });
                         },
                         error: function () {
                             progress_list.append('<li>FAILED</li>');
@@ -53,10 +67,14 @@ function processShapefiles() {
                     load_bar.hide();
                 },
             });
-        },
+        }
+
+        ,
         error: function () {
             progress_list.append('<li>FAILED</li>');
             load_bar.hide();
-        },
-    });
+        }
+        ,
+    })
+    ;
 }

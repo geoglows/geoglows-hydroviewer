@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import urllib.parse
+from zipfile import ZipFile
 
 import geopandas as gpd
 from django.contrib import messages
@@ -107,8 +108,8 @@ def project_overview(request):
 
     boundaries_created = os.path.exists(os.path.join(proj_dir, 'boundaries.json'))
 
-    shapefiles_created = bool(os.path.exists(os.path.join(proj_dir, 'selected_catchment')) and
-                              os.path.exists(os.path.join(proj_dir, 'selected_drainageline')))
+    shapefiles_created = bool(os.path.exists(os.path.join(proj_dir, 'catchment_shapefiles.zip')) and
+                              os.path.exists(os.path.join(proj_dir, 'drainageline_shapefiles.zip')))
 
     with open(os.path.join(proj_dir, 'export_configs.json')) as a:
         configs = json.loads(a.read())
@@ -248,7 +249,7 @@ def save_boundaries(request):
 
     gjson_file = gpd.read_file(os.path.join(proj_dir, 'boundaries.json'))
     gjson_file = gjson_file.to_crs("EPSG:3857")
-    gjson_file.to_file(os.path.join(proj_dir, 'projected_selections'))
+    gjson_file.to_file(os.path.join(proj_dir, 'projected_boundaries'))
     return JsonResponse({'status': 'success'})
 
 
@@ -316,7 +317,7 @@ def upload_boundary(request):
     proj_dir = get_project_directory(project)
 
     # make the projected selections folder
-    tmp_dir = os.path.join(proj_dir, 'projected_selections')
+    tmp_dir = os.path.join(proj_dir, 'projected_boundaries')
     if os.path.exists(tmp_dir):
         shutil.rmtree(tmp_dir)
     os.mkdir(tmp_dir)
@@ -324,15 +325,15 @@ def upload_boundary(request):
     # save the uploaded shapefile to that folder
     files = request.FILES.getlist('files')
     for file in files:
-        file_name = 'projected_selections' + os.path.splitext(file.name)[-1]
+        file_name = 'projected_boundaries' + os.path.splitext(file.name)[-1]
         with open(os.path.join(tmp_dir, file_name), 'wb') as dst:
             for chunk in file.chunks():
                 dst.write(chunk)
 
     # read the uploaded shapefile with geopandas and save it to selections.geojson
-    boundaries_gdf = gpd.read_file(os.path.join(tmp_dir, 'projected_selections.shp'))
+    boundaries_gdf = gpd.read_file(os.path.join(tmp_dir, 'projected_boundaries.shp'))
     boundaries_gdf = boundaries_gdf.to_crs("EPSG:3857")
-    boundaries_gdf.to_file(os.path.join(tmp_dir, 'projected_selections.shp'))
+    boundaries_gdf.to_file(os.path.join(tmp_dir, 'projected_boundaries.shp'))
     boundaries_gdf = boundaries_gdf.to_crs("EPSG:4326")
     boundaries_gdf.to_file(os.path.join(proj_dir, "boundaries.json"), driver='GeoJSON')
 
@@ -345,7 +346,7 @@ def geoprocess_hydroviewer_idregion(request):
     if not project:
         raise FileNotFoundError('project directory not found')
     proj_dir = get_project_directory(project)
-    gjson_gdf = gpd.read_file(os.path.join(proj_dir, 'projected_selections', 'projected_selections.shp'))
+    gjson_gdf = gpd.read_file(os.path.join(proj_dir, 'projected_boundaries', 'projected_boundaries.shp'))
 
     for region_zip in glob.glob(os.path.join(SHAPE_DIR, '*-boundary.zip')):
         region_name = os.path.splitext(os.path.basename(region_zip))[0]
@@ -371,7 +372,7 @@ def geoprocess_hydroviewer_clip(request):
             shutil.rmtree(dl_folder)
         os.mkdir(dl_folder)
 
-        gjson_gdf = gpd.read_file(os.path.join(proj_dir, 'projected_selections', 'projected_selections.shp'))
+        gjson_gdf = gpd.read_file(os.path.join(proj_dir, 'projected_boundaries', 'projected_boundaries.shp'))
         dl_name = region_name.replace('boundary', 'drainageline')
         dl_path = os.path.join(SHAPE_DIR, dl_name + '.zip', dl_name + '.shp')
         dl_gdf = gpd.read_file("zip:///" + dl_path)
@@ -398,3 +399,47 @@ def geoprocess_hydroviewer_clip(request):
 
     else:
         raise ValueError('illegal shapefile type specified')
+
+
+@login_required()
+def geoprocess_zip_shapefiles(request):
+    project = request.GET.get('project', False)
+    proj_dir = get_project_directory(project)
+
+    catchment_zip = os.path.join(proj_dir, 'catchment_shapefiles.zip')
+    drainageline_zip = os.path.join(proj_dir, 'drainageline_shapefiles.zip')
+
+    catchment_shapefile = os.path.join(proj_dir, 'selected_catchment', 'catchment_select.shp')
+    drainageline_shapefile = os.path.join(proj_dir, 'selected_drainageline', 'drainageline_select.shp')
+
+    try:
+        if os.path.exists(catchment_shapefile):
+            with ZipFile(catchment_zip, 'w') as zipped:
+                for component in glob.glob(os.path.join(proj_dir, 'selected_catchment', 'catchment_select.*')):
+                    zipped.write(component, arcname=os.path.basename(component))
+            shutil.rmtree(os.path.join(proj_dir, 'selected_catchment'))
+        else:
+            raise FileNotFoundError('selected catchment shapefile does not exist')
+        if os.path.exists(drainageline_shapefile):
+            with ZipFile(drainageline_zip, 'w') as zipped:
+                for component in glob.glob(os.path.join(proj_dir, 'selected_drainageline', 'drainageline_select.*')):
+                    zipped.write(component, arcname=os.path.basename(component))
+                shutil.rmtree(os.path.join(proj_dir, 'selected_drainageline'))
+        else:
+            raise FileNotFoundError('selected drainageline shapefile does not exist')
+
+        return JsonResponse({'status': 'success'})
+
+    except FileNotFoundError as e:
+        if os.path.isdir(os.path.join(proj_dir, 'selected_drainageline')):
+            shutil.rmtree(os.path.join(proj_dir, 'selected_drainageline'))
+        if os.path.isdir(os.path.join(proj_dir, 'selected_catchment')):
+            shutil.rmtree(os.path.join(proj_dir, 'selected_catchment'))
+        if os.path.exists(catchment_zip):
+            os.remove(catchment_zip)
+        if os.path.exists(drainageline_zip):
+            os.remove(drainageline_zip)
+        raise e
+
+    except Exception as e:
+        raise e

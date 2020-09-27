@@ -14,7 +14,6 @@ from tethys_sdk.permissions import login_required
 
 from .app import GeoglowsHydroviewer as App
 from .hydroviewer_creator_tools import get_project_directory
-from .hydroviewer_creator_tools import zip_project_shapefiles
 
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
@@ -78,14 +77,9 @@ def export_zipfile(request):
     if not project:
         return JsonResponse({'error': 'unable to find the project'})
     proj_dir = get_project_directory(project)
-    zip_path = os.path.join(proj_dir, 'hydroviewer_shapefiles.zip')
 
-    # if there is already a zip file, serve it for download
-    if not os.path.exists(zip_path):
-        try:
-            zip_project_shapefiles(project)
-        except Exception as e:
-            raise e
+    # todo update this to download the drainagelines and catchments separately using the component command
+    zip_path = os.path.join(proj_dir, f'{request.GET.get("component")}_shapefiles.zip')
     zip_file = open(zip_path, 'rb')
     response = HttpResponse(zip_file, content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename="hydroviewer_shapefiles.zip"'
@@ -102,11 +96,10 @@ def export_hydroshare(request):
     zip_path = os.path.join(proj_dir, 'hydroviewer_shapefiles.zip')
 
     # make the zip file of shapefiles if it doesn't already exist
+    # todo we don't need to try zipping. make sure this works
+    # todo modify this to upload the catchments and drainagelines separately
     if not os.path.exists(zip_path):
-        try:
-            zip_project_shapefiles(project)
-        except Exception as e:
-            raise e
+        raise FileNotFoundError('Zipped shapefiles not found')
 
     # hs = hs_restclient.get_oauth_hs(request)
     auth = hs_restclient.HydroShareAuthBasic(username=request.POST.get('username'),
