@@ -19,7 +19,7 @@ const watersheds = [["Islands", "islands-geoglows"], ["Australia", "australia-ge
 const mapObj = L.map('map', {
     zoom: 3,
     minZoom: 2,
-    maxZoom: 3,
+    maxZoom: 12,
     boxZoom: true,
     maxBounds: L.latLngBounds(L.latLng(-100, -225), L.latLng(100, 225)),
     center: [20, 0],
@@ -65,11 +65,10 @@ const drawControl = new L.Control.Draw({
 mapObj.addControl(drawControl);
 mapObj.on(L.Draw.Event.CREATED, function (e) {
     drawnItems.addLayer(e.layer);
-    $("#geojson").attr('value', JSON.stringify(drawnItems.toGeoJSON()))
+    mapObj.fitBounds(L.geoJSON(drawnItems.toGeoJSON()).getBounds())
 });
 ////////////////////////////////////////////////////////////////////////  MAP FUNCTIONS AND VARIABLES
 function showBoundaryLayers() {
-    mapObj.setMaxZoom(3);
     ctrllayers = {};
     for (let i = 0; i < watersheds.length; i++) {
         ctrllayers[watersheds[i][0] + ' Boundary'] = getWatershedComponent(watersheds[i][1] + '-boundary').addTo(mapObj);
@@ -162,19 +161,24 @@ $("#watersheds_select_input").change(function () {
         'Drainage Lines': drainage_layer,
     };
     controlsObj = L.control.layers(basemaps, ctrllayers).addTo(mapObj);
-    mapObj.setMaxZoom(12);
 });
 ////////////////////////////////////////////////////////////////////////  UPLOAD BOUNDARIES
+let tmplayer;
 $("#submit-boundaries").on('click', function () {
     let return_home_button = $("#return_to_overview");
     let load_bar = $("#loading-bar-div");
     let load_status = $("#loading-message-div");
     load_bar.show();
-    load_status.html('loading...')
+    load_status.html('loading...');
+    let center = mapObj.getCenter();
     let data = {
         project: $("#project").val(),
-        geojson: JSON.stringify(drawnItems.toGeoJSON())
+        geojson: JSON.stringify(drawnItems.toGeoJSON()),
+        zoom: mapObj.getZoom(),
+        center_lat: Number(center.lat),
+        center_lng: Number(center.lng),
     }
+    console.log(data);
     $.ajax({
         type: 'POST',
         url: URL_saveboundaries,

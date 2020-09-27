@@ -1,5 +1,3 @@
-import os
-
 from tethys_sdk.app_settings import CustomSetting
 from tethys_sdk.base import TethysAppBase, url_map_maker
 
@@ -89,10 +87,10 @@ class GeoglowsHydroviewer(TethysAppBase):
                    controller=f'{self.package}.controllers_creator.choose_hydroviewer_boundaries'),
             UrlMap(name='upload_boundaries',
                    url=f'{self.root_url}/creator/project/edit/upload_boundaries',
-                   controller=f'{self.package}.controllers_creator.upload_boundary_shapefile'),
+                   controller=f'{self.package}.controllers_creator.upload_boundary'),
             UrlMap(name='save_boundaries',
                    url=f'{self.root_url}/creator/project/edit/save_boundaries',
-                   controller=f'{self.package}.controllers_creator.save_drawn_boundaries'),
+                   controller=f'{self.package}.controllers_creator.save_boundaries'),
             UrlMap(name='retrieve_boundaries',
                    url=f'{self.root_url}/creator/project/edit/retrieve_boundaries',
                    controller=f'{self.package}.controllers_creator.retrieve_hydroviewer_boundaries'),
@@ -117,8 +115,8 @@ class GeoglowsHydroviewer(TethysAppBase):
             CustomSetting(
                 name='global_delineation_shapefiles_directory',
                 type=CustomSetting.TYPE_STRING,
-                description="Absolute file path to a directory containing shapefiles (see app documentation)",
+                description="Absolute file path to a directory containing geoglows shapefiles (see app documentation)",
                 required=False,
-                default=f"{os.path.join(self.get_app_workspace().path, 'shapefiles')}",
+                default=self.get_app_workspace().path,
             ),
         )

@@ -4,7 +4,6 @@ import os
 import shutil
 import urllib.parse
 
-import geomatics
 import geopandas as gpd
 from django.contrib import messages
 from django.http import JsonResponse
@@ -17,8 +16,18 @@ from .hydroviewer_creator_tools import get_project_directory, shapefiles_downloa
 
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
-EXPORT_CONFIGS_DICT = {'url': '', 'workspace': '', 'dl': '', 'ctch': '', 'resource_id': '', 'exported': False,
-                       'export_destination': '', 'exported_by_app': False}
+EXPORT_CONFIGS_DICT = {
+    'url': '',
+    'workspace': '',
+    'dl': '',
+    'ctch': '',
+    'zoom': '',
+    'center': '',
+    'resource_id': '',
+    'exported': False,
+    'export_destination': '',
+    'exported_by_app': False
+}
 
 WARN_DOWNLOAD_SHAPEFILES = 'GEOGloWS Shapefile data not found. You can continue to work on projects who have created ' \
                            'shapefiles but will be unable to create shapefiles for new projects. Check the custom ' \
@@ -109,18 +118,23 @@ def project_overview(request):
     catchment_layer = configs['ctch']
 
     context = {
+        # project naming
         'project': project,
         'project_title': project.replace('_', ' '),
 
+        # step 1
         'boundaries': boundaries_created,
         'boundariesJS': json.dumps(boundaries_created),
 
+        # step 2
         'shapefiles': shapefiles_created,
         'shapefilesJS': json.dumps(shapefiles_created),
 
+        # step 3
         'exported': configs['exported'],
         'exportedJS': json.dumps(configs['exported']),
 
+        # config values
         'geoserver_url': geoserver_url,
         'workspace': workspace,
         'drainagelines_layer': drainagelines_layer,
@@ -217,18 +231,20 @@ def draw_hydroviewer_boundaries(request):
 
 
 @login_required()
-def save_drawn_boundaries(request):
+def save_boundaries(request):
     proj_dir = get_project_directory(request.POST['project'])
 
-    geojson = request.POST.get('geojson', False)
-    if geojson is not False:
-        with open(os.path.join(proj_dir, 'boundaries.json'), 'w') as gj:
-            gj.write(geojson)
+    with open(os.path.join(proj_dir, 'boundaries.json'), 'w') as gj:
+        gj.write(request.POST.get('geojson'))
 
-    esri = request.POST.get('esri', False)
-    if esri is not False:
-        with open(os.path.join(proj_dir, 'boundaries.json'), 'w') as gj:
-            gj.write(json.dumps(geomatics.data.get_livingatlas_geojson(esri)))
+    lat = round(float(request.POST.get('center_lat')), 4)
+    lon = round(float(request.POST.get('center_lng')), 4)
+    with open(os.path.join(proj_dir, 'export_configs.json'), 'r') as a:
+        ec = json.loads(a.read())
+        ec['zoom'] = request.POST.get('zoom', 4)
+        ec['center'] = f'{lat},{lon}'
+    with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as a:
+        a.write(json.dumps(ec))
 
     gjson_file = gpd.read_file(os.path.join(proj_dir, 'boundaries.json'))
     gjson_file = gjson_file.to_crs("EPSG:3857")
@@ -293,7 +309,7 @@ def retrieve_hydroviewer_boundaries(request):
 
 
 @login_required()
-def upload_boundary_shapefile(request):
+def upload_boundary(request):
     project = request.POST.get('project', False)
     if not project:
         return JsonResponse({'status': 'error', 'error': 'project not found'})
