@@ -7,17 +7,21 @@
     <h1>Project: {{ project_title }}</h1>
     <div style="float: left; width: 40%; overflow-y: scroll">
       <ol>
-        <h3>
-          <li>Define Boundaries {% if boundaries %}
-            <span class="glyphicon glyphicon-check" style="color: green"></span>{% endif %}</li>
-        </h3>
-        <div class="content">
-          <form id="boundaries-form" action="{% url 'geoglows_hydroviewer:draw_boundaries' %}" method="get">
-            <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
-            <div class="btn-group ">
-              <button class="btn btn-success" role="button" form="boundaries-form" submit="True">
-                <span class="glyphicon glyphicon-globe"></span> Draw Project Boundaries on a Map
-              </button>
+        {% if boundaries %}
+          <h3>
+            <li>Project Boundaries Chosen <span class="glyphicon glyphicon-check" style="color: green"></span></li>
+          </h3>
+        {% else %}
+          <h3>
+            <li>Define Project Boundaries</li>
+          </h3>
+          <div class="content">
+            <form id="boundaries-form" action="{% url 'geoglows_hydroviewer:draw_boundaries' %}" method="get">
+              <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+              <div class="btn-group ">
+                <button class="btn btn-success" role="button" form="boundaries-form" submit="True">
+                  <span class="glyphicon glyphicon-globe"></span> Draw Project Boundaries on a Map
+                </button>
             </div>
           </form>
           <form id="esri-layer-form" action="{% url 'geoglows_hydroviewer:choose_boundaries' %}" method="get">
@@ -29,32 +33,48 @@
             </div>
           </form>
 
-          <button class="btn btn-success" role="button" data-toggle="modal" data-target="#shapefile-upload">
-            <span class="glyphicon glyphicon-cloud-upload"></span> Upload a Shapefile (beta)
-          </button>
-        </div>
+            <button class="btn btn-success" role="button" data-toggle="modal" data-target="#shapefile-upload">
+              <span class="glyphicon glyphicon-cloud-upload"></span> Upload a Shapefile (beta)
+            </button>
+          </div>
+        {% endif %}
 
         {% if boundaries %}
-          <h3>
-            <li>Create Shapefiles {% if shapefiles %}
-              <span class="glyphicon glyphicon-check" style="color: green"></span>{% endif %}</li>
-          </h3>
-          <button class="btn btn-success" role="button" id="process-shapefiles" onclick="processShapefiles()">
-            <span class="glyphicon glyphicon-cog"></span> Create Custom Shapefiles
-          </button>
-          <p>
-          <ul id="process-callback-list"></ul>
+          {% if shapefiles %}
+            <h3>
+              <li>Shapefiles Created <span class="glyphicon glyphicon-check" style="color: green"></span></li>
+            </h3>
+          {% else %}
+            <h3>
+              <li>Create Shapefiles</li>
+            </h3>
+            <button class="btn btn-success" role="button" id="process-shapefiles" onclick="processShapefiles()">
+              <span class="glyphicon glyphicon-cog"></span> Create Custom Shapefiles
+            </button>
+            <p>
+            <ul id="process-callback-list"></ul>
+          {% endif %}
         {% endif %}
 
         {% if shapefiles %}
-          <h3>
-            <li>Export Shapefiles {% if exported %}
-              <span class="glyphicon glyphicon-check" style="color: green"></span>{% endif %}</li>
-          </h3>
-          <a href="{% url 'geoglows_hydroviewer:export_zipfile' %}?project={{ project }}"
+          {% if exported %}
+            <h3>
+              <li>Export Shapefiles <span class="glyphicon glyphicon-check" style="color: green"></span></li>
+            </h3>
+          {% else %}
+            <h3>
+              <li>Export Shapefiles</li>
+            </h3>
+          {% endif %}
+
+          <a href="{% url 'geoglows_hydroviewer:export_zipfile' %}?project={{ project }}&component=catchment"
              role="button" class="btn btn-success" download><span class="glyphicon glyphicon-download"></span>
-            Download Zipfiles</a>
+            Download Catchments Shapefile</a>
           <br>
+          <a href="{% url 'geoglows_hydroviewer:export_zipfile' %}?project={{ project }}&component=drainageline"
+             role="button" class="btn btn-success" download><span class="glyphicon glyphicon-download"></span>
+            Download Drainagelines Shapefile</a>
+          <hr>
           <button class="btn btn-success" role="button" data-toggle="modal" data-target="#geoserver-options">
             <span class="glyphicon glyphicon-cloud-upload"></span> Export to a Geoserver
           </button>
@@ -275,6 +295,7 @@
       const URLgetBoundary = "{% url 'geoglows_hydroviewer:retrieve_boundaries' %}";
       const URLidRegion = "{% url 'geoglows_hydroviewer:geoprocess_idregion' %}";
       const URLclip = "{% url 'geoglows_hydroviewer:geoprocess_clip' %}";
+      const URLzipshapes = "{% url 'geoglows_hydroviewer:geoprocess_zip_shapefiles' %}";
   </script>
   <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/jquery-form/form@4.3.0/dist/jquery.form.min.js"

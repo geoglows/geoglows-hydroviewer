@@ -1,10 +1,8 @@
-import glob
 import json
 import os
 import shutil
 import urllib.parse
 
-import geomatics
 import geopandas as gpd
 from django.contrib import messages
 from django.http import JsonResponse
@@ -13,12 +11,21 @@ from tethys_sdk.gizmos import SelectInput
 from tethys_sdk.permissions import login_required
 
 from .app import GeoglowsHydroviewer as App
-from .hydroviewer_creator_tools import get_project_directory, shapefiles_downloaded
+from .hydroviewer_creator_tools import get_project_directory
+from .hydroviewer_creator_tools import shapefiles_downloaded
 
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
-EXPORT_CONFIGS_DICT = {'url': '', 'workspace': '', 'dl': '', 'ctch': '', 'resource_id': '', 'exported': False,
-                       'export_destination': '', 'exported_by_app': False}
+EXPORT_CONFIGS_DICT = {
+    'url': '',
+    'workspace': '',
+    'dl': '',
+    'ctch': '',
+    'zoom': '',
+    'center': '',
+    'resource_id': '',
+    'exported': False,
+}
 
 WARN_DOWNLOAD_SHAPEFILES = 'GEOGloWS Shapefile data not found. You can continue to work on projects who have created ' \
                            'shapefiles but will be unable to create shapefiles for new projects. Check the custom ' \
@@ -67,8 +74,8 @@ def add_new_project(request):
         with open(os.path.join(new_proj_dir, 'export_configs.json'), 'w') as ec:
             ec.write(json.dumps(EXPORT_CONFIGS_DICT))
         messages.success(request, 'Project Successfully Created')
-        return redirect(
-            reverse('geoglows_hydroviewer:project_overview') + f'?{urllib.parse.urlencode(dict(project=project))}')
+        return redirect(reverse('geoglows_hydroviewer:project_overview') +
+                        f'?{urllib.parse.urlencode(dict(project=project))}')
     except Exception as e:
         messages.error(request, f'Failed to Create Project: {project} ({e})')
         return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
@@ -98,8 +105,8 @@ def project_overview(request):
 
     boundaries_created = os.path.exists(os.path.join(proj_dir, 'boundaries.json'))
 
-    shapefiles_created = bool(os.path.exists(os.path.join(proj_dir, 'selected_catchment')) and
-                              os.path.exists(os.path.join(proj_dir, 'selected_drainageline')))
+    shapefiles_created = bool(os.path.exists(os.path.join(proj_dir, 'catchment_shapefile.zip')) and
+                              os.path.exists(os.path.join(proj_dir, 'drainageline_shapefile.zip')))
 
     with open(os.path.join(proj_dir, 'export_configs.json')) as a:
         configs = json.loads(a.read())
@@ -109,18 +116,23 @@ def project_overview(request):
     catchment_layer = configs['ctch']
 
     context = {
+        # project naming
         'project': project,
         'project_title': project.replace('_', ' '),
 
+        # step 1
         'boundaries': boundaries_created,
         'boundariesJS': json.dumps(boundaries_created),
 
+        # step 2
         'shapefiles': shapefiles_created,
         'shapefilesJS': json.dumps(shapefiles_created),
 
+        # step 3
         'exported': configs['exported'],
         'exportedJS': json.dumps(configs['exported']),
 
+        # config values
         'geoserver_url': geoserver_url,
         'workspace': workspace,
         'drainagelines_layer': drainagelines_layer,
@@ -217,22 +229,24 @@ def draw_hydroviewer_boundaries(request):
 
 
 @login_required()
-def save_drawn_boundaries(request):
+def save_boundaries(request):
     proj_dir = get_project_directory(request.POST['project'])
 
-    geojson = request.POST.get('geojson', False)
-    if geojson is not False:
-        with open(os.path.join(proj_dir, 'boundaries.json'), 'w') as gj:
-            gj.write(geojson)
+    with open(os.path.join(proj_dir, 'boundaries.json'), 'w') as gj:
+        gj.write(request.POST.get('geojson'))
 
-    esri = request.POST.get('esri', False)
-    if esri is not False:
-        with open(os.path.join(proj_dir, 'boundaries.json'), 'w') as gj:
-            gj.write(json.dumps(geomatics.data.get_livingatlas_geojson(esri)))
+    lat = round(float(request.POST.get('center_lat')), 4)
+    lon = round(float(request.POST.get('center_lng')), 4)
+    with open(os.path.join(proj_dir, 'export_configs.json'), 'r') as a:
+        ec = json.loads(a.read())
+        ec['zoom'] = request.POST.get('zoom', 4)
+        ec['center'] = f'{lat},{lon}'
+    with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as a:
+        a.write(json.dumps(ec))
 
     gjson_file = gpd.read_file(os.path.join(proj_dir, 'boundaries.json'))
     gjson_file = gjson_file.to_crs("EPSG:3857")
-    gjson_file.to_file(os.path.join(proj_dir, 'projected_selections'))
+    gjson_file.to_file(os.path.join(proj_dir, 'projected_boundaries'))
     return JsonResponse({'status': 'success'})
 
 
@@ -293,14 +307,14 @@ def retrieve_hydroviewer_boundaries(request):
 
 
 @login_required()
-def upload_boundary_shapefile(request):
+def upload_boundary(request):
     project = request.POST.get('project', False)
     if not project:
         return JsonResponse({'status': 'error', 'error': 'project not found'})
     proj_dir = get_project_directory(project)
 
     # make the projected selections folder
-    tmp_dir = os.path.join(proj_dir, 'projected_selections')
+    tmp_dir = os.path.join(proj_dir, 'projected_boundaries')
     if os.path.exists(tmp_dir):
         shutil.rmtree(tmp_dir)
     os.mkdir(tmp_dir)
@@ -308,77 +322,16 @@ def upload_boundary_shapefile(request):
     # save the uploaded shapefile to that folder
     files = request.FILES.getlist('files')
     for file in files:
-        file_name = 'projected_selections' + os.path.splitext(file.name)[-1]
+        file_name = 'projected_boundaries' + os.path.splitext(file.name)[-1]
         with open(os.path.join(tmp_dir, file_name), 'wb') as dst:
             for chunk in file.chunks():
                 dst.write(chunk)
 
     # read the uploaded shapefile with geopandas and save it to selections.geojson
-    boundaries_gdf = gpd.read_file(os.path.join(tmp_dir, 'projected_selections.shp'))
+    boundaries_gdf = gpd.read_file(os.path.join(tmp_dir, 'projected_boundaries.shp'))
     boundaries_gdf = boundaries_gdf.to_crs("EPSG:3857")
-    boundaries_gdf.to_file(os.path.join(tmp_dir, 'projected_selections.shp'))
+    boundaries_gdf.to_file(os.path.join(tmp_dir, 'projected_boundaries.shp'))
     boundaries_gdf = boundaries_gdf.to_crs("EPSG:4326")
     boundaries_gdf.to_file(os.path.join(proj_dir, "boundaries.json"), driver='GeoJSON')
 
     return JsonResponse({'status': 'success'})
-
-
-@login_required()
-def geoprocess_hydroviewer_idregion(request):
-    project = request.GET.get('project', False)
-    if not project:
-        raise FileNotFoundError('project directory not found')
-    proj_dir = get_project_directory(project)
-    gjson_gdf = gpd.read_file(os.path.join(proj_dir, 'projected_selections', 'projected_selections.shp'))
-
-    for region_zip in glob.glob(os.path.join(SHAPE_DIR, '*-boundary.zip')):
-        region_name = os.path.splitext(os.path.basename(region_zip))[0]
-        boundary_gdf = gpd.read_file("zip:///" + os.path.join(region_zip, region_name + '.shp'))
-        if gjson_gdf.intersects(boundary_gdf)[0]:
-            return JsonResponse({'region': region_name})
-    return JsonResponse({'error': 'unable to find a region'}), 422
-
-
-@login_required()
-def geoprocess_hydroviewer_clip(request):
-    project = request.GET.get('project', False)
-    region_name = request.GET.get('region', False)
-    if not project:
-        return JsonResponse({'error': 'unable to find the project'})
-    proj_dir = get_project_directory(project)
-
-    catch_folder = os.path.join(proj_dir, 'selected_catchment')
-    dl_folder = os.path.join(proj_dir, 'selected_drainageline')
-
-    if request.GET.get('shapefile', False) == 'drainageline':
-        if os.path.exists(dl_folder):
-            shutil.rmtree(dl_folder)
-        os.mkdir(dl_folder)
-
-        gjson_gdf = gpd.read_file(os.path.join(proj_dir, 'projected_selections', 'projected_selections.shp'))
-        dl_name = region_name.replace('boundary', 'drainageline')
-        dl_path = os.path.join(SHAPE_DIR, dl_name + '.zip', dl_name + '.shp')
-        dl_gdf = gpd.read_file("zip:///" + dl_path)
-
-        dl_point = dl_gdf.representative_point()
-        dl_point_clip = gpd.clip(dl_point, gjson_gdf)
-        dl_boo_list = dl_point_clip.within(dl_gdf)
-        dl_select = dl_gdf[dl_boo_list]
-        dl_select.to_file(os.path.join(dl_folder, 'drainageline_select.shp'))
-        return JsonResponse({'status': 'success'})
-
-    elif request.GET.get('shapefile', False) == 'catchment':
-        if os.path.exists(catch_folder):
-            shutil.rmtree(catch_folder)
-        os.mkdir(catch_folder)
-
-        dl_select = gpd.read_file(os.path.join(dl_folder, 'drainageline_select.shp'))
-        catch_name = region_name.replace('boundary', 'catchment')
-        catch_path = os.path.join(SHAPE_DIR, catch_name + '.zip', catch_name + '.shp')
-        catch_gdf = gpd.read_file("zip:///" + catch_path)
-        catch_gdf = catch_gdf.loc[catch_gdf['COMID'].isin(dl_select['COMID'].to_list())]
-        catch_gdf.to_file(os.path.join(catch_folder, 'catchment_select.shp'))
-        return JsonResponse({'status': 'success'})
-
-    else:
-        raise ValueError('illegal shapefile type specified')
