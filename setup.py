@@ -33,7 +33,5 @@ setup(
     install_requires=dependencies,
 )
 
-# todo set center and zoom from chosen region
 # todo fix upload shapefiles
-# todo verify hydroshare login with django.conf
 # todo increment version number

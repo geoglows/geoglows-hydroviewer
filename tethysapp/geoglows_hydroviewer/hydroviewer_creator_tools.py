@@ -16,5 +16,4 @@ def shapefiles_downloaded():
     shape_dir_contents = glob.glob(os.path.join(SHAPE_DIR, '*geoglows*.zip'))
     if len(shape_dir_contents) == 39:
         return True
-    print(len(shape_dir_contents))
     return False

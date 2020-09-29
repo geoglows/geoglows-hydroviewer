@@ -176,6 +176,12 @@
         {% if esrihybrid %}
             'ESRI Labeled World Imagery': L.layerGroup([L.esri.basemapLayer('Imagery'), L.esri.basemapLayer('ImageryLabels')]),
         {% endif %}
+        {% if esriterrain %}
+            'ESRI Terrain': L.esri.basemapLayer('Terrain'),
+        {% endif %}
+        {% if esriterrainlabeled %}
+            'ESRI Labeled Terrain': L.layerGroup([L.esri.basemapLayer('Terrain'), L.esri.basemapLayer('ImageryLabels')]),
+        {% endif %}
     }
     basemaps[Object.keys(basemaps)[0]].addTo(map);
 

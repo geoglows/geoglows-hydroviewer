@@ -4,7 +4,7 @@
 
 {% block app_content %}
   {% if project %}
-    <h1>Render Hydroviewer Project: {{ project_title }}</h1>
+    <h1>Render Project: {{ project_title }}</h1>
   {% else %}
     <h1>Render Existing Sources as Hydroviewer</h1>
   {% endif %}
@@ -55,6 +55,10 @@
     <label for="esri-imagery" class="control-label">ESRI World Imagery</label><br>
     <input type="checkbox" id="esri-hybrid" name="esri-hybrid">
     <label for="esri-hybrid" class="control-label">ESRI World Imagery with Labels</label><br>
+    <input type="checkbox" id="esri-terrain" name="esri-terrain">
+    <label for="esri-terrain" class="control-label">ESRI Terrain Map</label><br>
+    <input type="checkbox" id="esri-terrain-labeled" name="esri-terrain-labeled">
+    <label for="esri-terrain-labeled" class="control-label">ESRI Labeled Terrain Map</label><br>
 
     <hr>
 
@@ -65,13 +69,11 @@
 {% endblock %}
 
 {% block app_actions %}
-  <form id="overview-form" action="{% url 'geoglows_hydroviewer:geoglows_hydroviewer_creator' %} }}" method="post">
-    <div class="btn-group ">
-      <button class="btn btn-success" role="button" form="overview-form" submit="True">
-        <span class="glyphicon glyphicon-home"></span> Return to Creator
-      </button>
-    </div>
-  </form>
+  <a href="{% url 'geoglows_hydroviewer:geoglows_hydroviewer_creator' %}">
+    <button class="btn btn-group btn-success" role="button">
+      <span class="glyphicon glyphicon-home"></span> Return to Creator
+    </button>
+  </a>
 {% endblock %}
 
 {% block content_dependent_styles %}

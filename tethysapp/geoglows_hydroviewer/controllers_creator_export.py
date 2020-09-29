@@ -78,11 +78,10 @@ def export_zipfile(request):
         return JsonResponse({'error': 'unable to find the project'})
     proj_dir = get_project_directory(project)
 
-    # todo update this to download the drainagelines and catchments separately using the component command
-    zip_path = os.path.join(proj_dir, f'{request.GET.get("component")}_shapefiles.zip')
+    zip_path = os.path.join(proj_dir, f'{request.GET.get("component")}_shapefile.zip')
     zip_file = open(zip_path, 'rb')
     response = HttpResponse(zip_file, content_type='application/zip')
-    response['Content-Disposition'] = 'attachment; filename="hydroviewer_shapefiles.zip"'
+    response['Content-Disposition'] = f'attachment; filename="{request.GET.get("component")}_shapefile.zip"'
     return response
 
 
@@ -93,42 +92,39 @@ def export_hydroshare(request):
         messages.error(request, 'Project not found. Please pick a valid project.')
         return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
     proj_dir = get_project_directory(project)
-    zip_path = os.path.join(proj_dir, 'hydroviewer_shapefiles.zip')
 
-    # make the zip file of shapefiles if it doesn't already exist
-    # todo we don't need to try zipping. make sure this works
-    # todo modify this to upload the catchments and drainagelines separately
-    if not os.path.exists(zip_path):
+    # verify the shapefile zips exist
+    catchment_zip = os.path.join(proj_dir, 'catchment_shapefile.zip')
+    drainageline_zip = os.path.join(proj_dir, 'drainageline_shapefile.zip')
+    if not all([os.path.exists(catchment_zip), os.path.exists(drainageline_zip)]):
+        if os.path.exists(catchment_zip):
+            os.remove(catchment_zip)
+        if os.path.exists(drainageline_zip):
+            os.remove(drainageline_zip)
         raise FileNotFoundError('Zipped shapefiles not found')
 
-    # hs = hs_restclient.get_oauth_hs(request)
-    auth = hs_restclient.HydroShareAuthBasic(username=request.POST.get('username'),
-                                             password=request.POST.get('password'))
-    hs = hs_restclient.HydroShare(auth=auth)
+    # todo modify this to upload the catchments and drainagelines separately
 
     try:
+        # hs = hs_restclient.get_oauth_hs(request)
+        auth = hs_restclient.HydroShareAuthBasic(username=request.POST.get('username'),
+                                                 password=request.POST.get('password'))
+        hs = hs_restclient.HydroShare(auth=auth)
+
         resource_id = hs.createResource('GenericResource',
                                         request.POST.get('title'),
-                                        resource_file=zip_path,
+                                        resource_file=drainageline_zip,
                                         keywords=request.POST.get('keywords').split(', '),
                                         abstract=request.POST.get('abstract'), )
+        hs.addResourceFile(resource_id, catchment_zip)
         hs.resource(resource_id).functions.unzip(
-            payload={'zip_with_rel_path': 'hydroviewer_shapefiles.zip', 'remove_original_zip': True})
+            payload={'zip_with_rel_path': 'catchment_shapefile.zip', 'remove_original_zip': True})
+        hs.resource(resource_id).functions.unzip(
+            payload={'zip_with_rel_path': 'drainageline_shapefile.zip', 'remove_original_zip': True})
 
         hs.setAccessRules(resource_id, public=True)
         messages.success(request, f'Successfully Exported To New Hydroshare Resource (ID: {resource_id})')
 
-        # add keys to the export_configs.json
-        with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
-            geoserver_configs = json.loads(configfile.read())
-            geoserver_configs['url'] = 'https://geoserver.hydroshare.org/geoserver/wms'
-            geoserver_configs['workspace'] = f'HS-{resource_id}'
-            geoserver_configs['dl'] = 'selected_drainageline drainageline_select'
-            geoserver_configs['ctch'] = 'selected_catchment catchment_select'
-        with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
-            configfile.write(json.dumps(geoserver_configs))
-            return redirect(reverse('geoglows_hydroviewer:project_overview') +
-                            f'?{urllib.parse.urlencode(dict(project=project))}')
     except hs_restclient.HydroShareArgumentException as e:
         print('invalid parameter')
         print(e)
@@ -142,6 +138,19 @@ def export_hydroshare(request):
         print(e)
         raise e
 
+    # add keys to the export_configs.json
+    with open(os.path.join(proj_dir, 'export_configs.json'), 'r') as configfile:
+        geoserver_configs = json.loads(configfile.read())
+        geoserver_configs['url'] = 'https://geoserver.hydroshare.org/geoserver/wms'
+        geoserver_configs['workspace'] = f'HS-{resource_id}'
+        geoserver_configs['dl'] = 'drainageline_shapefile drainagelines'
+        geoserver_configs['ctch'] = 'catchment_shapefile catchments'
+        geoserver_configs['exported'] = True
+    with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
+        configfile.write(json.dumps(geoserver_configs))
+        return redirect(reverse('geoglows_hydroviewer:project_overview') +
+                        f'?{urllib.parse.urlencode(dict(project=project))}')
+
 
 @login_required()
 def export_html(request):
@@ -150,7 +159,10 @@ def export_html(request):
     title = request.POST.get('title')
     html_path = os.path.join(App.get_app_workspace().path, f'{title}.html')
 
-    esridependency = any([request.POST.get('esri-imagery', False), request.POST.get('esri-hybrid', False)])
+    esridependency = any([request.POST.get('esri-imagery', False),
+                          request.POST.get('esri-hybrid', False),
+                          request.POST.get('esri-terrain', False),
+                          request.POST.get('esri-terrain-labeled', False), ])
 
     with open(template_path) as template:
         with open(html_path, 'w') as hydrohtml:
@@ -173,6 +185,8 @@ def export_html(request):
                     esridependency=esridependency,
                     esriimagery=bool(request.POST.get('esri-imagery', False)),
                     esrihybrid=bool(request.POST.get('esri-hybrid', False)),
+                    esriterrain=bool(request.POST.get('esri-terrain', False)),
+                    esriterrainlabeled=bool(request.POST.get('esri-terrain-labeled', False)),
                 )
             )
 

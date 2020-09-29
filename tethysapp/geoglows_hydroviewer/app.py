@@ -73,13 +73,13 @@ class GeoglowsHydroviewer(TethysAppBase):
             # geoprocessing shapefiles urls
             UrlMap(name='geoprocess_idregion',
                    url=f'{self.root_url}/creator/project/geoprocessing/geoprocess_idregion',
-                   controller=f'{self.package}.controllers_creator.geoprocess_hydroviewer_idregion'),
+                   controller=f'{self.package}.controllers_creator_geoprocess.geoprocess_hydroviewer_idregion'),
             UrlMap(name='geoprocess_clip',
                    url=f'{self.root_url}/creator/project/geoprocessing/geoprocess_clip',
-                   controller=f'{self.package}.controllers_creator.geoprocess_hydroviewer_clip'),
+                   controller=f'{self.package}.controllers_creator_geoprocess.geoprocess_hydroviewer_clip'),
             UrlMap(name='geoprocess_zip_shapefiles',
                    url=f'{self.root_url}/creator/project/geoprocessing/geoprocess_zip_shapefiles',
-                   controller=f'{self.package}.controllers_creator.geoprocess_zip_shapefiles'),
+                   controller=f'{self.package}.controllers_creator_geoprocess.geoprocess_zip_shapefiles'),
 
             # project editing urls and pages
             UrlMap(name='draw_boundaries',
