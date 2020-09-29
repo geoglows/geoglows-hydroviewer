@@ -103,8 +103,6 @@ def export_hydroshare(request):
             os.remove(drainageline_zip)
         raise FileNotFoundError('Zipped shapefiles not found')
 
-    # todo modify this to upload the catchments and drainagelines separately
-
     try:
         # hs = hs_restclient.get_oauth_hs(request)
         auth = hs_restclient.HydroShareAuthBasic(username=request.POST.get('username'),
