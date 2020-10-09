@@ -1,14 +1,15 @@
 $('#geoserver-form').submit(function (evt) {
-    evt.preventDefault();
+	evt.preventDefault();
 	$("#geoserver-upload-loading").show();
 	let url = $(this).attr("action");
 	let type = $(this).attr("method");
-	let data = $(this).serialize()
+	let data = $(this).serialize();
+	console.log(typeof data);
 	$.ajax({
 		url: url,
 		type: type,
 		data: data,
-	}).done(function (response) {
+	}).done(function () {
 		$.ajax({
 			url: url,
 			type: type,

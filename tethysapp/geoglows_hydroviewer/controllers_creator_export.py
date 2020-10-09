@@ -3,7 +3,6 @@ import os
 import urllib.parse
 
 import geoglows
-import geoserver.util
 import hs_restclient
 import jinja2
 from django.contrib import messages
@@ -38,53 +37,49 @@ def export_geoserver(request):
         geoserver_configs['workspace'] = workspace_name
         geoserver_configs['dl'] = dl_name
         geoserver_configs['ctch'] = ct_name
-        export_dl_status = geoserver_configs['exported_drainagelines']
-        export_ctch_status = geoserver_configs['exported_catchment']
-    
+
+    if geoserver_configs['exported_drainagelines'] and geoserver_configs['exported_catchment']:
+        geoserver_configs['exported_drainagelines'] = False
+        geoserver_configs['exported_catchment'] = False
 
     try:
         cat = Catalog(url, username=username, password=password)
-
         # identify the geoserver stores
         workspace = cat.get_workspace(workspace_name)
-
-        if not export_dl_status:
-            try:
-                # create geoserver store and upload the drainagelines
-                zip_path = os.path.join(proj_dir, 'drainageline_shapefile.zip')
-                print('Did you upload this correctly?')
-                cat.create_featurestore(dl_name, workspace=workspace, data=zip_path, overwrite=True)
-                print('Please work, I want to graduate')
-            except Exception as e:
-                print('failed to upload drainagelines')
-                print(e)
-            
-            geoserver_configs['exported_drainagelines'] = True
-            # Add code to overwrite export_configs.json on successful upload
-            
-        elif not export_ctch_status:
-            try:
-                # create geoserver store and upload the catchments
-                zip_path = os.path.join(proj_dir, 'catchment_shapefile.zip')
-                print('Hey, is this working?')
-                cat.create_featurestore(ct_name, workspace=workspace, data=zip_path, overwrite=True)
-                print('Just checking stuff')
-            except Exception as e:
-                print('failed to upload catchments')
-                print(e)
-            
-            geoserver_configs['exported_catchment'] = True
-
-        with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
-            configfile.write(json.dumps(geoserver_configs))
-
-            # Add code to overwrite export_configs.json on successful upload
-
     except Exception as e:
         print(e)
         return JsonResponse({'status': 'failed'})
 
+    if not geoserver_configs['exported_drainagelines']:
+        try:
+            # create geoserver store and upload the drainagelines
+            zip_path = os.path.join(proj_dir, 'drainageline_shapefile.zip')
+            print('Did you upload this correctly?')
+            cat.create_featurestore(dl_name, workspace=workspace, data=zip_path, overwrite=True)
+            print('Please work, I want to graduate')
+            geoserver_configs['exported_drainagelines'] = True
+            with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
+                configfile.write(json.dumps(geoserver_configs))
+        except Exception as e:
+            print('failed to upload drainagelines')
+            print(e)
+
+    elif not geoserver_configs['exported_catchment']:
+        try:
+            # create geoserver store and upload the catchments
+            zip_path = os.path.join(proj_dir, 'catchment_shapefile.zip')
+            print('Hey, is this working?')
+            cat.create_featurestore(ct_name, workspace=workspace, data=zip_path, overwrite=True)
+            print('Just checking stuff')
+            geoserver_configs['exported_catchment'] = True
+            with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
+                configfile.write(json.dumps(geoserver_configs))
+        except Exception as e:
+            print('failed to upload catchments')
+            print(e)
+
     return JsonResponse({'status': 'success'})
+
 
 @login_required()
 def export_zipfile(request):
