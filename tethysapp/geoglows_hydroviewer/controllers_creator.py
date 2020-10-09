@@ -24,7 +24,8 @@ EXPORT_CONFIGS_DICT = {
     'zoom': '',
     'center': '',
     'resource_id': '',
-    'exported': False,
+    'exported_drainagelines': False,
+    'exported_catchment': False,
 }
 
 WARN_DOWNLOAD_SHAPEFILES = 'GEOGloWS Shapefile data not found. You can continue to work on projects who have created ' \
@@ -129,8 +130,10 @@ def project_overview(request):
         'shapefilesJS': json.dumps(shapefiles_created),
 
         # step 3
-        'exported': configs['exported'],
-        'exportedJS': json.dumps(configs['exported']),
+        'exported_drainagelines': configs['exported_drainagelines'],
+        'exported_drainagelinesJS': json.dumps(configs['exported_drainagelines']),
+        'exported_catchment': configs['exported_catchment'],
+        'exported_catchmentJS': json.dumps(configs['exported_catchment']),
 
         # config values
         'geoserver_url': geoserver_url,
