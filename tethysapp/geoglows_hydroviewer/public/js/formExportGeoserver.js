@@ -4,7 +4,6 @@ $('#geoserver-form').submit(function (evt) {
 	let url = $(this).attr("action");
 	let type = $(this).attr("method");
 	let data = $(this).serialize();
-	console.log(typeof data);
 	$.ajax({
 		url: url,
 		type: type,
