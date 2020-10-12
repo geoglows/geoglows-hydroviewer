@@ -86,14 +86,14 @@
 
         {% if exported %}
           <h3>
-            <li>Download Hydroviewer</li>
+            <li>Create Hydroviewer</li>
           </h3>
           <form id="render_existing_form" action="{% url 'geoglows_hydroviewer:render_hydroviewer' %}" method="post">
             {% csrf_token %}
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <div class="btn-group ">
               <button class="btn btn-block btn-success" role="button" form="render_existing_form" submit="True">
-                <span class="glyphicon glyphicon-circle-arrow-down"></span> Export Hydroviewer
+                <span class="glyphicon glyphicon-circle-arrow-down"></span> Go To Hydroviewer Render Page
               </button>
             </div>
           </form>
@@ -126,7 +126,7 @@
           <h5 class="modal-title" id="help-modal-label">Geoserver Configuration Options</h5>
         </div>
         <div class="modal-body">
-          <form id="geoserver-form" action="{% url 'geoglows_hydroviewer:export_geoserver' %}">
+          <form id="geoserver-form" action="{% url 'geoglows_hydroviewer:export_geoserver' %}" method="post">
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <label style="width: 40%; float: left" for="gs_url">Geoserver Rest Endpoint
               <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-info-circle" fill="blue"
@@ -285,12 +285,11 @@
       const project = "{{ project }}";
       const boundaries = {{ boundariesJS }};
       const shapefiles = {{ shapefilesJS }};
-      const exported_drainagelines = {{ exported_drainagelinesJS }};
-      const exported_catchment = {{ exported_catchmentJS }}
+      const exported = {{ exportedJS }};
 
       const geoserver_wms = "{{ geoserver_url }}"
       const workspace = "{{ workspace }}"
-      const drainagelinesLayer = "{{ drainagelines_layer }}"
+      const drainageLayer = "{{ drainage_layer }}"
       const catchmentLayer = "{{ catchment_layer }}"
 
       const URLgetBoundary = "{% url 'geoglows_hydroviewer:retrieve_boundaries' %}";

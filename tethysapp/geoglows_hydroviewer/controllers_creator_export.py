@@ -19,45 +19,47 @@ SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
 @login_required()
 def export_geoserver(request):
-    project = request.GET.get('project', False)
-    url = request.GET.get('gs_url')
-    username = request.GET.get('gs_username', 'admin')
-    password = request.GET.get('gs_password', 'geoserver')
-    workspace_name = request.GET.get('workspace', 'geoglows_hydroviewer_creator')
-    dl_name = request.GET.get('dl_name', 'drainagelines')
-    ct_name = request.GET.get('ct_name', 'catchments')
+    project = request.POST.get('project', False)
+    workspace_name = request.POST.get('workspace', 'geoglows_hydroviewer_creator')
+    dl_name = request.POST.get('dl_name', 'drainagelines')
+    ct_name = request.POST.get('ct_name', 'catchments')
     if not project:
         return JsonResponse({'error': 'unable to find the project'})
     proj_dir = get_project_directory(project)
 
+    # tailor the geoserver url
+    url = request.POST.get('gs_url')
+    if not url[-1] == '/':
+        url += '/'
+
     # add keys to the export_configs.json
     with open(os.path.join(proj_dir, 'export_configs.json'), 'r') as configfile:
         geoserver_configs = json.loads(configfile.read())
-        geoserver_configs['url'] = url.replace('/rest/', '/wms')
+        geoserver_configs['url'] = url.replace('/rest/', f'/{workspace_name}/wms')
         geoserver_configs['workspace'] = workspace_name
-        geoserver_configs['dl'] = dl_name
-        geoserver_configs['ctch'] = ct_name
+        geoserver_configs['drainage_layer_name'] = dl_name
+        geoserver_configs['catchment_layer_name'] = ct_name
 
-    if geoserver_configs['exported_drainagelines'] and geoserver_configs['exported_catchment']:
-        geoserver_configs['exported_drainagelines'] = False
+    if geoserver_configs['exported_drainage'] and geoserver_configs['exported_catchment']:
+        geoserver_configs['exported_drainage'] = False
         geoserver_configs['exported_catchment'] = False
 
     try:
-        cat = Catalog(url, username=username, password=password)
+        cat = Catalog(url,
+                      username=request.POST.get('gs_username', 'admin'),
+                      password=request.POST.get('gs_password', 'geoserver'))
         # identify the geoserver stores
         workspace = cat.get_workspace(workspace_name)
     except Exception as e:
         print(e)
         return JsonResponse({'status': 'failed'})
 
-    if not geoserver_configs['exported_drainagelines']:
+    if not geoserver_configs['exported_drainage']:
         try:
             # create geoserver store and upload the drainagelines
             zip_path = os.path.join(proj_dir, 'drainageline_shapefile.zip')
-            print('Did you upload this correctly?')
             cat.create_featurestore(dl_name, workspace=workspace, data=zip_path, overwrite=True)
-            print('Please work, I want to graduate')
-            geoserver_configs['exported_drainagelines'] = True
+            geoserver_configs['exported_drainage'] = True
             with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
                 configfile.write(json.dumps(geoserver_configs))
         except Exception as e:
@@ -68,9 +70,7 @@ def export_geoserver(request):
         try:
             # create geoserver store and upload the catchments
             zip_path = os.path.join(proj_dir, 'catchment_shapefile.zip')
-            print('Hey, is this working?')
             cat.create_featurestore(ct_name, workspace=workspace, data=zip_path, overwrite=True)
-            print('Just checking stuff')
             geoserver_configs['exported_catchment'] = True
             with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
                 configfile.write(json.dumps(geoserver_configs))
@@ -89,10 +89,10 @@ def export_zipfile(request):
     proj_dir = get_project_directory(project)
 
     zip_path = os.path.join(proj_dir, f'{request.GET.get("component")}_shapefile.zip')
-    zip_file = open(zip_path, 'rb')
-    response = HttpResponse(zip_file, content_type='application/zip')
-    response['Content-Disposition'] = f'attachment; filename="{request.GET.get("component")}_shapefile.zip"'
-    return response
+    with open(zip_path, 'rb') as zip_file:
+        response = HttpResponse(zip_file, content_type='application/zip')
+        response['Content-Disposition'] = f'attachment; filename="{request.GET.get("component")}_shapefile.zip"'
+        return response
 
 
 @login_required()
@@ -151,9 +151,10 @@ def export_hydroshare(request):
         geoserver_configs = json.loads(configfile.read())
         geoserver_configs['url'] = 'https://geoserver.hydroshare.org/geoserver/wms'
         geoserver_configs['workspace'] = f'HS-{resource_id}'
-        geoserver_configs['dl'] = 'drainageline_shapefile drainagelines'
-        geoserver_configs['ctch'] = 'catchment_shapefile catchments'
-        geoserver_configs['exported'] = True
+        geoserver_configs['drainage_layer_name'] = 'drainageline_shapefile drainagelines'
+        geoserver_configs['catchment_layer_name'] = 'catchment_shapefile catchments'
+        geoserver_configs['exported_drainage'] = True
+        geoserver_configs['exported_catchment'] = True
     with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
         configfile.write(json.dumps(geoserver_configs))
         return redirect(reverse('geoglows_hydroviewer:project_overview') +

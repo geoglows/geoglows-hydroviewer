@@ -19,12 +19,12 @@ SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 EXPORT_CONFIGS_DICT = {
     'url': '',
     'workspace': '',
-    'dl': '',
-    'ctch': '',
+    'drainage_layer_name': '',
+    'catchment_layer_name': '',
     'zoom': '',
     'center': '',
     'resource_id': '',
-    'exported_drainagelines': False,
+    'exported_drainage': False,
     'exported_catchment': False,
 }
 
@@ -104,42 +104,38 @@ def project_overview(request):
         return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
     proj_dir = get_project_directory(project)
 
+    with open(os.path.join(proj_dir, 'export_configs.json')) as a:
+        configs = json.loads(a.read())
+
     boundaries_created = os.path.exists(os.path.join(proj_dir, 'boundaries.json'))
 
     shapefiles_created = bool(os.path.exists(os.path.join(proj_dir, 'catchment_shapefile.zip')) and
                               os.path.exists(os.path.join(proj_dir, 'drainageline_shapefile.zip')))
 
-    with open(os.path.join(proj_dir, 'export_configs.json')) as a:
-        configs = json.loads(a.read())
-    geoserver_url = configs['url']
-    workspace = configs['workspace']
-    drainagelines_layer = configs['dl']
-    catchment_layer = configs['ctch']
+    exported = any([configs['exported_drainage'], configs['exported_catchment']])
 
     context = {
         # project naming
         'project': project,
         'project_title': project.replace('_', ' '),
 
-        # step 1
+        # creator step 1
         'boundaries': boundaries_created,
         'boundariesJS': json.dumps(boundaries_created),
 
-        # step 2
+        # creator step 2
         'shapefiles': shapefiles_created,
         'shapefilesJS': json.dumps(shapefiles_created),
 
-        # step 3
-        'exported_drainagelines': configs['exported_drainagelines'],
-        'exported_drainagelinesJS': json.dumps(configs['exported_drainagelines']),
-        'exported_catchment': configs['exported_catchment'],
-        'exported_catchmentJS': json.dumps(configs['exported_catchment']),
+        # creator step 3
+        'exported': exported,
+        'exportedJS': json.dumps(exported),
 
         # config values
-        'geoserver_url': geoserver_url,
-        'workspace': workspace,
-        'drainagelines_layer': drainagelines_layer,
-        'catchment_layer': catchment_layer,
+        'geoserver_url': configs['url'],
+        'workspace': configs['workspace'],
+        'drainage_layer': configs['drainage_layer_name'],
+        'catchment_layer': configs['catchment_layer_name'],
     }
 
     return render(request, 'geoglows_hydroviewer/creator_project_overview.html', context)
@@ -149,12 +145,6 @@ def project_overview(request):
 def render_hydroviewer(request):
     project = request.POST.get('project', False)
     project_title = False
-    url = ''
-    workspace = ''
-    dl = ''
-    ctch = ''
-    center = ''
-    zoom = ''
 
     # contols to auto fill form values with project values
     projects_path = os.path.join(App.get_app_workspace().path, 'projects')
@@ -173,10 +163,17 @@ def render_hydroviewer(request):
                 configs = json.loads(ec.read())
                 url = configs.get('url', '')
                 workspace = configs.get('workspace', '')
-                dl = configs.get('dl', '')
-                ctch = configs.get('ctch', '')
+                dl = configs.get('drainage_layer_name', '')
+                ctch = configs.get('catchment_layer_name', '')
                 center = configs.get('center', '')
                 zoom = configs.get('zoom', '')
+    else:
+        url = ''
+        workspace = ''
+        dl = ''
+        ctch = ''
+        center = ''
+        zoom = ''
 
     context = {
         'project': project,
