@@ -31,11 +31,11 @@ if (boundaries) {
 
 let drainagelines;
 let catchments;
-if (exported_drainagelines || exported_catchment) {
+if (exported) {
     catchments = L.tileLayer.wms(geoserver_wms,
         {"format": "image/png", "transparent": true, "layers": workspace + ":" + catchmentLayer});
     drainagelines = L.tileLayer.wms(geoserver_wms,
-        {"format": "image/png", "transparent": true, "layers": workspace + ":" + drainagelinesLayer}).addTo(mapObj);
+        {"format": "image/png", "transparent": true, "layers": workspace + ":" + drainageLayer}).addTo(mapObj);
 } else {
     drainagelines = L.geoJSON(false);
     catchments = L.geoJSON(false);
