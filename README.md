@@ -18,7 +18,7 @@ Provides a utility for creating hydroviewers for subsets of the global model
 1. Export clipped shapefiles:
     - To a specified geoserver
     - As a zip archive
-    - (beta) As a Hydroshare resource (requires log in to tethys via hydroshare)
+    - As a Hydroshare resource (requires log in to tethys via hydroshare)
 1. Export the fully functioning hydroviewer as an HTML file.
 
 How to get the global delineation shapefiles required for the Hydroviewer Creator functions:
