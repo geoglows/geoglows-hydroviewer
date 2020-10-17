@@ -6,13 +6,16 @@ import geoglows.plots as gpp
 import geoglows.streamflow as gsf
 import hydrostats.data
 import pandas as pd
+import requests
 from django.http import JsonResponse
 from django.shortcuts import render
 from tethys_sdk.gizmos import SelectInput, Button
 
 from .app import GeoglowsHydroviewer as App
-from .manage_gauge_networks import list_gauge_networks, get_observed_station_flow
-from .manage_uploaded_observations import delete_old_observations, list_uploaded_observations
+from .manage_gauge_networks import get_observed_station_flow
+from .manage_gauge_networks import list_gauge_networks
+from .manage_uploaded_observations import delete_old_observations
+from .manage_uploaded_observations import list_uploaded_observations
 
 GLOBAL_DELINEATIONS = (
     ('geoserver url', 'https://geoserver.hydroshare.org/geoserver/wms'),
@@ -137,15 +140,20 @@ def hydroshare_view(request):
 
 
 def get_streamflow(request):
+    # get data
+    s = requests.Session()
     reach_id = request.GET['reach_id']
-    stats = gsf.forecast_stats(reach_id)
+    stats = gsf.forecast_stats(reach_id, s=s)
     # rec = gsf.forecast_records(reach_id)
-    ens = gsf.forecast_ensembles(reach_id)
-    hist = gsf.historic_simulation(reach_id)
+    ens = gsf.forecast_ensembles(reach_id, s=s)
+    hist = gsf.historic_simulation(reach_id, s=s)
     rper = gsf.return_periods(reach_id)
+    s.close()
+    # process data
     dayavg = hydrostats.data.daily_average(hist, rolling=True)
     monavg = hydrostats.data.monthly_average(hist)
     title_headers = {'Reach ID': reach_id}
+    # return json of plot html
     return JsonResponse(dict(
         # fp=gpp.hydroviewer(rec, stats, ens, rper, titles=title_headers, outformat='plotly_html', record_days=0),
         fp=gpp.forecast_stats(stats, rper, titles=title_headers, outformat='plotly_html'),
