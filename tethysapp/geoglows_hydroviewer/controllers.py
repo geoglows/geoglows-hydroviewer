@@ -142,6 +142,7 @@ def hydroshare_view(request):
 def get_streamflow(request):
     # get data
     s = requests.Session()
+    s.get(gsf.ENDPOINT.replace('api/', ''))
     reach_id = request.GET['reach_id']
     stats = gsf.forecast_stats(reach_id, s=s)
     # rec = gsf.forecast_records(reach_id)
