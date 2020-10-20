@@ -1,5 +1,5 @@
 # This file should be committed to your app code.
-version: 1.5
+version: 1.5.1
 # This should match the app - package name in your setup.py
 name: geoglows_hydroviewer
 
