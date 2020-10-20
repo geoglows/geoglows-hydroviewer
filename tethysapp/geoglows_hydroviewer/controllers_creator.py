@@ -39,6 +39,9 @@ def home(request):
         messages.warning(request, WARN_DOWNLOAD_SHAPEFILES)
 
     projects_path = os.path.join(App.get_app_workspace().path, 'projects')
+    if not os.path.exists(projects_path):
+        os.mkdir(projects_path)
+
     projects = os.listdir(projects_path)
     projects = [(prj.replace('_', ' '), prj) for prj in projects if os.path.isdir(os.path.join(projects_path, prj))]
 
