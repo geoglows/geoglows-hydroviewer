@@ -6,7 +6,6 @@ class GeoglowsHydroviewer(TethysAppBase):
     """
     Tethys app class for the GEOGloWS ECMWF Streamflow Hydroviewer
     """
-
     name = 'GEOGloWS ECMWF Streamflow Hydroviewer'
     index = 'geoglows_hydroviewer:home'
     icon = 'geoglows_hydroviewer/images/water.jpeg'
@@ -31,9 +30,12 @@ class GeoglowsHydroviewer(TethysAppBase):
                    controller=f'{self.package}.controllers.hydroshare_view'),
 
             # handles the requests to get the various plots in the app modals
-            UrlMap(name='get_streamflow',
-                   url=f'{self.root_url}/hydroviewer/getStreamflow',
-                   controller=f'{self.package}.controllers.get_streamflow'),
+            UrlMap(name='getForecastData',
+                   url=f'{self.root_url}/hydroviewer/getForecastData',
+                   controller=f'{self.package}.controllers.get_forecast_data'),
+            UrlMap(name='getHistoricalData',
+                   url=f'{self.root_url}/hydroviewer/getHistoricalData',
+                   controller=f'{self.package}.controllers.get_historical_data'),
             UrlMap(name='upload_new_observations',
                    url=f'{self.root_url}/hydroviewer/upload_new_observations',
                    controller=f'{self.package}.manage_uploaded_observations.upload_new_observations'),
@@ -120,6 +122,5 @@ class GeoglowsHydroviewer(TethysAppBase):
                 type=CustomSetting.TYPE_STRING,
                 description="Absolute file path to a directory containing geoglows shapefiles (see app documentation)",
                 required=False,
-                default=self.get_app_workspace().path,
             ),
         )

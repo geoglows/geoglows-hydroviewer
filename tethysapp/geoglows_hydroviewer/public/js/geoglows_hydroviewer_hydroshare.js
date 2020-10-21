@@ -50,7 +50,7 @@ function getWatershedComponent(layername) {
 
 function getDrainageLine(layername) {
     let region = layername.replace('-drainageline', '');
-    return L.tileLayer.wms('https://geoserver.hydroshare.org/geoserver/wms', {
+    return L.tileLayer.WMFS('https://geoserver.hydroshare.org/geoserver/wms', {
         version: '1.1.0',
         layers: 'HS-' + watersheds_hydroshare_ids[region] + ':' + layername + ' ' + layername,
         useCache: true,
@@ -130,13 +130,14 @@ mapObj.on("click", function (event) {
         }
         REACHID = drainage_layer.GetFeatureInfo(event);
         marker = L.marker(event.latlng).addTo(mapObj);
-        marker.bindPopup('<b>Watershed/Region:</b> ' + $("#watersheds_select_input").val() + '<br><b>Reach ID:</b> ' + reachid);
-        updateStatusIcons('cleared');
-        for (let i in chart_divs) {
-            chart_divs[i].html('')
-        }
-        $("#forecast-table").html('');
+        marker.bindPopup('<b>Watershed/Region:</b> ' + $("#watersheds_select_input").val() + '<br><b>Reach ID:</b> ' + REACHID);
         $("#chart_modal").modal('show');
-        askAPI();
+        clearChartDivs();
+        hideGetHistorical();
+        hideHistoricalTabs();
+        hideBiasCalibrationTabs();
+        updateStatusIcons('load');
+        updateDownloadLinks('clear');
+        getForecastData();
     }
 });

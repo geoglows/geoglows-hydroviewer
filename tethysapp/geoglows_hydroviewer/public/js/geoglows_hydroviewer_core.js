@@ -44,19 +44,26 @@ function findReachID() {
     $.ajax({
         type: 'GET',
         async: true,
-        url: URL_find_reach_id + L.Util.getParamString({reach_id: $("#search_reachid_input").val()}),
+        url: URL_find_reach_id + L.Util.getParamString({reach_id: prompt("Please enter a Reach ID to search for")}),
         success: function (response) {
-            if (reachMarker) {mapObj.removeLayer(reachMarker)}
+            if (reachMarker) {
+                mapObj.removeLayer(reachMarker)
+            }
             reachMarker = L.marker(L.latLng(response['lat'], response['lon'])).addTo(mapObj);
             mapObj.flyTo(L.latLng(response['lat'], response['lon']), 9);
 
         },
-        error: function () {alert('Unable to find the reach_id specified')}
+        error: function () {
+            alert('Unable to find the reach_id specified')
+        }
     })
 }
 function findLatLon() {
-    if (latlonMarker) {mapObj.removeLayer(latlonMarker)}
-    let ll = $("#search_latlon_input").val().replace(' ', '').split(',')
+    if (latlonMarker) {
+        mapObj.removeLayer(latlonMarker)
+    }
+    let ll = prompt("Enter a latitude and longitude coordinate pair separated by a comma. For example, to get to BYU you would enter: 40.25, -111.65", "40.25, -111.65")
+    ll = ll.replace(" ", '').replace("(", "").replace(")", "").split(',')
     latlonMarker = L.marker(L.latLng(ll[0], ll[1])).addTo(mapObj);
     mapObj.flyTo(L.latLng(ll[0], ll[1]), 9);
 }
@@ -79,12 +86,9 @@ function updateDownloadLinks(type) {
     if (type === 'clear') {
         $("#download-forecast-btn").attr('href', '');
         $("#download-historical-btn").attr('href', '');
-        $("#download-seasonal-btn").attr('href', '');
     } else if (type === 'set') {
         $("#download-forecast-btn").attr('href', endpoint + 'ForecastStats/?reach_id=' + REACHID);
-        $("#download-records-btn").attr('href', endpoint + 'ForecastRecords/?reach_id=' + REACHID);
         $("#download-historical-btn").attr('href', endpoint + 'HistoricSimulation/?reach_id=' + REACHID);
-        $("#download-seasonal-btn").attr('href', endpoint + 'SeasonalAverage/?reach_id=' + REACHID);
     }
 }
 //////////////////////////////////////////////////////////////////////// GET BIAS CORRECTED PLOTS FUNCTION
@@ -94,7 +98,7 @@ function getBiasCorrectedPlots(gauge_metadata) {
         data = gauge_metadata;
         data['gauge_network'] = $("#gauge_networks").val();
     } else if (!REACHID) {
-        alert('No reach-id found');
+        alert('No Reach-ID has been chosen. You must successfully retrieve streamflow before attempting calibration');
         return
     } else {
         let csv = $("#uploaded_observations").val();
@@ -183,7 +187,7 @@ $("#hydrograph-csv-form").on('submit', function (e) {
             uploaded_input.empty();
             let new_file_list = response['new_file_list'];
             for (let i = 0; i < new_file_list.length; i++) {
-                uploaded_input.append('<option value="'+new_file_list[i][1]+'">'+new_file_list[i][0]+'</option>')
+                uploaded_input.append('<option value="' + new_file_list[i][1] + '">' + new_file_list[i][0] + '</option>')
             }
         },
         error: function (response) {
@@ -191,58 +195,110 @@ $("#hydrograph-csv-form").on('submit', function (e) {
         },
     });
 });
-$("#start-bias-correction-btn").click(function (e) {getBiasCorrectedPlots(false)})
 
 ////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
-const chart_divs = [$("#forecast-chart"), $("#corrected-forecast-chart"), $("#forecast-table"), $("#historical-chart"), $("#historical-table"), $("#daily-avg-chart"), $("#monthly-avg-chart"), $("#flowduration-chart"), $("#volume_plot"), $("#scatters"), $("#stats_table")];
-function getStreamflowPlots() {
-    updateStatusIcons('load');
-    updateDownloadLinks('clear');
-    for (let i in chart_divs) {chart_divs[i].html('')}  // clear the contents of old chart divs
+const chart_divs = [$("#forecast-chart"), $("#forecast-table"), $("#historical-chart"), $("#historical-table"), $("#daily-avg-chart"), $("#monthly-avg-chart"), $("#flowduration-chart"), $("#volume_plot"), $("#scatters"), $("#stats_table")];
+
+function clearChartDivs() {
+    for (let i in chart_divs) {
+        chart_divs[i].html('')
+    }
+}
+
+function showGetHistorical() {
+    $("#historical_tab_link").show();
+    $("#get-historical-btn").show();
+}
+
+function hideGetHistorical() {
+    $("#historical_tab_link").hide();
+    $("#get-historical-btn").hide();
+}
+
+function hideHistoricalTabs() {
+    $("#avg_flow_tab_link").hide();
+    $("#flow_duration_tab_link").hide();
+}
+
+function showHistoricalTabs() {
+    $("#avg_flow_tab_link").show();
+    $("#flow_duration_tab_link").show();
+}
+
+function hideBiasCalibrationTabs() {
+    $("#bias_correction_tab_link").hide();
+}
+
+function showBiasCalibrationTabs() {
+    $("#bias_correction_tab_link").show();
+}
+
+function getForecastData() {
     let ftl = $("#forecast_tab_link");  // select divs with jquery so we can reuse them
-    let fc = chart_divs[0];
     ftl.tab('show')
+    let fc = chart_divs[0];
     fc.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
     fc.css('text-align', 'center');
     $.ajax({
         type: 'GET',
         async: true,
         data: {reach_id: REACHID},
-        url: URL_get_streamflow,
-        success: function (html) {
+        url: URL_getForecastData,
+        success: function (response) {
             // forecast tab
             ftl.tab('show');
-            fc.html(html['fp']);
-            $("#forecast-table").html(html['prob_table']);
-            // historical tab
-            $("#historical_tab_link").tab('show');
-            $("#historical-chart").html(html['hp']);
-            $("#historical-table").html(html['rp_table']);
-            // average flows tab
-            $("#avg_flow_tab_link").tab('show');
-            $("#daily-avg-chart").html(html['dp']);
-            $("#monthly-avg-chart").html(html['mp']);
-            // $("#monthly-avg-chart").html(html['sp']);
-            // flow duration tab
-            $("#flow_duration_tab_link").tab('show');
-            $("#flowduration-chart").html(html['fdp']);
-            // update other messages and links
-            ftl.tab('show');
-            updateStatusIcons('ready');
+            fc.html(response['plot']);
+            $("#forecast-table").html(response['table']);
             updateDownloadLinks('set');
-            $("#bias_correction_tab_link").show()
+            updateStatusIcons('ready');
+            showGetHistorical();
+            showBiasCalibrationTabs();
         },
         error: function () {
             updateStatusIcons('fail');
-            $("#bias_correction_tab_link").hide()
-            for (let i in chart_divs) {
-                chart_divs[i].html('')
-            }
+            REACHID = null;
+        }
+    })
+}
+
+function getHistoricalData() {
+    updateStatusIcons('load');
+    updateDownloadLinks('clear');
+    let tl = $("#historical_tab_link");  // select divs with jquery so we can reuse them
+    tl.tab('show')
+    let plotdiv = chart_divs[2];
+    plotdiv.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
+    plotdiv.css('text-align', 'center');
+    $.ajax({
+        type: 'GET',
+        async: true,
+        data: {reach_id: REACHID},
+        url: URL_getHistoricalData,
+        success: function (response) {
+            showHistoricalTabs();
+            // historical tab
+            tl.tab('show');
+            $("#get-historical-btn").hide();
+            plotdiv.html(response['plot']);
+            $("#historical-table").html(response['table']);
+            // average flows tab
+            $("#avg_flow_tab_link").tab('show');
+            $("#daily-avg-chart").html(response['dayavg']);
+            $("#monthly-avg-chart").html(response['monavg']);
+            // flow duration tab
+            $("#flow_duration_tab_link").tab('show');
+            $("#flowduration-chart").html(response['fdp']);
+            // update other messages and links
+            tl.tab('show');
+            updateStatusIcons('ready');
+        },
+        error: function () {
+            updateStatusIcons('fail');
         }
     })
 }
 function fix_buttons(tab) {
-    let buttons = [$("#download-forecast-btn"), $("#download-historical-btn"), $("#download-averages-btn"), $("#start-bias-correction-btn")]
+    let buttons = [$("#download-forecast-btn"), $("#download-historical-btn"), $("#start-bias-correction-btn")]
     for (let i in buttons) {
         buttons[i].hide()
     }
@@ -250,10 +306,8 @@ function fix_buttons(tab) {
         buttons[0].show()
     } else if (tab === 'historical') {
         buttons[1].show()
-    } else if (tab === 'averages') {
-        buttons[2].show()
     } else if (tab === 'biascorrection') {
-        buttons[3].show()
+        buttons[2].show()
     }
     fix_chart_sizes(tab);
     $("#resize_charts").attr({'onclick': "fix_chart_sizes('" + tab + "')"})
@@ -262,8 +316,6 @@ function fix_chart_sizes(tab) {
     let divs = [];
     if (tab === 'forecast') {
         divs = [$("#forecast-chart .js-plotly-plot")]
-    } else if (tab === 'records') {
-        divs = [$("#records-chart .js-plotly-plot")]
     } else if (tab === 'historical') {
         divs = [$("#historical-5-chart .js-plotly-plot")]
     } else if (tab === 'averages') {
