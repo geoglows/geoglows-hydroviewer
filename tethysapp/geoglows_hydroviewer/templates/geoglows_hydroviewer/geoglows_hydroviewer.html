@@ -5,8 +5,8 @@
 {% load tethys_gizmos %}
 
 {% block header_buttons %}
-  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="VIIRS">
-    <a data-toggle="modal" data-target="#viirs_modal"><span class="glyphicon glyphicon-picture"></span></a>
+  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="About Map Data">
+    <a data-toggle="modal" data-target="#about_modal"><span class="glyphicon glyphicon-question-sign"></span></a>
   </div>
   <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Upload CSV">
     <a data-toggle="modal" data-target="#csv_modal"><span class="glyphicon glyphicon-upload"></span></a>
@@ -24,6 +24,7 @@
 {% endblock %}
 
 {% block app_actions %}
+  <a role="button" class="btn btn-default" data-toggle="modal" data-target="#about_modal">About the Map Data</a>
 {% endblock %}
 
 {% block after_app_content %}
@@ -118,16 +119,48 @@
       </div>
     </div>
   </div>
-  <div class="modal fade" id="viirs_modal" role="dialog">
-    <div class="modal-dialog" role="document">
+  <div class="modal fade" id="about_modal" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">X</span>
-          </button>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+          <div class="row">
+            <h1 style="text-align: center">About Map Data</h1>
+          </div>
         </div>
-        <h1 style="text-align: center">VIIRS 5-Day Composite Imagery</h1>
+
         <div class="modal-body">
-          <img src="{% static 'geoglows_hydroviewer/images/VIIRS_legend.png' %}" alt="legend" style="width: 100%">
+          <h2 style="text-align: center">GEOGloWS ECMWF Streamflow Model Streams</h2>
+          <p>
+            The stream network visualization is made possible by a collaboration between ESRI, ECMWF, and BYU. The
+            color and width of the lines which represent the stream segments are determined by the average of the
+            ensemble streamflow prediction run by the hydrologic model. Wider lines means more flow and the coloring
+            represents if the stream is experiencing a return period level event: blue = normal, yellow = exceeds 2
+            year return period, red = exceeds 10 year return period, and purple = exceeds 20 year return period.
+          </p>
+          <h2 style="text-align: center">Gauge Networks</h2>
+          <p>
+            Like all models, the GEOGloWS ECMWF model needs to be calibrated. Calibration becomes increasingly
+            difficult as a model increases in geographic extents, complexity, temporal range of simulation, and the
+            frequency the model is executed. The difficulty increases because both the computation time and amount of
+            required input and validation data increases. In the case of hydrologic models, sufficient streamflow
+            observations often do not exist, are not shareable, or are too inaccurate or incomplete to be used.
+            Researchers at BYU led by Jorge Luis Sanchez Lozano, Riley Hales, and Jim Nelson, are developing alternate
+            methods to calibrate models on the fly using what observed data exist and various techniques rooted in
+            spatial analysis, statistical reasoning, and machine learning. These gauge networks represent countries
+            where observed discharge is available as a service and this research team has been performing case studies.
+            Click on one of the reds dots (representing a gauged stream location) to retrieve the streamflow model
+            results for that location after applying a calibration algorithm using the observed data.
+          </p>
+          <h2 style="text-align: center">VIIRS 5-Day Composite Imagery</h2>
+          <p>VIIRS imagery is a web mapping service layer derived from optical observations from satellites.</p>
+          <a href="https://www.star.nesdis.noaa.gov/jpss/images/Harvey/show/VIIRSFloodDetectionMapQuickGuide.pdf"
+             target="_blank">VIIRS Flood Detection Map Quick Guide (PDF) (noaa.gov)</a><br>
+          <a href="https://www.ssec.wisc.edu/flood-map-demo/"
+             target="_blank">VIIRS Quick Start Guide/Flood Map Demo (wisc.edu)</a><br>
+          <img src="{% static 'geoglows_hydroviewer/images/VIIRS_legend.png' %}" alt="legend"
+               style="width: 80%; margin: auto">
           <ul>
             <li>MS: missing data (transparent)</li>
             <li>LD: clear-sky land (brown)</li>
@@ -139,14 +172,9 @@
             <li>WA: open water (blue)</li>
             <li>0-100: floodwater fractions (light cyan to red)</li>
           </ul>
-          <a href="https://www.star.nesdis.noaa.gov/jpss/images/Harvey/show/VIIRSFloodDetectionMapQuickGuide.pdf"
-             target="_blank">VIIRS Flood Detection Map Quick Guide (PDF) (noaa.gov)</a><br>
-          <a href="https://www.ssec.wisc.edu/flood-map-demo/"
-             target="_blank">VIIRS Quick Start Guide/Flood Map Demo (wisc.edu)</a>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
