@@ -329,39 +329,40 @@ def find_upstream_boundaries(request):
     reachid = int(request.GET.get('reachid'))
     if not project:
         return JsonResponse({'status': 'error', 'error': 'project not found'})
+    proj_dir = get_project_directory(project)
 
     try:
         # remove the boundaries if they exist
-        boundary_json = os.path.join(get_project_directory(project), "boundaries.json")
+        boundary_json = os.path.join(proj_dir, "boundaries.json")
         if os.path.exists(boundary_json):
             os.remove(boundary_json)
 
         # figure out the region stream network shapefile to read and then open it
-        print(reachid)
         region = gsf.reach_to_region(reachid)
-        print(region)
         zipped_shp = os.path.join(SHAPE_DIR, f'{region}-catchment.zip')
-        print(zipped_shp)
-        geodf = gpd.read_file("zip:///" + os.path.join(zipped_shp, f'{region}-catchment.shp'))
+        gdf = gpd.read_file("zip:///" + os.path.join(zipped_shp, f'{region}-catchment.shp'))
+        gdf = gdf.to_crs(epsg=4326)
+        gdf = gdf[['COMID', 'NextDownID', 'geometry']]
 
-        # drop most of the columns except ones needed for traversing the network
-        geodf = geodf[['COMID', 'NextDownID', 'geometry']]
-        print(geodf.head())
-        upstream = walk_upstream(geodf, reachid, 'COMID', 'NextDownID')
-        print(upstream)
-        geodf = geodf[geodf['COMID'].isin(upstream)]
-        print(geodf.head())
+        # traverse the network, select, dissolve
+        upstream = walk_upstream(gdf, reachid, 'COMID', 'NextDownID')
+        gdf = gdf[gdf['COMID'].isin(upstream)]
+        gdf['dissolve'] = 'dissolve'
+        gdf = gdf.dissolve(by="dissolve")
+        gdf = gdf[['geometry']]
+        gdf.to_file(boundary_json, driver='GeoJSON')
 
-        # dissolve and drop the remaining columns
-        geodf['dissolve'] = 'dissolve'
-        print(geodf)
-        geodf = geodf.dissolve(by="dissolve")
-        geodf = geodf[['geometry']]
-        geodf.to_crs(epsg=4326).to_file(boundary_json, driver='GeoJSON')
+        # write the zoom/centroid info to the configs json
+        with open(os.path.join(proj_dir, 'export_configs.json'), 'r') as a:
+            ec = json.loads(a.read())
+            ec['zoom'] = 6
+            ec['center'] = f'{gdf.centroid.y[0]},{gdf.centroid.x[0]}'
+        with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as a:
+            a.write(json.dumps(ec))
+
         return JsonResponse({'status': 'success'})
-    except Exception as e:
-        print('error')
-        print(e)
+
+    except Exception:
         return JsonResponse({'status': 'fail'})
 
 
