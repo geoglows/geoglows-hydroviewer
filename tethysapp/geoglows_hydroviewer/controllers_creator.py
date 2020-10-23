@@ -12,6 +12,7 @@ from tethys_sdk.gizmos import SelectInput
 from tethys_sdk.permissions import login_required
 
 from .app import GeoglowsHydroviewer as App
+from .hydroviewer_creator_tools import get_livingatlas_geojson
 from .hydroviewer_creator_tools import get_project_directory
 from .hydroviewer_creator_tools import shapefiles_downloaded
 from .hydroviewer_creator_tools import walk_upstream
@@ -299,8 +300,16 @@ def choose_boundary_country(request):
 def save_boundaries(request):
     proj_dir = get_project_directory(request.POST['project'])
 
-    with open(os.path.join(proj_dir, 'boundaries.json'), 'w') as gj:
-        gj.write(request.POST.get('geojson'))
+    geojson = request.POST.get('geojson', False)
+    esri = request.POST.get('esri', False)
+    if geojson:
+        with open(os.path.join(proj_dir, 'boundaries.json'), 'w') as gj:
+            gj.write(geojson)
+    elif esri:
+        with open(os.path.join(proj_dir, 'boundaries.json'), 'w') as gj:
+            gj.write(get_livingatlas_geojson(esri))
+    else:
+        return JsonResponse({'status': 'fail'})
 
     lat = round(float(request.POST.get('center_lat')), 4)
     lon = round(float(request.POST.get('center_lng')), 4)
@@ -311,9 +320,6 @@ def save_boundaries(request):
     with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as a:
         a.write(json.dumps(ec))
 
-    gjson_file = gpd.read_file(os.path.join(proj_dir, 'boundaries.json'))
-    gjson_file = gjson_file.to_crs("EPSG:3857")
-    gjson_file.to_file(os.path.join(proj_dir, 'projected_boundaries'))
     return JsonResponse({'status': 'success'})
 
 
