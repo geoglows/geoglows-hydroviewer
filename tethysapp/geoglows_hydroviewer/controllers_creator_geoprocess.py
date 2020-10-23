@@ -19,7 +19,8 @@ def geoprocess_hydroviewer_idregion(request):
     if not project:
         raise FileNotFoundError('project directory not found')
     proj_dir = get_project_directory(project)
-    gjson_gdf = gpd.read_file(os.path.join(proj_dir, 'projected_boundaries', 'projected_boundaries.shp'))
+    gjson_gdf = gpd.read_file(os.path.join(proj_dir, 'boundaries.json'))
+    gjson_gdf = gjson_gdf.to_crs(epsg=3857)
 
     for region_zip in glob.glob(os.path.join(SHAPE_DIR, '*-boundary.zip')):
         region_name = os.path.splitext(os.path.basename(region_zip))[0]
@@ -45,7 +46,8 @@ def geoprocess_hydroviewer_clip(request):
             shutil.rmtree(dl_folder)
         os.mkdir(dl_folder)
 
-        gjson_gdf = gpd.read_file(os.path.join(proj_dir, 'projected_boundaries', 'projected_boundaries.shp'))
+        gjson_gdf = gpd.read_file(os.path.join(proj_dir, 'boundaries.json'))
+        gjson_gdf = gjson_gdf.to_crs(epsg=3857)
         dl_name = region_name.replace('boundary', 'drainageline')
         dl_path = os.path.join(SHAPE_DIR, dl_name + '.zip', dl_name + '.shp')
         dl_gdf = gpd.read_file("zip:///" + dl_path)
@@ -92,8 +94,6 @@ def geoprocess_zip_shapefiles(request):
             for component in glob.glob(os.path.join(proj_dir, 'drainageline_shapefile', 'drainagelines.*')):
                 zipped.write(component, arcname=os.path.basename(component))
             shutil.rmtree(os.path.join(proj_dir, 'drainageline_shapefile'))
-
-        shutil.rmtree(os.path.join(proj_dir, 'projected_boundaries'))
 
         return JsonResponse({'status': 'success'})
 

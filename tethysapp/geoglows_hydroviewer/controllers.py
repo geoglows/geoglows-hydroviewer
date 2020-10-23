@@ -34,6 +34,8 @@ GLOBAL_DELINEATIONS = (
     ('North America', 'north_america-geoglows', '43ae93136e10439fbf2530e02156caf0'),
 )
 
+gsf.ENDPOINT = gsf.AZURE
+
 
 def home(request):
     """
@@ -63,11 +65,9 @@ def home(request):
     context = {
         # constants
         'endpoint': gsf.ENDPOINT,
-
         # uploaded data
         'uploaded_observations': uploaded_observations,
         'upload_new_observation': upload_new_observation,
-
         # gauge_networks
         'gauge_networks': gauge_networks,
     }
@@ -125,30 +125,41 @@ def hydroshare_view(request):
     context = {
         # constants
         'endpoint': gsf.ENDPOINT,
-
         # uploaded data
         'uploaded_observations': uploaded_observations,
         'upload_new_observation': upload_new_observation,
-
         # gauge_networks
         'gauge_networks': gauge_networks,
-
+        # controls
         'watersheds_select_input': watersheds_select_input,
     }
 
     return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer.html', context)
 
 
-def get_streamflow(request):
+def get_forecast_data(request):
     # get data
     s = requests.Session()
-    s.get(gsf.ENDPOINT.replace('api/', ''))
     reach_id = request.GET['reach_id']
     stats = gsf.forecast_stats(reach_id, s=s)
-    # rec = gsf.forecast_records(reach_id)
     ens = gsf.forecast_ensembles(reach_id, s=s)
+    rper = gsf.return_periods(reach_id, s=s)
+    s.close()
+    # process data
+    title_headers = {'Reach ID': reach_id}
+    # return json of plot html
+    return JsonResponse(dict(
+        plot=gpp.forecast_stats(stats, rper, titles=title_headers, outformat='plotly_html'),
+        table=gpp.probabilities_table(stats, ens, rper),
+    ))
+
+
+def get_historical_data(request):
+    # get data
+    s = requests.Session()
+    reach_id = request.GET['reach_id']
     hist = gsf.historic_simulation(reach_id, s=s)
-    rper = gsf.return_periods(reach_id)
+    rper = gsf.return_periods(reach_id, s=s)
     s.close()
     # process data
     dayavg = hydrostats.data.daily_average(hist, rolling=True)
@@ -156,18 +167,15 @@ def get_streamflow(request):
     title_headers = {'Reach ID': reach_id}
     # return json of plot html
     return JsonResponse(dict(
-        # fp=gpp.hydroviewer(rec, stats, ens, rper, titles=title_headers, outformat='plotly_html', record_days=0),
-        fp=gpp.forecast_stats(stats, rper, titles=title_headers, outformat='plotly_html'),
-        hp=gpp.historic_simulation(hist, rper, titles=title_headers, outformat='plotly_html'),
-        dp=gpp.daily_averages(dayavg, titles=title_headers, outformat='plotly_html'),
-        mp=gpp.monthly_averages(monavg, titles=title_headers, outformat='plotly_html'),
+        plot=gpp.historic_simulation(hist, rper, titles=title_headers, outformat='plotly_html'),
+        table=gpp.return_periods_table(rper),
+        dayavg=gpp.daily_averages(dayavg, titles=title_headers, outformat='plotly_html'),
+        monavg=gpp.monthly_averages(monavg, titles=title_headers, outformat='plotly_html'),
         fdp=gpp.flow_duration_curve(hist, titles=title_headers, outformat='plotly_html'),
-        prob_table=gpp.probabilities_table(stats, ens, rper),
-        rp_table=gpp.return_periods_table(rper),
     ))
 
 
-def correct_bias(request):
+def get_bias_adjusted(request):
     # accept the parameters from the user
     data = request.GET.dict()
     network = data.get('gauge_network', False)

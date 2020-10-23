@@ -32,15 +32,20 @@ const slider = $("#time-slider");
 slider.change(function () {
     refreshLayerAnimation()
 })
+
 function refreshLayerAnimation() {
     layerAnimationTime = new Date(startDateTime);
     layerAnimationTime.setUTCHours(slider.val() * 3);
     currentDate.html(layerAnimationTime);
     globalLayer.setTimeRange(layerAnimationTime, endDateTime);
 }
+
 let animate = false;
+
 function playAnimation(once = false) {
-    if (!animate) {return}
+    if (!animate) {
+        return
+    }
     if (layerAnimationTime < endDateTime) {
         slider.val(Number(slider.val()) + 1)
     } else {
@@ -53,6 +58,7 @@ function playAnimation(once = false) {
     }
     setTimeout(playAnimation, 750);
 }
+
 $("#animationPlay").click(function () {
     animate = true;
     playAnimation()
@@ -60,11 +66,11 @@ $("#animationPlay").click(function () {
 $("#animationStop").click(function () {
     animate = false;
 })
-$("#animationPlus1").click(function(){
+$("#animationPlus1").click(function () {
     animate = true;
     playAnimation(true)
 })
-$("#animationBack1").click(function(){
+$("#animationBack1").click(function () {
     if (layerAnimationTime > startDateTime) {
         slider.val(Number(slider.val()) - 1)
     } else {
@@ -73,7 +79,11 @@ $("#animationBack1").click(function(){
     refreshLayerAnimation();
 })
 ////////////////////////////////////////////////////////////////////////  ADD WMS LAYERS FOR DRAINAGE LINES, VIIRS, ETC - SEE HOME.HTML TEMPLATE
-let VIIRSlayer = L.tileLayer('https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png', {layers: 'RIVER-FLDglobal-composite: Latest', crossOrigin: true, pane: 'viirs',});
+let VIIRSlayer = L.tileLayer('https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png', {
+    layers: 'RIVER-FLDglobal-composite: Latest',
+    crossOrigin: true,
+    pane: 'viirs',
+});
 const globalLayer = L.esri.dynamicMapLayer({
     url: 'https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer',
     useCors: false,
@@ -81,7 +91,11 @@ const globalLayer = L.esri.dynamicMapLayer({
     from: startDateTime,
     to: endDateTime,
 }).addTo(mapObj);
-L.control.layers(basemapsJson, {'Stream Network': globalLayer, 'Gauge Network': gaugeNetwork, 'VIIRS Imagery': VIIRSlayer}, {'collapsed': false}).addTo(mapObj);
+L.control.layers(basemapsJson, {
+    'Stream Network': globalLayer,
+    'Gauge Network': gaugeNetwork,
+    'VIIRS Imagery': VIIRSlayer
+}, {'collapsed': false}).addTo(mapObj);
 
 mapObj.on("click", function (event) {
     if (mapObj.getZoom() <= 9.5) {
@@ -94,9 +108,6 @@ mapObj.on("click", function (event) {
         mapObj.removeLayer(marker)
     }
     marker = L.marker(event.latlng).addTo(mapObj);
-    for (let i in chart_divs) {
-        chart_divs[i].html('')
-    }
     updateStatusIcons('identify');
     $("#chart_modal").modal('show');
     L.esri.identifyFeatures({
@@ -122,7 +133,12 @@ mapObj.on("click", function (event) {
             SelectedSegment.clearLayers();
             SelectedSegment.addData(featureCollection.features[0].geometry)
             REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"];
+            clearChartDivs();
+            hideGetHistorical();
+            hideHistoricalTabs();
+            hideBiasCalibrationTabs();
             updateStatusIcons('load');
-            getStreamflowPlots();
+            updateDownloadLinks('clear');
+            getForecastData();
         })
 });

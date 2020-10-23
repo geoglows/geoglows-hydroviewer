@@ -19,81 +19,46 @@
   {% url 'geoglows_hydroviewer:render_hydroviewer' as render %}
   {% url 'geoglows_hydroviewer:geoglows_hydroviewer_creator' as creator %}
 
-  {% if request.path == hydroviewer %}
+  {% if request.user.is_authenticated %}
+    <li class="title">App Features</li>
+    <li class="{% if request.path == hydroviewer or request.path == hydroshare %}active{% endif %}"><a
+            href="{{ hydroviewer }}">Global Hydroviewer</a></li>
+    <li class="{% if request.path != hydroviewer and request.path != hydroshare %}active{% endif %}"><a
+            href="{{ creator }}">Hydroviewer Creator</a></li>
+  {% endif %}
+
+  {% if request.path == hydroviewer or request.path == hydroshare %}
     <li class="title">Map Controls</li>
-    <label class="control-label" for="time-slider">Map Animation</label>
-    <input type="range" min="0" max="40" value="0" class="slider" id="time-slider">
-    <li id="current-map-date" style="text-align: center"></li>
-    <div style="text-align: center;">
-      <button class="header-button glyphicon-button" id="animationBack1"><span
-              class="glyphicon glyphicon-chevron-left"></span></button>
-      <button class="header-button glyphicon-button" id="animationPlay"><span class="glyphicon glyphicon-play"></span>
-      </button>
-      <button class="header-button glyphicon-button" id="animationStop"><span class="glyphicon glyphicon-stop"></span>
-      </button>
-      <button class="header-button glyphicon-button" id="animationPlus1"><span
-              class="glyphicon glyphicon-chevron-right"></span></button>
-    </div>
-  
+    {% if request.path == hydroviewer %}
+      <label class="control-label" for="time-slider">Map Animation</label>
+      <input type="range" min="0" max="40" value="0" class="slider" id="time-slider">
+      <li id="current-map-date" style="text-align: center"></li>
+      <div style="text-align: center;">
+        <button class="header-button glyphicon-button" id="animationBack1"><span
+                class="glyphicon glyphicon-chevron-left"></span></button>
+        <button class="header-button glyphicon-button" id="animationPlay"><span class="glyphicon glyphicon-play"></span>
+        </button>
+        <button class="header-button glyphicon-button" id="animationStop"><span class="glyphicon glyphicon-stop"></span>
+        </button>
+        <button class="header-button glyphicon-button" id="animationPlus1"><span
+                class="glyphicon glyphicon-chevron-right"></span></button>
+      </div>
+    {% else %}
+      <li>{% gizmo select_input watersheds_select_input %}</li>
+    {% endif %}
     <li class="separator"></li>
-    <label class="control-label" for="search_reachid_input">Search for a Reach ID</label>
-    <input id="search_reachid_input" placeholder="Search for a Reach ID" style="width: 100%" class="input">
     <a class="btn btn-default" role="button" style="width: 100%" onclick="findReachID()">Find A Reach ID</a>
-  
     <li class="separator"></li>
-    <label class="control-label" for="search_latlon_input">Search for a Latitude/Longitude</label>
-    <input id="search_latlon_input" placeholder="Enter 'latitude, longitude'" style="width: 100%" class="input">
-    <a class="btn btn-default" role="button" style="width: 100%" onclick="findLatLon()">Find A Lat/Lon Location</a>
-  
+    <a class="btn btn-default" role="button" style="width: 100%" onclick="findLatLon()">Zoom to Lat/Lon Coordinates</a>
     <li class="separator"></li>
-    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#viirs_modal" style="width: 100%">About
-      VIIRS Imagery</a>
-  
-    <li class="title">Bias Correction</li>
-    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New
-      Observation</a>
+    {% if request.path == hydroviewer %}
+      <a href="{{ hydroshare }}" class="btn btn-default" role="button" style="width: 100%">Switch to HydroShare Map</a>
+    {% else %}
+      <a href="{{ hydroviewer }}" class="btn btn-default" role="button" style="width: 100%">Switch to ESRI Map</a>
+    {% endif %}
     <li class="separator"></li>
     {% gizmo select_input gauge_networks %}
-    {% if request.user.is_authenticated %}
-      <a href="{{ creator }}" class="btn btn-default" role="button" style="width: 100%">Go to Hydroviewer Creator</a>
-    {% else %}
-      <a class="btn btn-default" role="button" data-toggle="modal" data-target="#warn_modal" style="width: 100%">Go to
-        Hydroviewer Creator</a>
-    {% endif %}
-
-  {% elif request.path == hydroshare %}
-    <li class="title">Map Controls</li>
-    <li>{% gizmo select_input watersheds_select_input %}</li>
-    <li class="separator"></li>
-    <label class="control-label" for="search_reachid_input">Search for a Reach ID</label>
-    <input id="search_reachid_input" placeholder="Search for a Reach ID" style="width: 100%" class="input">
-    <a class="btn btn-default" role="button" style="width: 100%" onclick="findReachID()">Find A Reach ID</a>
-
-    <li class="separator"></li>
-    <label class="control-label" for="search_latlon_input">Search for a Latitude/Longitude</label>
-    <input id="search_latlon_input" placeholder="Enter 'latitude, longitude'" style="width: 100%" class="input">
-    <a class="btn btn-default" role="button" style="width: 100%" onclick="findLatLon()">Find A Lat/Lon Location</a>
-
-    <li class="separator"></li>
-    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#viirs_modal" style="width: 100%">About
-      VIIRS Imagery</a>
-
-    <li class="title">Bias Correction</li>
-    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New
-      Observation</a>
-    <li class="separator"></li>
-    {% gizmo select_input gauge_networks %}
-    {% if request.user.is_authenticated %}
-      <a href="{{ creator }}" class="btn btn-default" role="button" style="width: 100%">Go to Hydroviewer Creator</a>
-    {% else %}
-      <a class="btn btn-default" role="button" data-toggle="modal" data-target="#warn_modal" style="width: 100%">Go to
-        Hydroviewer Creator</a>
-    {% endif %}
   {% else %}
-    <li class="separator"></li>
-    <a href="{{ hydroviewer }}" class="btn btn-default" role="button" style="width: 100%">Return to Hydroviewer Main
-      Page</a>
-    <li class="separator"></li>
     <li class="title">Hydroviewer Creation Tools</li>
     <li {% if request.path == creator %}class="active"{% endif %}><a href="{{ creator }}">Project Selection</a></li>
     <li {% if request.path == overview %}class="active"{% endif %}><a>Project Overview</a></li>

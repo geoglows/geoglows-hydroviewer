@@ -98,10 +98,6 @@ function regionsESRI() {
         style: {color: 'rgb(0,0,0)', opacity: 1, weight: 1, fillColor: 'rgba(0,0,0,0)', fillOpacity: 'rgba(0,0,0,0)'},
         outSR: 4326,
         where: where,
-        onEachFeature: function (feature, layer) {
-            let place = feature.properties.REGION;
-            layer.bindPopup('<a class="btn btn-default" role="button">' + place + '</a>');
-        },
     };
     if (region !== '') {params['where'] = "REGION = '" + region + "'"}
     let layer = L.esri.featureLayer(params);
@@ -119,9 +115,6 @@ function countriesESRI() {
         style: {color: 'rgba(0,0,0,1)', opacity: 1, weight: 1, fillColor: 'rgba(0,0,0,0)', fillOpacity: 'rgba(0,0,0,0)'},
         outSR: 4326,
         where: where,
-        onEachFeature: function (feature, layer) {
-            layer.bindPopup('<a class="btn btn-default" role="button" onclick="getShapeChart(' + "'esri-" + region + "'" + ')">Get timeseries for ' + region + '</a>');
-        },
     };
     let layer = L.esri.featureLayer(params);
     layer.addTo(mapObj);
@@ -133,14 +126,16 @@ function countriesESRI() {
 let layerRegion = regionsESRI();
 $("#submit-boundaries").click(function () {
     let esri = $("#regions").val();
-    console.log(esri);
     if (esri === '' || esri === null) {
         esri = $("#countries").val()
-        console.log(esri);
     }
+    const center = mapObj.getCenter();
     let data = {
-        project: $("#project").val(),
-        esri: esri
+        project: project,
+        esri: esri,
+        zoom: mapObj.getZoom(),
+        center_lat: Number(center.lat),
+        center_lng: Number(center.lng),
     }
     let return_home_button = $("#return_to_overview");
     let load_bar = $("#loading-bar-div");

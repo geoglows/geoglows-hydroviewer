@@ -5,8 +5,8 @@
 {% load tethys_gizmos %}
 
 {% block header_buttons %}
-  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="VIIRS">
-    <a data-toggle="modal" data-target="#viirs_modal"><span class="glyphicon glyphicon-picture"></span></a>
+  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="About Map Data">
+    <a data-toggle="modal" data-target="#about_modal"><span class="glyphicon glyphicon-question-sign"></span></a>
   </div>
   <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Upload CSV">
     <a data-toggle="modal" data-target="#csv_modal"><span class="glyphicon glyphicon-upload"></span></a>
@@ -24,17 +24,11 @@
 {% endblock %}
 
 {% block app_actions %}
-  {% url 'geoglows_hydroviewer:home' as hydroviewer %}
-  {% url 'geoglows_hydroviewer:hydroshare_view' as hydroshare %}
-  {% if request.path == hydroshare %}
-    <a href="{{ hydroviewer }}" class="btn btn-default" role="button">Switch to ESRI layers</a>
-  {% else %}
-    <a href="{{ hydroshare }}" class="btn btn-default" role="button">Switch to HydroShare layers</a>
-  {% endif %}
+  <a role="button" class="btn btn-default" data-toggle="modal" data-target="#about_modal">About the Map Data</a>
 {% endblock %}
 
 {% block after_app_content %}
-  {# Chart Modal #}
+  {# Chart Modals #}
   <div class="modal fade" id="chart_modal" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -51,14 +45,14 @@
           <ul class="nav nav-tabs" role="tablist">
             <li role="presentation" class="active"><a id="forecast_tab_link" href="#forecast" role="tab"
                                                       data-toggle="tab">Forecasts</a></li>
-            <li role="presentation"><a id="historical_tab_link" href="#historical" role="tab" data-toggle="tab">Historical</a>
-            </li>
-            <li role="presentation"><a id="avg_flow_tab_link" href="#average_flows" role="tab" data-toggle="tab">Average
-              Flows</a></li>
-            <li role="presentation"><a id="flow_duration_tab_link" href="#flow_duration" role="tab" data-toggle="tab">Flow-Duration</a>
-            </li>
+            <li role="presentation"><a id="historical_tab_link" href="#historical" role="tab" data-toggle="tab"
+                                       style="display: none">Historical</a></li>
+            <li role="presentation"><a id="avg_flow_tab_link" href="#average_flows" role="tab" data-toggle="tab"
+                                       style="display: none">Average Flows</a></li>
+            <li role="presentation"><a id="flow_duration_tab_link" href="#flow_duration" role="tab" data-toggle="tab"
+                                       style="display: none">Flow-Duration</a></li>
             <li role="presentation"><a id="bias_correction_tab_link" href="#bias_correction" role="tab"
-                                       data-toggle="tab" style="display: none">Bias Correction</a></li>
+                                       style="display: none" data-toggle="tab">Bias Correction</a></li>
           </ul>
 
           <!-- Tab panes -->
@@ -66,17 +60,18 @@
             <div role="tabpanel" class="tab-pane active" id="forecast">
               <div class="panel panel-default">
                 <div id="forecast-chart"></div>
-                <div id="corrected-forecast-chart"></div>
                 <div id="forecast-table"></div>
               </div>
             </div> <!-- /.tab-pane -->
 
             <div role="tabpanel" class="tab-pane" id="historical">
               <div class="panel panel-default">
-                <div id="historical-5">
-                  <div id="historical-chart" class="panel-body"></div>
-                  <div id="historical-table"></div>
+                <div style="width: 70%; margin: auto; text-align: center; padding: 16px">
+                  <a class="btn btn-success" role="button" style="width: 100%" id="get-historical-btn"
+                     onclick="getHistoricalData()">Get Historical Data</a>
                 </div>
+                <div id="historical-chart" class="panel-body"></div>
+                <div id="historical-table"></div>
               </div>
             </div><!-- /.tab-pane -->
 
@@ -95,8 +90,14 @@
 
             <div role="tabpanel" class="tab-pane" id="bias_correction">
               <div class="panel panel-default">
-                <div style="margin-left: auto; margin-right: auto; width: 75%">
+                <div style="margin-left: auto; margin-right: auto; width: 80%">
+                  <br>
+                  <a class="btn btn-info" role="button" data-toggle="modal" data-target="#csv_modal"
+                     style="width: 100%">Upload New Observation</a>
+                  <hr>
                   <p>{% gizmo select_input uploaded_observations %}</p>
+                  <a class="btn btn-success" role="button" id="bias-correction-btn" style="width: 100%"
+                     onclick="getBiasCorrectedPlots(false)">Start Bias Correction</a>
                 </div>
                 <div id='volume_plot' class="panel-body"></div>
                 <div id='scatters' class="panel-body"></div>
@@ -108,14 +109,8 @@
         </div>
         <div class="modal-footer">
           <a class="btn btn-success" role="button" id="download-forecast-btn" target="_blank">Download Forecast</a>
-          <a class="btn btn-success" role="button" id="download-records-btn" target="_blank" style="display: none">Download
-            Previous Forecasts</a>
           <a class="btn btn-success" role="button" id="download-historical-btn" target="_blank" style="display: none">Download
             Historical Data</a>
-          <a class="btn btn-success" role="button" id="download-seasonal-btn" target="_blank" style="display: none">Download
-            Daily Average</a>
-          <a class="btn btn-danger" role="button" id="start-bias-correction-btn" target="_blank" style="display: none"
-             onclick="getBiasCorrectedPlots(false)">Start Bias Correction</a>
           <button type="button" class="btn btn-info" id="resize_charts" onclick="fix_chart_sizes('forecasts')">Resize
             the Chart
           </button>
@@ -124,16 +119,48 @@
       </div>
     </div>
   </div>
-  <div class="modal fade" id="viirs_modal" role="dialog">
-    <div class="modal-dialog" role="document">
+  <div class="modal fade" id="about_modal" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">X</span>
-          </button>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+          <div class="row">
+            <h1 style="text-align: center">About Map Data</h1>
+          </div>
         </div>
-        <h1 style="text-align: center">VIIRS 5-Day Composite Imagery</h1>
+
         <div class="modal-body">
-          <img src="{% static 'geoglows_hydroviewer/images/VIIRS_legend.png' %}" alt="legend" style="width: 100%">
+          <h2 style="text-align: center">GEOGloWS ECMWF Streamflow Model Streams</h2>
+          <p>
+            The stream network visualization is made possible by a collaboration between ESRI, ECMWF, and BYU. The
+            color and width of the lines which represent the stream segments are determined by the average of the
+            ensemble streamflow prediction run by the hydrologic model. Wider lines means more flow and the coloring
+            represents if the stream is experiencing a return period level event: blue = normal, yellow = exceeds 2
+            year return period, red = exceeds 10 year return period, and purple = exceeds 20 year return period.
+          </p>
+          <h2 style="text-align: center">Gauge Networks</h2>
+          <p>
+            Like all models, the GEOGloWS ECMWF model needs to be calibrated. Calibration becomes increasingly
+            difficult as a model increases in geographic extents, complexity, temporal range of simulation, and the
+            frequency the model is executed. The difficulty increases because both the computation time and amount of
+            required input and validation data increases. In the case of hydrologic models, sufficient streamflow
+            observations often do not exist, are not shareable, or are too inaccurate or incomplete to be used.
+            Researchers at BYU led by Jorge Luis Sanchez Lozano, Riley Hales, and Jim Nelson, are developing alternate
+            methods to calibrate models on the fly using what observed data exist and various techniques rooted in
+            spatial analysis, statistical reasoning, and machine learning. These gauge networks represent countries
+            where observed discharge is available as a service and this research team has been performing case studies.
+            Click on one of the reds dots (representing a gauged stream location) to retrieve the streamflow model
+            results for that location after applying a calibration algorithm using the observed data.
+          </p>
+          <h2 style="text-align: center">VIIRS 5-Day Composite Imagery</h2>
+          <p>VIIRS imagery is a web mapping service layer derived from optical observations from satellites.</p>
+          <a href="https://www.star.nesdis.noaa.gov/jpss/images/Harvey/show/VIIRSFloodDetectionMapQuickGuide.pdf"
+             target="_blank">VIIRS Flood Detection Map Quick Guide (PDF) (noaa.gov)</a><br>
+          <a href="https://www.ssec.wisc.edu/flood-map-demo/"
+             target="_blank">VIIRS Quick Start Guide/Flood Map Demo (wisc.edu)</a><br>
+          <img src="{% static 'geoglows_hydroviewer/images/VIIRS_legend.png' %}" alt="legend"
+               style="width: 80%; margin: auto">
           <ul>
             <li>MS: missing data (transparent)</li>
             <li>LD: clear-sky land (brown)</li>
@@ -145,14 +172,9 @@
             <li>WA: open water (blue)</li>
             <li>0-100: floodwater fractions (light cyan to red)</li>
           </ul>
-          <a href="https://www.star.nesdis.noaa.gov/jpss/images/Harvey/show/VIIRSFloodDetectionMapQuickGuide.pdf"
-             target="_blank">VIIRS Flood Detection Map Quick Guide (PDF) (noaa.gov)</a><br>
-          <a href="https://www.ssec.wisc.edu/flood-map-demo/"
-             target="_blank">VIIRS Quick Start Guide/Flood Map Demo (wisc.edu)</a>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -167,71 +189,36 @@
         </div>
 
         <div class="modal-body">
-          <strong>Uploaded CSV files are available for a maximum of 24 hours after you upload them.</strong>
-          <!-- Nav tabs -->
-          <ul class="nav nav-tabs" role="tablist">
-            <li role="presentation" class="active"><a id="csv_upload_link" href="#csv_upload_tab" role="tab"
-                                                      data-toggle="tab">Upload CSV</a></li>
-            <li role="presentation"><a id="records_tab_link" href="#hydroshare_resource_tab" role="tab"
-                                       data-toggle="tab">Hydroshare</a></li>
-          </ul>
-
           <!-- Tab panes -->
-          <div class="tab-content">
-            
-            <div role="tabpanel" class="tab-pane active" id="csv_upload_tab">
-              <div class="panel panel-default">
-                <p>The uploaded CSV of observed steamfled MUST satisfy the following:</p>
-                <ol>
-                  <li>Your csv must contain exactly 2 columns</li>
-                  <li>The first row must contain the names for the columns (e.g. datetime and streamflow)</li>
-                  <li>The first column must contain the date and time (datetime) of the observation</li>
-                  <li>The date should be written in a format that can be recognized by a computer</li>
-                  <li>The second column must contain the streamflow observations in cubic meters per second (cms)
-                    (m^3/s)</li>
-                  <li>There should be 1 value per day showing the day's average flow. If multiple measurements are
-                    specified per day, they will be averaged together.</li>
-                  <li><a href="{% static 'geoglows_hydroviewer/csvs/sample_observed_hydrograph.csv' %}" target="_blank">
-                    Download a sample hydrograph formatted correctly</a></li>
-                </ol>
-                <hr>
-                <form id="hydrograph-csv-form" method="post" enctype="multipart/form-data">
-                  {% csrf_token %}
-                  <div class="form-group">
-                    <label class="control-label" for="hydrograph-csv-input">Upload Hydrograph CSV</label>
-                    <input type="file" id="hydrograph-csv-input" name="hydrograph-csv-input" accept="text/csv,.csv">
-                    <input type="submit" value="Submit">
-                  </div>
-                </form>
-                <hr>
-                <p><strong>Upload Status: </strong><span id="hydrograph-csv-status"></span></p>
-
+          <div role="tabpanel" class="tab-pane active" id="csv_upload_tab">
+            <p>The uploaded CSV of observed streamflow MUST be formatted according to the following criteria:</p>
+            <ol>
+              <li>Your csv must contain exactly 2 columns</li>
+              <li>The first row must contain the names for the columns (e.g. datetime and streamflow)</li>
+              <li>The first column must contain the date and time (datetime) of the observation</li>
+              <li>The date should be written in a format that can be recognized by a computer e.g. YYYYMMDD HH:MM</li>
+              <li>The second column must contain the streamflow observations in cubic meters per second (cms)
+                (m^3/s)
+              </li>
+              <li>There should be 1 value per day showing the day's average flow. If multiple measurements are
+                specified per day, they will be averaged together.
+              </li>
+            </ol>
+            <a href="{% static 'geoglows_hydroviewer/csvs/sample_observed_hydrograph.csv' %}" target="_blank">
+              Click here to download a sample hydrograph formatted correctly</a>
+            <hr>
+            <form id="hydrograph-csv-form" method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="form-group">
+                <label class="control-label" for="hydrograph-csv-input">Upload Hydrograph CSV</label>
+                <input type="file" id="hydrograph-csv-input" name="hydrograph-csv-input" accept="text/csv,.csv">
+                <br>
+                <input type="submit" value="Submit">
               </div>
-            </div> <!-- /.tab-pane -->
-
-            <div role="tabpanel" class="tab-pane active" id="hydroshare_resource_tab">
-              <div class="panel panel-default">
-              </div>
-            </div> <!-- /.tab-pane -->
+            </form>
+            <hr>
+            <p><strong>Upload Status: </strong><span id="hydrograph-csv-status"></span></p>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="warn_modal" role="dialog">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">X</span>
-          </button>
-        </div>
-        <h1 style="text-align: center">WARNING</h1>
-        <div class="modal-body">
-          <h2 style="text-align: center">You need to be logged in to access the Hydroviewer Creator page</h2>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           </div>
@@ -255,8 +242,9 @@
   <script>
       let endpoint = "{{ endpoint }}";
       // URLS
-      let URL_get_streamflow = "{% url 'geoglows_hydroviewer:get_streamflow' %}";
-      let URL_correct_bias = "{% url 'geoglows_hydroviewer:correct_bias' %}";
+      let URL_getForecastData = "{% url 'geoglows_hydroviewer:getForecastData' %}";
+      let URL_getHistoricalData = "{% url 'geoglows_hydroviewer:getHistoricalData' %}";
+      let URL_getBiasAdjusted = "{% url 'geoglows_hydroviewer:getBiasAdjusted' %}";
       let URL_upload_new_observations = "{% url 'geoglows_hydroviewer:upload_new_observations' %}";
       let URL_get_gauge_geojson = "{% url 'geoglows_hydroviewer:get_gauge_geojson' %}";
       let URL_find_reach_id = "{% url 'geoglows_hydroviewer:find_reach_id' %}";
@@ -266,12 +254,11 @@
   <script src="https://unpkg.com/esri-leaflet@2.2.3/dist/esri-leaflet.js"></script>
   {# Plotly #}
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script type="text/javascript" src="{% static 'geoglows_hydroviewer/js/geoglows_hydroviewer_core.js' %}"></script>
+  <script src="{% static 'geoglows_hydroviewer/js/geoglows_hydroviewer_core.js' %}"></script>
   {% if request.path == hydroshare %}
-    <script type="text/javascript" src="{% static 'geoglows_hydroviewer/js/extensionWMFS.js' %}"></script>
-    <script type="text/javascript"
-            src="{% static 'geoglows_hydroviewer/js/geoglows_hydroviewer_hydroshare.js' %}"></script>
+    <script src="{% static 'geoglows_hydroviewer/js/extensionWMFS.js' %}"></script>
+    <script src="{% static 'geoglows_hydroviewer/js/geoglows_hydroviewer_hydroshare.js' %}"></script>
   {% else %}
-    <script type="text/javascript" src="{% static 'geoglows_hydroviewer/js/geoglows_hydroviewer_esri.js' %}"></script>
+    <script src="{% static 'geoglows_hydroviewer/js/geoglows_hydroviewer_esri.js' %}"></script>
   {% endif %}
 {% endblock %}

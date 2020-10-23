@@ -1,12 +1,16 @@
 const mapObj = L.map('preview-map', {
     zoom: 3,
     minZoom: 2,
-    maxZoom: 10,
+    maxZoom: 12,
     boxZoom: true,
     maxBounds: L.latLngBounds(L.latLng(-100, -225), L.latLng(100, 225)),
     center: [20, 0],
 })
-const basemapObj = {'ESRI Topographic Map': L.esri.basemapLayer('Topographic').addTo(mapObj)}
+const basemapsJson = {
+    "ESRI Topographic": L.esri.basemapLayer('Topographic').addTo(mapObj),
+    "ESRI Terrain": L.layerGroup([L.esri.basemapLayer('Terrain'), L.esri.basemapLayer('TerrainLabels')]),
+    "ESRI Grey": L.esri.basemapLayer('Gray'),
+}
 const message = L.control({position: 'bottomleft'});
 message.onAdd = function () {
     let div = L.DomUtil.create('div', 'well well-sm');
@@ -41,8 +45,19 @@ if (exported) {
     catchments = L.geoJSON(false);
 }
 
+const globalLayer = L.esri.dynamicMapLayer({
+    url: 'https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer',
+    useCors: false,
+    layers: [0],
+});
+
 L.control.layers(
-    basemapObj,
-    {'Project Boundaries': bounds, 'Catchments': catchments, 'Drainage Lines': drainagelines},
+    basemapsJson,
+    {
+        'Global Stream Network': globalLayer,
+        'Project Boundaries': bounds,
+        'Project Catchments': catchments,
+        'Project Drainage Lines': drainagelines
+    },
     {'collapsed': false}
 ).addTo(mapObj);
