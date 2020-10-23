@@ -119,7 +119,7 @@ function getBiasCorrectedPlots(gauge_metadata) {
         type: 'GET',
         async: true,
         data: data,
-        url: URL_correct_bias,
+        url: URL_getBiasAdjusted,
         success: function (html) {
             // forecast tab
             $("#forecast_tab_link").tab('show');

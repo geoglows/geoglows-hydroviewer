@@ -34,6 +34,8 @@ GLOBAL_DELINEATIONS = (
     ('North America', 'north_america-geoglows', '43ae93136e10439fbf2530e02156caf0'),
 )
 
+gsf.ENDPOINT = gsf.AZURE
+
 
 def home(request):
     """
@@ -173,7 +175,7 @@ def get_historical_data(request):
     ))
 
 
-def correct_bias(request):
+def get_bias_adjusted(request):
     # accept the parameters from the user
     data = request.GET.dict()
     network = data.get('gauge_network', False)

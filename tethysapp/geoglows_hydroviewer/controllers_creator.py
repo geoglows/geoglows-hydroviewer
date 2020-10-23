@@ -3,6 +3,7 @@ import os
 import shutil
 import urllib.parse
 
+import geoglows.streamflow as gsf
 import geopandas as gpd
 from django.contrib import messages
 from django.http import JsonResponse
@@ -13,6 +14,7 @@ from tethys_sdk.permissions import login_required
 from .app import GeoglowsHydroviewer as App
 from .hydroviewer_creator_tools import get_project_directory
 from .hydroviewer_creator_tools import shapefiles_downloaded
+from .hydroviewer_creator_tools import walk_upstream
 
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
@@ -194,7 +196,7 @@ def render_hydroviewer(request):
 
 
 @login_required()
-def draw_hydroviewer_boundaries(request):
+def draw_boundaries(request):
     project = request.GET.get('project', False)
     if not project:
         messages.error(request, 'Unable to find this project')
@@ -232,29 +234,20 @@ def draw_hydroviewer_boundaries(request):
 
 
 @login_required()
-def save_boundaries(request):
-    proj_dir = get_project_directory(request.POST['project'])
-
-    with open(os.path.join(proj_dir, 'boundaries.json'), 'w') as gj:
-        gj.write(request.POST.get('geojson'))
-
-    lat = round(float(request.POST.get('center_lat')), 4)
-    lon = round(float(request.POST.get('center_lng')), 4)
-    with open(os.path.join(proj_dir, 'export_configs.json'), 'r') as a:
-        ec = json.loads(a.read())
-        ec['zoom'] = request.POST.get('zoom', 4)
-        ec['center'] = f'{lat},{lon}'
-    with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as a:
-        a.write(json.dumps(ec))
-
-    gjson_file = gpd.read_file(os.path.join(proj_dir, 'boundaries.json'))
-    gjson_file = gjson_file.to_crs("EPSG:3857")
-    gjson_file.to_file(os.path.join(proj_dir, 'projected_boundaries'))
-    return JsonResponse({'status': 'success'})
+def boundary_by_outlet(request):
+    project = request.GET.get('project', False)
+    if not project:
+        messages.error(request, 'Unable to find this project')
+        return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
+    context = {
+        'project': project,
+        'project_title': project.replace('_', ' '),
+    }
+    return render(request, 'geoglows_hydroviewer/creator_boundaries_outlet.html', context)
 
 
 @login_required()
-def choose_hydroviewer_boundaries(request):
+def choose_boundary_country(request):
     project = request.GET.get('project', False)
     if not project:
         messages.error(request, 'Unable to find this project')
@@ -299,7 +292,71 @@ def choose_hydroviewer_boundaries(request):
         'regions': regions,
         'geojson': bool(os.path.exists(os.path.join(get_project_directory(project), 'boundaries.json'))),
     }
-    return render(request, 'geoglows_hydroviewer/creator_boundaries_choose_predefined.html', context)
+    return render(request, 'geoglows_hydroviewer/creator_boundaries_choose.html', context)
+
+
+@login_required()
+def save_boundaries(request):
+    proj_dir = get_project_directory(request.POST['project'])
+
+    with open(os.path.join(proj_dir, 'boundaries.json'), 'w') as gj:
+        gj.write(request.POST.get('geojson'))
+
+    lat = round(float(request.POST.get('center_lat')), 4)
+    lon = round(float(request.POST.get('center_lng')), 4)
+    with open(os.path.join(proj_dir, 'export_configs.json'), 'r') as a:
+        ec = json.loads(a.read())
+        ec['zoom'] = request.POST.get('zoom', 4)
+        ec['center'] = f'{lat},{lon}'
+    with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as a:
+        a.write(json.dumps(ec))
+
+    gjson_file = gpd.read_file(os.path.join(proj_dir, 'boundaries.json'))
+    gjson_file = gjson_file.to_crs("EPSG:3857")
+    gjson_file.to_file(os.path.join(proj_dir, 'projected_boundaries'))
+    return JsonResponse({'status': 'success'})
+
+
+@login_required()
+def find_upstream_boundaries(request):
+    project = request.GET.get('project', False)
+    reachid = int(request.GET.get('reachid'))
+    if not project:
+        return JsonResponse({'status': 'error', 'error': 'project not found'})
+
+    try:
+        # remove the boundaries if they exist
+        boundary_json = os.path.join(get_project_directory(project), "boundaries.json")
+        if os.path.exists(boundary_json):
+            os.remove(boundary_json)
+
+        # figure out the region stream network shapefile to read and then open it
+        print(reachid)
+        region = gsf.reach_to_region(reachid)
+        print(region)
+        zipped_shp = os.path.join(SHAPE_DIR, f'{region}-catchment.zip')
+        print(zipped_shp)
+        geodf = gpd.read_file("zip:///" + os.path.join(zipped_shp, f'{region}-catchment.shp'))
+
+        # drop most of the columns except ones needed for traversing the network
+        geodf = geodf[['COMID', 'NextDownID', 'geometry']]
+        print(geodf.head())
+        upstream = walk_upstream(geodf, reachid, 'COMID', 'NextDownID')
+        print(upstream)
+        geodf = geodf[geodf['COMID'].isin(upstream)]
+        print(geodf.head())
+
+        # dissolve and drop the remaining columns
+        geodf['dissolve'] = 'dissolve'
+        print(geodf)
+        geodf = geodf.dissolve(by="dissolve")
+        geodf = geodf[['geometry']]
+        geodf.to_crs(epsg=4326).to_file(boundary_json, driver='GeoJSON')
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        print('error')
+        print(e)
+        return JsonResponse({'status': 'fail'})
 
 
 @login_required()
@@ -307,34 +364,3 @@ def retrieve_hydroviewer_boundaries(request):
     proj_dir = get_project_directory(request.GET['project'])
     with open(os.path.join(proj_dir, 'boundaries.json'), 'r') as geojson:
         return JsonResponse(json.load(geojson))
-
-
-@login_required()
-def upload_boundary(request):
-    project = request.POST.get('project', False)
-    if not project:
-        return JsonResponse({'status': 'error', 'error': 'project not found'})
-    proj_dir = get_project_directory(project)
-
-    # make the projected selections folder
-    tmp_dir = os.path.join(proj_dir, 'projected_boundaries')
-    if os.path.exists(tmp_dir):
-        shutil.rmtree(tmp_dir)
-    os.mkdir(tmp_dir)
-
-    # save the uploaded shapefile to that folder
-    files = request.FILES.getlist('files')
-    for file in files:
-        file_name = 'projected_boundaries' + os.path.splitext(file.name)[-1]
-        with open(os.path.join(tmp_dir, file_name), 'wb') as dst:
-            for chunk in file.chunks():
-                dst.write(chunk)
-
-    # read the uploaded shapefile with geopandas and save it to selections.geojson
-    boundaries_gdf = gpd.read_file(os.path.join(tmp_dir, 'projected_boundaries.shp'))
-    boundaries_gdf = boundaries_gdf.to_crs("EPSG:3857")
-    boundaries_gdf.to_file(os.path.join(tmp_dir, 'projected_boundaries.shp'))
-    boundaries_gdf = boundaries_gdf.to_crs("EPSG:4326")
-    boundaries_gdf.to_file(os.path.join(proj_dir, "boundaries.json"), driver='GeoJSON')
-
-    return JsonResponse({'status': 'success'})

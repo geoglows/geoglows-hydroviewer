@@ -122,7 +122,6 @@ $("#watersheds_select_input").change(function () {
     mapObj.setMaxZoom(12);
 });
 
-// todo
 mapObj.on("click", function (event) {
     if (mapObj.getZoom() >= cd_threshold) {
         if (marker) {

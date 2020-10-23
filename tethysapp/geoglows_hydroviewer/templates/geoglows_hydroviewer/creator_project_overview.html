@@ -16,15 +16,15 @@
             <li>Define Project Boundaries</li>
           </h3>
           <div class="content">
-            <form id="boundaries-form" action="{% url 'geoglows_hydroviewer:draw_boundaries' %}" method="get">
-              <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
-              <div class="btn-group ">
-                <button class="btn btn-success" role="button" form="boundaries-form" submit="True">
-                  <span class="glyphicon glyphicon-globe"></span> Draw Project Boundaries on a Map
-                </button>
+          <form id="boundaries-form" action="{% url 'geoglows_hydroviewer:draw_boundaries' %}" method="get">
+            <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+            <div class="btn-group ">
+              <button class="btn btn-success" role="button" form="boundaries-form" submit="True">
+                <span class="glyphicon glyphicon-globe"></span> Draw Project Boundaries on a Map
+              </button>
             </div>
           </form>
-          <form id="esri-layer-form" action="{% url 'geoglows_hydroviewer:choose_boundaries' %}" method="get">
+          <form id="esri-layer-form" action="{% url 'geoglows_hydroviewer:choose_boundary_country' %}" method="get">
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <div class="btn-group ">
               <button class="btn btn-success" role="button" form="esri-layer-form" submit="True">
@@ -32,11 +32,14 @@
               </button>
             </div>
           </form>
-
-            <button class="btn btn-success" role="button" data-toggle="modal" data-target="#shapefile-upload">
-              <span class="glyphicon glyphicon-cloud-upload"></span> Upload a Shapefile (beta)
-            </button>
-          </div>
+          <form id="outlet-form" action="{% url 'geoglows_hydroviewer:boundary_by_outlet' %}" method="get">
+            <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
+            <div class="btn-group ">
+              <button class="btn btn-success" role="button" form="outlet-form" submit="True">
+                <span class="glyphicon glyphicon-map-marker"></span> Pick Watershed Outlet Location
+              </button>
+            </div>
+          </form>
         {% endif %}
 
         {% if boundaries %}
@@ -198,30 +201,6 @@
           </form>
           <div id="geoserver-upload-loading" style="text-align: center; display: none"><img
                   src="{% static 'geoglows_hydroviewer/images/progress_bar.gif' %}"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="modal fade" id="shapefile-upload" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                  aria-hidden="true">&times;</span></button>
-          <h5 class="modal-title" id="help-modal-label">Define Boundaries via Shapefile</h5>
-        </div>
-        <div class="modal-body">
-          <form id="shapefile-form" action="{% url 'geoglows_hydroviewer:upload_boundaries' %}" method="post"
-                enctype="multipart/form-data">
-            {% csrf_token %}
-            <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
-            <input class="form-group" type="file" name="files" accept="*.shp,*.shx,*.dbf,*.prj" multiple>
-            <br>
-            <input type="submit">
-          </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>

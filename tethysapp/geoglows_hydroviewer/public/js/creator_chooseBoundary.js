@@ -139,7 +139,7 @@ $("#submit-boundaries").click(function () {
         console.log(esri);
     }
     let data = {
-        project: $("#project").val(),
+        project: project,
         esri: esri
     }
     let return_home_button = $("#return_to_overview");

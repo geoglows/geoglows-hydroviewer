@@ -172,7 +172,7 @@ $("#submit-boundaries").on('click', function () {
     load_status.html('loading...');
     let center = mapObj.getCenter();
     let data = {
-        project: $("#project").val(),
+        project: project,
         geojson: JSON.stringify(drawnItems.toGeoJSON()),
         zoom: mapObj.getZoom(),
         center_lat: Number(center.lat),

@@ -43,20 +43,19 @@
         <button class="header-button glyphicon-button" id="animationPlus1"><span
                 class="glyphicon glyphicon-chevron-right"></span></button>
       </div>
-      <li class="separator"></li>
     {% else %}
       <li>{% gizmo select_input watersheds_select_input %}</li>
     {% endif %}
+    <li class="separator"></li>
     <a class="btn btn-default" role="button" style="width: 100%" onclick="findReachID()">Find A Reach ID</a>
     <li class="separator"></li>
     <a class="btn btn-default" role="button" style="width: 100%" onclick="findLatLon()">Zoom to Lat/Lon Coordinates</a>
     <li class="separator"></li>
-    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#viirs_modal" style="width: 100%">About
-      VIIRS Imagery</a>
-
-    <li class="title">Bias Correction</li>
-    <a class="btn btn-default" role="button" data-toggle="modal" data-target="#csv_modal" style="width: 100%">Upload New
-      Observation</a>
+    {% if request.path == hydroviewer %}
+      <a href="{{ hydroshare }}" class="btn btn-default" role="button" style="width: 100%">Switch to HydroShare Map</a>
+    {% else %}
+      <a href="{{ hydroviewer }}" class="btn btn-default" role="button" style="width: 100%">Switch to ESRI Map</a>
+    {% endif %}
     <li class="separator"></li>
     {% gizmo select_input gauge_networks %}
   {% else %}

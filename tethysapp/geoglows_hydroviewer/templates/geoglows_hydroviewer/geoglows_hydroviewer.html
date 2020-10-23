@@ -24,13 +24,6 @@
 {% endblock %}
 
 {% block app_actions %}
-  {% url 'geoglows_hydroviewer:home' as hydroviewer %}
-  {% url 'geoglows_hydroviewer:hydroshare_view' as hydroshare %}
-  {% if request.path == hydroshare %}
-    <a href="{{ hydroviewer }}" class="btn btn-default" role="button">Switch to ESRI layers</a>
-  {% else %}
-    <a href="{{ hydroshare }}" class="btn btn-default" role="button">Switch to HydroShare layers</a>
-  {% endif %}
 {% endblock %}
 
 {% block after_app_content %}
@@ -205,23 +198,6 @@
       </div>
     </div>
   </div>
-  <div class="modal fade" id="warn_modal" role="dialog">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">X</span>
-          </button>
-        </div>
-        <h1 style="text-align: center">WARNING</h1>
-        <div class="modal-body">
-          <h2 style="text-align: center">You need to be logged in to access the Hydroviewer Creator page</h2>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 {% endblock %}
 
 {% block styles %}
@@ -240,7 +216,7 @@
       // URLS
       let URL_getForecastData = "{% url 'geoglows_hydroviewer:getForecastData' %}";
       let URL_getHistoricalData = "{% url 'geoglows_hydroviewer:getHistoricalData' %}";
-      let URL_correct_bias = "{% url 'geoglows_hydroviewer:correct_bias' %}";
+      let URL_getBiasAdjusted = "{% url 'geoglows_hydroviewer:getBiasAdjusted' %}";
       let URL_upload_new_observations = "{% url 'geoglows_hydroviewer:upload_new_observations' %}";
       let URL_get_gauge_geojson = "{% url 'geoglows_hydroviewer:get_gauge_geojson' %}";
       let URL_find_reach_id = "{% url 'geoglows_hydroviewer:find_reach_id' %}";
