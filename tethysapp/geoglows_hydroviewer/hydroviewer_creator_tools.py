@@ -50,7 +50,6 @@ def walk_upstream(df: pd.DataFrame, target_id: int, id_col: str, next_col: str, 
     upstream_rows = df_[df_[next_col] == target_id]
 
     while not upstream_rows.empty or len(upstream_rows) > 0:
-        print('yes')
         if len(upstream_rows) == 1:
             upstream_ids.append(upstream_rows[id_col].values[0])
             upstream_rows = df_[df_[next_col] == upstream_rows[id_col].values[0]]
