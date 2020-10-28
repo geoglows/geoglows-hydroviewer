@@ -34,8 +34,6 @@ GLOBAL_DELINEATIONS = (
     ('North America', 'north_america-geoglows', '43ae93136e10439fbf2530e02156caf0'),
 )
 
-gsf.ENDPOINT = gsf.AZURE
-
 
 def home(request):
     """
@@ -141,6 +139,7 @@ def get_forecast_data(request):
     # get data
     s = requests.Session()
     reach_id = request.GET['reach_id']
+    rec = gsf.forecast_records(reach_id, s=s)
     stats = gsf.forecast_stats(reach_id, s=s)
     ens = gsf.forecast_ensembles(reach_id, s=s)
     rper = gsf.return_periods(reach_id, s=s)
@@ -149,7 +148,7 @@ def get_forecast_data(request):
     title_headers = {'Reach ID': reach_id}
     # return json of plot html
     return JsonResponse(dict(
-        plot=gpp.forecast_stats(stats, rper, titles=title_headers, outformat='plotly_html'),
+        plot=gpp.hydroviewer(rec, stats, ens, rper, titles=title_headers, outformat='plotly_html'),
         table=gpp.probabilities_table(stats, ens, rper),
     ))
 
