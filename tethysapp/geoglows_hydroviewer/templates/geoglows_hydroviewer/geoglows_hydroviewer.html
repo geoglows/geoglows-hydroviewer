@@ -3,7 +3,9 @@
 {% load static %}
 {% load staticfiles %}
 {% load tethys_gizmos %}
-
+{% block import_gizmos %}
+    {% import_gizmo_dependency date_picker %}
+{% endblock %}
 {% block header_buttons %}
   <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="About Map Data">
     <a data-toggle="modal" data-target="#about_modal"><span class="glyphicon glyphicon-question-sign"></span></a>
@@ -59,6 +61,10 @@
           <div class="tab-content">
             <div role="tabpanel" class="tab-pane active" id="forecast">
               <div class="panel panel-default">
+                <div id="forecast-date-selector">
+                  <label for="forecast_date">Forecast Date: </label>
+                  <input class="form-control" id="forecast_date" name="forecast_date" type="text">
+                </div>
                 <div id="forecast-chart"></div>
                 <div id="forecast-table"></div>
               </div>
@@ -242,6 +248,7 @@
   <script>
       let endpoint = "{{ endpoint }}";
       // URLS
+      let URL_getAvailableDates = "{% url 'geoglows_hydroviewer:getAvailableDates' %}";
       let URL_getForecastData = "{% url 'geoglows_hydroviewer:getForecastData' %}";
       let URL_getHistoricalData = "{% url 'geoglows_hydroviewer:getHistoricalData' %}";
       let URL_getBiasAdjusted = "{% url 'geoglows_hydroviewer:getBiasAdjusted' %}";

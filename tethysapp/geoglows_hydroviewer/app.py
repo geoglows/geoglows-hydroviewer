@@ -29,6 +29,9 @@ class GeoglowsHydroviewer(TethysAppBase):
                    controller=f'{self.package}.controllers.hydroshare_view'),
 
             # handles the requests to get the various plots in the app modals
+            UrlMap(name='getAvailableDates',
+                   url=f'{self.root_url}/hydroviewer/getAvailableDates',
+                   controller=f'{self.package}.controllers.get_available_dates'),
             UrlMap(name='getForecastData',
                    url=f'{self.root_url}/hydroviewer/getForecastData',
                    controller=f'{self.package}.controllers.get_forecast_data'),
@@ -117,7 +120,6 @@ class GeoglowsHydroviewer(TethysAppBase):
                    url=f'{self.root_url}/creator/project/export/html',
                    controller=f'{self.package}.controllers_creator_export.export_html'),
         )
-
 
     def custom_settings(self):
         return (

@@ -135,14 +135,28 @@ def hydroshare_view(request):
     return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer.html', context)
 
 
+def get_available_dates(request):
+    reach_id = request.GET['reach_id']
+    s = requests.Session()
+    dates = gsf.available_dates(reach_id, s=s)
+    s.close()
+
+    return JsonResponse(dict(
+        dates=list(map(lambda x: x.split(".")[0], dates["available_dates"])),
+    ))
+
+
 def get_forecast_data(request):
     # get data
     s = requests.Session()
     reach_id = request.GET['reach_id']
-    rec = gsf.forecast_records(reach_id, s=s)
-    stats = gsf.forecast_stats(reach_id, s=s)
-    ens = gsf.forecast_ensembles(reach_id, s=s)
+    start_date = request.GET['start_date']
+    end_date = request.GET['end_date']
+    rec = gsf.forecast_records(reach_id, start_date=start_date.split('.')[0], end_date=end_date.split('.')[0],  s=s)
+    stats = gsf.forecast_stats(reach_id, forecast_date=end_date, s=s)
+    ens = gsf.forecast_ensembles(reach_id, forecast_date=end_date, s=s)
     rper = gsf.return_periods(reach_id, s=s)
+
     s.close()
     # process data
     title_headers = {'Reach ID': reach_id}
