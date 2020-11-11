@@ -21,8 +21,9 @@ SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 def export_geoserver(request):
     project = request.POST.get('project', False)
     workspace_name = request.POST.get('workspace', 'geoglows_hydroviewer_creator')
-    dl_name = request.POST.get('dl_name', 'drainagelines')
-    ct_name = request.POST.get('ct_name', 'catchments')
+    store_name = request.POST.get('store_name', 'shapefilestore')
+    store_name = str(store_name).replace(' ', '_')
+    store_name = str.lower(store_name)
     if not project:
         return JsonResponse({'error': 'unable to find the project'})
     proj_dir = get_project_directory(project)
@@ -37,8 +38,8 @@ def export_geoserver(request):
         geoserver_configs = json.loads(configfile.read())
         geoserver_configs['url'] = url.replace('/rest/', f'/{workspace_name}/wms')
         geoserver_configs['workspace'] = workspace_name
-        geoserver_configs['drainage_layer_name'] = dl_name
-        geoserver_configs['catchment_layer_name'] = ct_name
+        geoserver_configs['drainage_layer_name'] = str.lower(project) + '_drainagelines'
+        geoserver_configs['catchment_layer_name'] = str.lower(project) + '_catchments'
 
     if geoserver_configs['exported_drainage'] and geoserver_configs['exported_catchment']:
         geoserver_configs['exported_drainage'] = False
@@ -58,7 +59,7 @@ def export_geoserver(request):
         try:
             # create geoserver store and upload the drainagelines
             zip_path = os.path.join(proj_dir, 'drainageline_shapefile.zip')
-            cat.create_featurestore(dl_name, workspace=workspace, data=zip_path, overwrite=True)
+            cat.create_featurestore(store_name, workspace=workspace, data=zip_path, overwrite=True)
             geoserver_configs['exported_drainage'] = True
             with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
                 configfile.write(json.dumps(geoserver_configs))
@@ -70,7 +71,7 @@ def export_geoserver(request):
         try:
             # create geoserver store and upload the catchments
             zip_path = os.path.join(proj_dir, 'catchment_shapefile.zip')
-            cat.create_featurestore(ct_name, workspace=workspace, data=zip_path, overwrite=True)
+            cat.add_data_to_store(store_name, store_name, data=zip_path, workspace=workspace, overwrite=False)
             geoserver_configs['exported_catchment'] = True
             with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
                 configfile.write(json.dumps(geoserver_configs))
