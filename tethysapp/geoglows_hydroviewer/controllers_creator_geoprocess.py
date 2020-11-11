@@ -40,6 +40,7 @@ def geoprocess_hydroviewer_clip(request):
 
     catch_folder = os.path.join(proj_dir, 'catchment_shapefile')
     dl_folder = os.path.join(proj_dir, 'drainageline_shapefile')
+    project = str.lower(project)
 
     if request.GET.get('shapefile', False) == 'drainageline':
         if os.path.exists(dl_folder):
@@ -56,7 +57,7 @@ def geoprocess_hydroviewer_clip(request):
         dl_point_clip = gpd.clip(dl_point, gjson_gdf)
         dl_boo_list = dl_point_clip.within(dl_gdf)
         dl_select = dl_gdf[dl_boo_list]
-        dl_select.to_file(os.path.join(dl_folder, 'drainagelines.shp'))
+        dl_select.to_file(os.path.join(dl_folder, project + '_drainagelines.shp'))
         return JsonResponse({'status': 'success'})
 
     elif request.GET.get('shapefile', False) == 'catchment':
@@ -64,12 +65,12 @@ def geoprocess_hydroviewer_clip(request):
             shutil.rmtree(catch_folder)
         os.mkdir(catch_folder)
 
-        dl_select = gpd.read_file(os.path.join(dl_folder, 'drainagelines.shp'))
+        dl_select = gpd.read_file(os.path.join(dl_folder, project + '_drainagelines.shp'))
         catch_name = region_name.replace('boundary', 'catchment')
         catch_path = os.path.join(SHAPE_DIR, catch_name + '.zip', catch_name + '.shp')
         catch_gdf = gpd.read_file("zip:///" + catch_path)
         catch_gdf = catch_gdf.loc[catch_gdf['COMID'].isin(dl_select['COMID'].to_list())]
-        catch_gdf.to_file(os.path.join(catch_folder, 'catchments.shp'))
+        catch_gdf.to_file(os.path.join(catch_folder, project + '_catchments.shp'))
         return JsonResponse({'status': 'success'})
 
     else:
@@ -83,15 +84,15 @@ def geoprocess_zip_shapefiles(request):
 
     catchment_zip = os.path.join(proj_dir, 'catchment_shapefile.zip')
     drainageline_zip = os.path.join(proj_dir, 'drainageline_shapefile.zip')
-
+    project = str.lower(project)
     try:
         with ZipFile(catchment_zip, 'w') as zipped:
-            for component in glob.glob(os.path.join(proj_dir, 'catchment_shapefile', 'catchments.*')):
+            for component in glob.glob(os.path.join(proj_dir, 'catchment_shapefile', project + '_catchments.*')):
                 zipped.write(component, arcname=os.path.basename(component))
         shutil.rmtree(os.path.join(proj_dir, 'catchment_shapefile'))
 
         with ZipFile(drainageline_zip, 'w') as zipped:
-            for component in glob.glob(os.path.join(proj_dir, 'drainageline_shapefile', 'drainagelines.*')):
+            for component in glob.glob(os.path.join(proj_dir, 'drainageline_shapefile', project + '_drainagelines.*')):
                 zipped.write(component, arcname=os.path.basename(component))
             shutil.rmtree(os.path.join(proj_dir, 'drainageline_shapefile'))
 
