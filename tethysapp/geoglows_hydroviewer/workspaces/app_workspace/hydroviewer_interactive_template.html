@@ -192,6 +192,7 @@
             "layers": "{{ workspace }}:{{ catchment_layer }}"
         }
     );
+    // The workspace and catchment/drainage layer names come from export_configs.json
     const drainageline_layer = L.tileLayer.wms(
         "{{ geoserver_wms_url }}", {
             "format": "image/png",
@@ -199,10 +200,12 @@
             "layers": "{{ workspace }}:{{ drainage_layer }}"
         }
     ).addTo(map);
+    drainageline_layer.setZIndex(2);
+    catchment_layer.setZIndex(1);
     L.control.layers(
         basemaps,
         {"Drainage Lines": drainageline_layer, "Catchments": catchment_layer},
-        {"autoZIndex": true, "collapsed": false, "position": "topright"}
+        {"autoZIndex": false, "collapsed": false, "position": "topright"}
     ).addTo(map);
     ////////////////////////////////////////////////////////////////////////  MAP FUNCTIONS AND VARIABLES
     const modal_toggles = L.control({position: 'bottomright'});
