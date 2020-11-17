@@ -117,23 +117,20 @@ L.control
 
 mapObj.on("click", function(event) {
     if (mapObj.getZoom() <= 9.5) {
-        mapObj.flyTo(event.latlng, 10)
+        mapObj.flyTo(event.latlng, 10);
         return
     } else {
         mapObj.flyTo(event.latlng)
     }
-    if (marker) {
-        mapObj.removeLayer(marker)
+    if (mapMarker) {
+        mapObj.removeLayer(mapMarker)
     }
-    marker = L.marker(event.latlng).addTo(mapObj)
+    mapMarker = L.marker(event.latlng).addTo(mapObj)
     updateStatusIcons("identify")
     $("#chart_modal").modal("show")
 
     L.esri
-        .identifyFeatures({
-            url:
-                "https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer"
-        })
+        .identifyFeatures({url: "https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer"})
         .on(mapObj)
         // query bounding box
         // .at(L.latLngBounds(
@@ -153,8 +150,7 @@ mapObj.on("click", function(event) {
             }
             SelectedSegment.clearLayers()
             SelectedSegment.addData(featureCollection.features[0].geometry)
-            REACHID =
-                featureCollection.features[0].properties["COMID (Stream Identifier)"]
+            REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"]
             clearChartDivs()
             hideGetHistorical()
             hideHistoricalTabs()

@@ -124,11 +124,11 @@ $("#watersheds_select_input").change(function () {
 
 mapObj.on("click", function (event) {
     if (mapObj.getZoom() >= cd_threshold) {
-        if (marker) {
-            mapObj.removeLayer(marker)
+        if (mapMarker) {
+            mapObj.removeLayer(mapMarker)
         }
         REACHID = drainage_layer.GetFeatureInfo(event);
-        marker = L.marker(event.latlng).addTo(mapObj);
+        mapMarker = L.marker(event.latlng).addTo(mapObj);
         marker.bindPopup('<b>Watershed/Region:</b> ' + $("#watersheds_select_input").val() + '<br><b>Reach ID:</b> ' + REACHID);
         $("#chart_modal").modal('show');
         clearChartDivs();

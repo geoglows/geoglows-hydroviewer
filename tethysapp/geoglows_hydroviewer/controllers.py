@@ -208,14 +208,10 @@ def get_bias_adjusted(request):
     # get the data you need to correct bias
     sim_data = gsf.historic_simulation(reach_id)
     forecast_stats = gsf.forecast_stats(reach_id)
-    # forecast_rec = gsf.forecast_records(reach_id)
-    # forecast_ens = gsf.forecast_ensembles(reach_id)
 
     # corrected data
     fixed_hist = gbc.correct_historical(sim_data, obs_data)
     fixed_stats = gbc.correct_forecast(forecast_stats, sim_data, obs_data)
-    # fixed_rec = gbc.correct_forecast(forecast_rec, sim_data, obs_data, use_month=-1)
-    # fixed_ens = gbc.correct_forecast(forecast_ens, sim_data, obs_data)
 
     return JsonResponse(dict(
         new_hist=gpp.corrected_historical(
@@ -224,8 +220,6 @@ def get_bias_adjusted(request):
             fixed_hist, sim_data, obs_data, titles=titles_bc, outformat='plotly_html'),
         month_avg=gpp.corrected_month_average(
             fixed_hist, sim_data, obs_data, titles=titles_bc, outformat='plotly_html'),
-        # correct_hydro=gpp.hydroviewer(
-        #     fixed_rec, fixed_stats, fixed_ens, titles=titles_bc, outformat='plotly_html'),
         correct_hydro=gpp.forecast_stats(fixed_stats, titles=titles_bc, outformat='plotly_html'),
         volume_plot=gpp.corrected_volume_compare(
             fixed_hist, sim_data, obs_data, titles=titles_bc, outformat='plotly_html'),

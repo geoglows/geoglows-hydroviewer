@@ -51,6 +51,9 @@
     <li class="separator"></li>
     <a class="btn btn-default" role="button" style="width: 100%" onclick="findLatLon()">Zoom to Lat/Lon Coordinates</a>
     <li class="separator"></li>
+    <a class="btn btn-default" role="button" style="width: 100%"
+       onclick="if (mapMarker) {mapObj.removeLayer(mapMarker)}">Remove Map Marker</a>
+    <li class="separator"></li>
     {% if request.path == hydroviewer %}
       <a href="{{ hydroshare }}" class="btn btn-default" role="button" style="width: 100%">Switch to HydroShare Map</a>
     {% else %}

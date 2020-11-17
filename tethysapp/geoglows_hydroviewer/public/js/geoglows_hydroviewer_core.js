@@ -5,13 +5,11 @@ const mapObj = L.map("map", {
     maxBounds: L.latLngBounds(L.latLng(-100, -225), L.latLng(100, 225)),
     center: [20, 0]
 })
-let REACHID
-let CURRENTDATE
-let latlonMarker
-let reachMarker
-let marker = null
-let controlsObj
-let SelectedSegment = L.geoJSON(false, { weight: 5, color: "#00008b" }).addTo(mapObj)
+let REACHID;
+let CURRENTDATE;
+let mapMarker = null;
+let controlsObj;
+let SelectedSegment = L.geoJSON(false, {weight: 5, color: "#00008b"}).addTo(mapObj);
 
 const basemapsJson = {
     "ESRI Topographic": L.esri.basemapLayer("Topographic").addTo(mapObj),
@@ -50,10 +48,8 @@ latlon.onAdd = function() {
     return div
 }
 latlon.addTo(mapObj)
-mapObj.on("mousemove", function(event) {
-    $("#mouse-position").html(
-        "Lat: " + event.latlng.lat.toFixed(4) + ", Lon: " + event.latlng.lng.toFixed(4)
-    )
+mapObj.on("mousemove", function (event) {
+    $("#mouse-position").html("Lat: " + event.latlng.lat.toFixed(4) + ", Lon: " + event.latlng.lng.toFixed(4))
 })
 //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
 function findReachID() {
@@ -66,12 +62,10 @@ function findReachID() {
                 reach_id: prompt("Please enter a Reach ID to search for")
             }),
         success: function(response) {
-            if (reachMarker) {
-                mapObj.removeLayer(reachMarker)
+            if (mapMarker) {
+                mapObj.removeLayer(mapMarker)
             }
-            reachMarker = L.marker(L.latLng(response["lat"], response["lon"])).addTo(
-                mapObj
-            )
+            mapMarker = L.marker(L.latLng(response["lat"], response["lon"])).addTo(mapObj)
             mapObj.flyTo(L.latLng(response["lat"], response["lon"]), 9)
         },
         error: function() {
@@ -80,8 +74,8 @@ function findReachID() {
     })
 }
 function findLatLon() {
-    if (latlonMarker) {
-        mapObj.removeLayer(latlonMarker)
+    if (mapMarker) {
+        mapObj.removeLayer(mapMarker)
     }
     let ll = prompt(
         "Enter a latitude and longitude coordinate pair separated by a comma. For example, to get to BYU you would enter: 40.25, -111.65",
@@ -92,7 +86,7 @@ function findLatLon() {
         .replace("(", "")
         .replace(")", "")
         .split(",")
-    latlonMarker = L.marker(L.latLng(ll[0], ll[1])).addTo(mapObj)
+    mapMarker = L.marker(L.latLng(ll[0], ll[1])).addTo(mapObj)
     mapObj.flyTo(L.latLng(ll[0], ll[1]), 9)
 }
 ////////////////////////////////////////////////////////////////////////  GAUGE NETWORKS STUFF
@@ -115,7 +109,8 @@ function getGaugeGeoJSON() {
         }
     })
 }
-$("#gauge_networks").change(function() {
+
+$("#gauge_networks").change(function () {
     getGaugeGeoJSON()
 })
 //////////////////////////////////////////////////////////////////////// UPDATE DOWNLOAD LINKS FUNCTION
@@ -124,101 +119,8 @@ function updateDownloadLinks(type) {
         $("#download-forecast-btn").attr("href", "")
         $("#download-historical-btn").attr("href", "")
     } else if (type === "set") {
-        $("#download-forecast-btn").attr(
-            "href",
-            endpoint + "ForecastStats/?reach_id=" + REACHID
-        )
-        $("#download-historical-btn").attr(
-            "href",
-            endpoint + "HistoricSimulation/?reach_id=" + REACHID
-        )
-    }
-}
-//////////////////////////////////////////////////////////////////////// GET BIAS CORRECTED PLOTS FUNCTION
-function getBiasCorrectedPlots(gauge_metadata) {
-    let data
-    if (gauge_metadata !== false) {
-        data = gauge_metadata
-        data["gauge_network"] = $("#gauge_networks").val()
-    } else if (!REACHID) {
-        alert(
-            "No Reach-ID has been chosen. You must successfully retrieve streamflow before attempting calibration"
-        )
-        return
-    } else {
-        let csv = $("#uploaded_observations").val()
-        data = {
-            reach_id: REACHID,
-            observation: csv
-        }
-        if (
-            !confirm(
-                'You are about to perform bias correction on reach_id "' +
-                    String(REACHID) +
-                    '" with uploaded ' +
-                    'observed steamflow file "' +
-                    csv +
-                    '". Are you sure you want to continue?'
-            )
-        ) {
-            return
-        }
-    }
-    updateStatusIcons("load")
-    updateDownloadLinks("clear")
-    $("#chart_modal").modal("show")
-    $("#bias_correction_tab_link").show()
-    $.ajax({
-        type: "GET",
-        async: true,
-        data: data,
-        url: URL_getBiasAdjusted,
-        success: function(html) {
-            // forecast tab
-            $("#forecast_tab_link").tab("show")
-            $("#corrected-forecast-chart").append(html["correct_hydro"])
-            // historical tab
-            $("#historical_tab_link").tab("show")
-            $("#historical-chart").html(html["new_hist"])
-            $("#historical-table").html("")
-            // average flows tab
-            $("#avg_flow_tab_link").tab("show")
-            $("#daily-avg-chart").html(html["day_avg"])
-            $("#monthly-avg-chart").html(html["month_avg"])
-            // flow duration curve
-            $("#flow_duration_tab_link").tab("show")
-            $("#flowduration-chart").html(html["flowdur_plot"])
-            // stats tab
-            $("#bias_correction_tab_link").tab("show")
-            $("#stats_table").html(html["stats_table"])
-            $("#volume_plot").html(html["volume_plot"])
-            $("#scatters").html(html["scatters"])
-            updateStatusIcons("ready")
-            updateDownloadLinks("set")
-        },
-        error: function() {
-            updateStatusIcons("fail")
-        }
-    })
-}
-//////////////////////////////////////////////////////////////////////// UPDATE STATUS ICONS FUNCTION
-function updateStatusIcons(type) {
-    let statusObj = $("#request-status")
-    if (type === "identify") {
-        statusObj.html(" (Getting Stream ID)")
-        statusObj.css("color", "orange")
-    } else if (type === "load") {
-        statusObj.html(" (Loading ID " + REACHID + ")")
-        statusObj.css("color", "orange")
-    } else if (type === "ready") {
-        statusObj.html(" (Ready)")
-        statusObj.css("color", "green")
-    } else if (type === "fail") {
-        statusObj.html(" (Failed)")
-        statusObj.css("color", "red")
-    } else if (type === "cleared") {
-        statusObj.html(" (Cleared)")
-        statusObj.css("color", "grey")
+        $("#download-forecast-btn").attr("href", endpoint + "ForecastStats/?reach_id=" + REACHID + "&forecast_date=" + getFormattedDate(CURRENTDATE))
+        $("#download-historical-btn").attr("href", endpoint + "HistoricSimulation/?reach_id=" + REACHID)
     }
 }
 ////////////////////////////////////////////////////////////////////////  UPLOAD OBSERVATIONAL DATA
@@ -269,43 +171,9 @@ const chart_divs = [
     $("#stats_table")
 ]
 
-function clearChartDivs() {
-    for (let i in chart_divs) {
-        chart_divs[i].html("")
-    }
-}
-
-function showGetHistorical() {
-    $("#historical_tab_link").show()
-    $("#get-historical-btn").show()
-}
-
-function hideGetHistorical() {
-    $("#historical_tab_link").hide()
-    $("#get-historical-btn").hide()
-}
-
-function hideHistoricalTabs() {
-    $("#avg_flow_tab_link").hide()
-    $("#flow_duration_tab_link").hide()
-}
-
-function showHistoricalTabs() {
-    $("#avg_flow_tab_link").show()
-    $("#flow_duration_tab_link").show()
-}
-
-function hideBiasCalibrationTabs() {
-    $("#bias_correction_tab_link").hide()
-}
-
-function showBiasCalibrationTabs() {
-    $("#bias_correction_tab_link").show()
-}
-
 function setupDatePicker() {
     let date = new Date()
-    let today = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    // let today = new Date(date.getFullYear(), date.getMonth(), date.getDate())
 
     $.ajax({
         type: "GET",
@@ -343,7 +211,8 @@ function setupDatePicker() {
                 .on("changeDate", function(e) {
                     if (e.date.getTime() !== CURRENTDATE.getTime()) {
                         CURRENTDATE = e.date
-                        clearChartDivs()
+                        chart_divs[0].html('')
+                        chart_divs[1].html('')
                         hideGetHistorical()
                         hideHistoricalTabs()
                         hideBiasCalibrationTabs()
@@ -361,22 +230,18 @@ function setupDatePicker() {
         }
     })
 }
-
 function getFormattedDate(dateObj) {
     return `${dateObj.getFullYear()}${("0" + (dateObj.getMonth() + 1)).slice(-2)}${(
         "0" + dateObj.getDate()
     ).slice(-2)}.00`
 }
-
 function getForecastData() {
     let ftl = $("#forecast_tab_link") // select divs with jquery so we can reuse them
     ftl.tab("show")
     let fc = chart_divs[0]
-    fc.html(
-        '<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">'
-    )
+    fc.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">')
     fc.css("text-align", "center")
-    let dateOffset = 24 * 60 * 60 * 1000 * 7
+    let dateOffset = 24 * 60 * 60 * 1000 * 7  // 7 days converted to milliseconds, the js time unit
     let start_date = new Date()
     start_date.setTime(CURRENTDATE.getTime() - dateOffset)
     $.ajax({
@@ -398,7 +263,7 @@ function getForecastData() {
             showGetHistorical()
             showBiasCalibrationTabs()
         },
-        error: function() {
+        error: function () {
             updateStatusIcons("fail")
             REACHID = null
         }
@@ -418,9 +283,9 @@ function getHistoricalData() {
     $.ajax({
         type: "GET",
         async: true,
-        data: { reach_id: REACHID },
+        data: {reach_id: REACHID},
         url: URL_getHistoricalData,
-        success: function(response) {
+        success: function (response) {
             showHistoricalTabs()
             // historical tab
             tl.tab("show")
@@ -438,11 +303,90 @@ function getHistoricalData() {
             tl.tab("show")
             updateStatusIcons("ready")
         },
-        error: function() {
+        error: function () {
             updateStatusIcons("fail")
         }
     })
 }
+
+function getBiasCorrectedPlots(gauge_metadata) {
+    let data
+    if (gauge_metadata !== false) {
+        data = gauge_metadata
+        data["gauge_network"] = $("#gauge_networks").val()
+    } else if (!REACHID) {
+        alert("No Reach-ID has been chosen. You must successfully retrieve streamflow before attempting calibration")
+        return
+    } else {
+        let csv = $("#uploaded_observations").val()
+        data = {
+            reach_id: REACHID,
+            observation: csv
+        }
+        if (!confirm('You are about to perform bias correction on reach_id "' + String(REACHID) + '" with uploaded ' + 'observed steamflow file "' + csv + '". Are you sure you want to continue?')) {
+            return
+        }
+    }
+    updateStatusIcons("load")
+    updateDownloadLinks("clear")
+    $("#chart_modal").modal("show")
+    $("#bias_correction_tab_link").show()
+    $.ajax({
+        type: "GET",
+        async: true,
+        data: data,
+        url: URL_getBiasAdjusted,
+        success: function (html) {
+            // forecast tab
+            $("#forecast_tab_link").tab("show")
+            $("#forecast-chart").append(html["correct_hydro"])
+            // historical tab
+            $("#historical_tab_link").tab("show")
+            $("#historical-chart").html(html["new_hist"])
+            $("#historical-table").html("")
+            // average flows tab
+            $("#avg_flow_tab_link").tab("show")
+            $("#daily-avg-chart").html(html["day_avg"])
+            $("#monthly-avg-chart").html(html["month_avg"])
+            // flow duration curve
+            $("#flow_duration_tab_link").tab("show")
+            $("#flowduration-chart").html(html["flowdur_plot"])
+            // stats tab
+            $("#bias_correction_tab_link").tab("show")
+            $("#stats_table").html(html["stats_table"])
+            $("#volume_plot").html(html["volume_plot"])
+            $("#scatters").html(html["scatters"])
+            $("#bias_correction_tab_link").tab("show")
+            updateStatusIcons("ready")
+            updateDownloadLinks("set")
+        },
+        error: function () {
+            updateStatusIcons("fail")
+        }
+    })
+}
+
+//////////////////////////////////////////////////////////////////////// UPDATE STATUS ICONS FUNCTION
+function updateStatusIcons(type) {
+    let statusObj = $("#request-status")
+    if (type === "identify") {
+        statusObj.html(" (Getting Stream ID)")
+        statusObj.css("color", "orange")
+    } else if (type === "load") {
+        statusObj.html(" (Loading ID " + REACHID + ")")
+        statusObj.css("color", "orange")
+    } else if (type === "ready") {
+        statusObj.html(" (Ready)")
+        statusObj.css("color", "green")
+    } else if (type === "fail") {
+        statusObj.html(" (Failed)")
+        statusObj.css("color", "red")
+    } else if (type === "cleared") {
+        statusObj.html(" (Cleared)")
+        statusObj.css("color", "grey")
+    }
+}
+
 function fix_buttons(tab) {
     let buttons = [
         $("#download-forecast-btn"),
@@ -482,21 +426,57 @@ function fix_chart_sizes(tab) {
         try {
             divs[i].css("height", 500)
             Plotly.Plots.resize(divs[i][0])
-        } catch (e) {}
+        } catch (e) {
+        }
     }
 }
-$("#forecast_tab_link").on("click", function() {
+
+function clearChartDivs() {
+    for (let i in chart_divs) {
+        chart_divs[i].html("")
+    }
+}
+
+function showGetHistorical() {
+    $("#historical_tab_link").show();
+    $("#get-historical-btn").show()
+}
+
+function hideGetHistorical() {
+    $("#historical_tab_link").hide();
+    $("#get-historical-btn").hide()
+}
+
+function hideHistoricalTabs() {
+    $("#avg_flow_tab_link").hide();
+    $("#flow_duration_tab_link").hide()
+}
+
+function showHistoricalTabs() {
+    $("#avg_flow_tab_link").show();
+    $("#flow_duration_tab_link").show()
+}
+
+function hideBiasCalibrationTabs() {
+    $("#bias_correction_tab_link").hide()
+}
+
+function showBiasCalibrationTabs() {
+    $("#bias_correction_tab_link").show()
+}
+
+$("#forecast_tab_link").on("click", function () {
     fix_buttons("forecast")
 })
-$("#historical_tab_link").on("click", function() {
+$("#historical_tab_link").on("click", function () {
     fix_buttons("historical")
 })
-$("#avg_flow_tab_link").on("click", function() {
+$("#avg_flow_tab_link").on("click", function () {
     fix_buttons("averages")
 })
-$("#flow_duration_tab_link").on("click", function() {
+$("#flow_duration_tab_link").on("click", function () {
     fix_buttons("flowduration")
 })
-$("#bias_correction_tab_link").on("click", function() {
+$("#bias_correction_tab_link").on("click", function () {
     fix_buttons("biascorrection")
 })
