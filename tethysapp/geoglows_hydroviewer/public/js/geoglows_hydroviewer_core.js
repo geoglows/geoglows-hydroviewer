@@ -5,11 +5,11 @@ const mapObj = L.map("map", {
     maxBounds: L.latLngBounds(L.latLng(-100, -225), L.latLng(100, 225)),
     center: [20, 0]
 })
-let REACHID;
-let CURRENTDATE;
-let mapMarker = null;
-let controlsObj;
-let SelectedSegment = L.geoJSON(false, {weight: 5, color: "#00008b"}).addTo(mapObj);
+let REACHID
+let CURRENTDATE
+let mapMarker = null
+let controlsObj
+let SelectedSegment = L.geoJSON(false, { weight: 5, color: "#00008b" }).addTo(mapObj)
 
 const basemapsJson = {
     "ESRI Topographic": L.esri.basemapLayer("Topographic").addTo(mapObj),
@@ -48,8 +48,10 @@ latlon.onAdd = function() {
     return div
 }
 latlon.addTo(mapObj)
-mapObj.on("mousemove", function (event) {
-    $("#mouse-position").html("Lat: " + event.latlng.lat.toFixed(4) + ", Lon: " + event.latlng.lng.toFixed(4))
+mapObj.on("mousemove", function(event) {
+    $("#mouse-position").html(
+        "Lat: " + event.latlng.lat.toFixed(4) + ", Lon: " + event.latlng.lng.toFixed(4)
+    )
 })
 //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
 function findReachID() {
@@ -110,7 +112,7 @@ function getGaugeGeoJSON() {
     })
 }
 
-$("#gauge_networks").change(function () {
+$("#gauge_networks").change(function() {
     getGaugeGeoJSON()
 })
 //////////////////////////////////////////////////////////////////////// UPDATE DOWNLOAD LINKS FUNCTION
@@ -119,8 +121,18 @@ function updateDownloadLinks(type) {
         $("#download-forecast-btn").attr("href", "")
         $("#download-historical-btn").attr("href", "")
     } else if (type === "set") {
-        $("#download-forecast-btn").attr("href", endpoint + "ForecastStats/?reach_id=" + REACHID + "&forecast_date=" + getFormattedDate(CURRENTDATE))
-        $("#download-historical-btn").attr("href", endpoint + "HistoricSimulation/?reach_id=" + REACHID)
+        $("#download-forecast-btn").attr(
+            "href",
+            endpoint +
+                "ForecastStats/?reach_id=" +
+                REACHID +
+                "&forecast_date=" +
+                getFormattedDate(CURRENTDATE)
+        )
+        $("#download-historical-btn").attr(
+            "href",
+            endpoint + "HistoricSimulation/?reach_id=" + REACHID
+        )
     }
 }
 ////////////////////////////////////////////////////////////////////////  UPLOAD OBSERVATIONAL DATA
@@ -194,7 +206,7 @@ function setupDatePicker() {
             $("#forecast_date")
                 .datepicker({
                     format: "mm/dd/yyyy",
-                    startDate: "-30d",
+                    startDate: "-45d",
                     endDate: selectedDate,
                     autoclose: true,
                     beforeShowDay: function(date) {
@@ -211,8 +223,8 @@ function setupDatePicker() {
                 .on("changeDate", function(e) {
                     if (e.date.getTime() !== CURRENTDATE.getTime()) {
                         CURRENTDATE = e.date
-                        chart_divs[0].html('')
-                        chart_divs[1].html('')
+                        chart_divs[0].html("")
+                        chart_divs[1].html("")
                         hideGetHistorical()
                         hideHistoricalTabs()
                         hideBiasCalibrationTabs()
@@ -239,9 +251,11 @@ function getForecastData() {
     let ftl = $("#forecast_tab_link") // select divs with jquery so we can reuse them
     ftl.tab("show")
     let fc = chart_divs[0]
-    fc.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">')
+    fc.html(
+        '<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">'
+    )
     fc.css("text-align", "center")
-    let dateOffset = 24 * 60 * 60 * 1000 * 7  // 7 days converted to milliseconds, the js time unit
+    let dateOffset = 24 * 60 * 60 * 1000 * 7 // 7 days converted to milliseconds, the js time unit
     let start_date = new Date()
     start_date.setTime(CURRENTDATE.getTime() - dateOffset)
     $.ajax({
@@ -263,7 +277,7 @@ function getForecastData() {
             showGetHistorical()
             showBiasCalibrationTabs()
         },
-        error: function () {
+        error: function() {
             updateStatusIcons("fail")
             REACHID = null
         }
@@ -283,9 +297,9 @@ function getHistoricalData() {
     $.ajax({
         type: "GET",
         async: true,
-        data: {reach_id: REACHID},
+        data: { reach_id: REACHID },
         url: URL_getHistoricalData,
-        success: function (response) {
+        success: function(response) {
             showHistoricalTabs()
             // historical tab
             tl.tab("show")
@@ -303,7 +317,7 @@ function getHistoricalData() {
             tl.tab("show")
             updateStatusIcons("ready")
         },
-        error: function () {
+        error: function() {
             updateStatusIcons("fail")
         }
     })
@@ -315,7 +329,9 @@ function getBiasCorrectedPlots(gauge_metadata) {
         data = gauge_metadata
         data["gauge_network"] = $("#gauge_networks").val()
     } else if (!REACHID) {
-        alert("No Reach-ID has been chosen. You must successfully retrieve streamflow before attempting calibration")
+        alert(
+            "No Reach-ID has been chosen. You must successfully retrieve streamflow before attempting calibration"
+        )
         return
     } else {
         let csv = $("#uploaded_observations").val()
@@ -323,7 +339,16 @@ function getBiasCorrectedPlots(gauge_metadata) {
             reach_id: REACHID,
             observation: csv
         }
-        if (!confirm('You are about to perform bias correction on reach_id "' + String(REACHID) + '" with uploaded ' + 'observed steamflow file "' + csv + '". Are you sure you want to continue?')) {
+        if (
+            !confirm(
+                'You are about to perform bias correction on reach_id "' +
+                    String(REACHID) +
+                    '" with uploaded ' +
+                    'observed steamflow file "' +
+                    csv +
+                    '". Are you sure you want to continue?'
+            )
+        ) {
             return
         }
     }
@@ -336,7 +361,7 @@ function getBiasCorrectedPlots(gauge_metadata) {
         async: true,
         data: data,
         url: URL_getBiasAdjusted,
-        success: function (html) {
+        success: function(html) {
             // forecast tab
             $("#forecast_tab_link").tab("show")
             $("#forecast-chart").append(html["correct_hydro"])
@@ -360,7 +385,7 @@ function getBiasCorrectedPlots(gauge_metadata) {
             updateStatusIcons("ready")
             updateDownloadLinks("set")
         },
-        error: function () {
+        error: function() {
             updateStatusIcons("fail")
         }
     })
@@ -426,8 +451,7 @@ function fix_chart_sizes(tab) {
         try {
             divs[i].css("height", 500)
             Plotly.Plots.resize(divs[i][0])
-        } catch (e) {
-        }
+        } catch (e) {}
     }
 }
 
@@ -438,22 +462,22 @@ function clearChartDivs() {
 }
 
 function showGetHistorical() {
-    $("#historical_tab_link").show();
+    $("#historical_tab_link").show()
     $("#get-historical-btn").show()
 }
 
 function hideGetHistorical() {
-    $("#historical_tab_link").hide();
+    $("#historical_tab_link").hide()
     $("#get-historical-btn").hide()
 }
 
 function hideHistoricalTabs() {
-    $("#avg_flow_tab_link").hide();
+    $("#avg_flow_tab_link").hide()
     $("#flow_duration_tab_link").hide()
 }
 
 function showHistoricalTabs() {
-    $("#avg_flow_tab_link").show();
+    $("#avg_flow_tab_link").show()
     $("#flow_duration_tab_link").show()
 }
 
@@ -465,18 +489,18 @@ function showBiasCalibrationTabs() {
     $("#bias_correction_tab_link").show()
 }
 
-$("#forecast_tab_link").on("click", function () {
+$("#forecast_tab_link").on("click", function() {
     fix_buttons("forecast")
 })
-$("#historical_tab_link").on("click", function () {
+$("#historical_tab_link").on("click", function() {
     fix_buttons("historical")
 })
-$("#avg_flow_tab_link").on("click", function () {
+$("#avg_flow_tab_link").on("click", function() {
     fix_buttons("averages")
 })
-$("#flow_duration_tab_link").on("click", function () {
+$("#flow_duration_tab_link").on("click", function() {
     fix_buttons("flowduration")
 })
-$("#bias_correction_tab_link").on("click", function () {
+$("#bias_correction_tab_link").on("click", function() {
     fix_buttons("biascorrection")
 })
