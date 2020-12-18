@@ -68,6 +68,18 @@
     <li {% if request.path == render %}class="active"{% endif %}><a href="{{ render }}">Render Hydroviewer</a></li>
   {% endif %}
 
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RG4TEVRDL8"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+
+      function gtag() {
+          dataLayer.push(arguments);
+      }
+
+      gtag('js', new Date());
+      gtag('config', 'G-RG4TEVRDL8');
+  </script>
 
 {% endblock %}
 
