@@ -152,8 +152,8 @@ def export_hydroshare(request):
         geoserver_configs = json.loads(configfile.read())
         geoserver_configs['url'] = 'https://geoserver.hydroshare.org/geoserver/wms'
         geoserver_configs['workspace'] = f'HS-{resource_id}'
-        geoserver_configs['drainage_layer_name'] = 'drainageline_shapefile drainagelines'
-        geoserver_configs['catchment_layer_name'] = 'catchment_shapefile catchments'
+        geoserver_configs['drainage_layer_name'] = 'drainageline_shapefile ' + str.lower(project) + '_drainagelines'
+        geoserver_configs['catchment_layer_name'] = 'catchment_shapefile ' + str.lower(project) + '_catchments'
         geoserver_configs['exported_drainage'] = True
         geoserver_configs['exported_catchment'] = True
     with open(os.path.join(proj_dir, 'export_configs.json'), 'w') as configfile:
