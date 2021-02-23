@@ -208,6 +208,9 @@ def get_bias_adjusted(request):
     # get the data you need to correct bias
     sim_data = gsf.historic_simulation(reach_id)
     forecast_stats = gsf.forecast_stats(reach_id)
+    
+    # remove negative flows from the historical simulation
+    sim_data[sim_data["streamflow_m^3/s"] < 0] = 0
 
     # corrected data
     fixed_hist = gbc.correct_historical(sim_data, obs_data)
