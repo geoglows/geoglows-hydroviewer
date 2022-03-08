@@ -2,7 +2,7 @@
 {% load tethys_gizmos %}
 {% load static %}
 
-{% block title %}{{ tethys_app.name }}{% endblock %}
+{% block title %}GEOGloWS Hydroviewer{% endblock %}
 
 {% block header_buttons %}
 {% endblock %}
@@ -22,9 +22,9 @@
   {% if request.user.is_authenticated %}
     <li class="title">App Features</li>
     <li class="{% if request.path == hydroviewer or request.path == hydroshare %}active{% endif %}"><a
-            href="{{ hydroviewer }}">Global Hydroviewer</a></li>
+      href="{{ hydroviewer }}">Global Hydroviewer</a></li>
     <li class="{% if request.path != hydroviewer and request.path != hydroshare %}active{% endif %}"><a
-            href="{{ creator }}">Hydroviewer Creator</a></li>
+      href="{{ creator }}">Hydroviewer Creator</a></li>
   {% endif %}
 
   {% if request.path == hydroviewer or request.path == hydroshare %}
@@ -35,13 +35,13 @@
       <li id="current-map-date" style="text-align: center"></li>
       <div style="text-align: center;">
         <button class="header-button glyphicon-button" id="animationBack1"><span
-                class="glyphicon glyphicon-chevron-left"></span></button>
+          class="glyphicon glyphicon-chevron-left"></span></button>
         <button class="header-button glyphicon-button" id="animationPlay"><span class="glyphicon glyphicon-play"></span>
         </button>
         <button class="header-button glyphicon-button" id="animationStop"><span class="glyphicon glyphicon-stop"></span>
         </button>
         <button class="header-button glyphicon-button" id="animationPlus1"><span
-                class="glyphicon glyphicon-chevron-right"></span></button>
+          class="glyphicon glyphicon-chevron-right"></span></button>
       </div>
     {% else %}
       <li>{% gizmo select_input watersheds_select_input %}</li>
@@ -64,23 +64,9 @@
   {% else %}
     <li class="title">Hydroviewer Creation Tools</li>
     <li {% if request.path == creator %}class="active"{% endif %}><a href="{{ creator }}">Project Selection</a></li>
-    <li {% if request.path == overview %}class="active"{% endif %}><a>Project Overview</a></li>
+    <li {% if request.path == overview %}class="active"{% else %}class="disabled"{% endif %}><a>Project Overview</a></li>
     <li {% if request.path == render %}class="active"{% endif %}><a href="{{ render }}">Render Hydroviewer</a></li>
   {% endif %}
-
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RG4TEVRDL8"></script>
-  <script>
-      window.dataLayer = window.dataLayer || [];
-
-      function gtag() {
-          dataLayer.push(arguments);
-      }
-
-      gtag('js', new Date());
-      gtag('config', 'G-RG4TEVRDL8');
-  </script>
-
 {% endblock %}
 
 {% block app_content %}
@@ -95,4 +81,12 @@
 
 {% block scripts %}
   {{ block.super }}
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3K5B8H0KHJ"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-3K5B8H0KHJ');
+  </script>
 {% endblock %}

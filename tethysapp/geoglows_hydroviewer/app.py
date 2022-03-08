@@ -6,14 +6,14 @@ class GeoglowsHydroviewer(TethysAppBase):
     """
     Tethys app class for the GEOGloWS ECMWF Streamflow Hydroviewer
     """
-    name = 'GEOGloWS ECMWF Streamflow Hydroviewer'
-    index = 'geoglows_hydroviewer:home'
-    icon = 'geoglows_hydroviewer/images/water.jpeg'
+    name = 'GEOGloWS Hydroviewer'
     package = 'geoglows_hydroviewer'
     root_url = 'geoglows-hydroviewer'
+    index = 'geoglows_hydroviewer:home'
+    icon = 'geoglows_hydroviewer/images/water.jpeg'
     color = '#2980b9'
-    description = 'A tool for viewing the GEOGloWS ECMWF Streamflow Model and creating subset shapefiles.',
-    tags = 'geoglows, streamflow, animations, timeseries, hydrograph, geoprocessing, esri'
+    description = 'A tool for viewing the GEOGloWS ECMWF Hydrologic Model and creating subset shapefiles.',
+    tags = 'geoglows, streamflow, discharge, time series, hydrograph, geoprocessing, esri'
     enable_feedback = False
     feedback_emails = []
 

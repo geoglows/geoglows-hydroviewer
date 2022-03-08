@@ -1,5 +1,5 @@
 # This file should be committed to your app code.
-version: 1.8
+version: 1.9
 # This should match the app - package name in your setup.py
 name: geoglows_hydroviewer
 
@@ -16,7 +16,6 @@ requirements:
       - requests
       - geopandas
       - jinja2
-      - geomatics
       - hs_restclient
 
   pip:
