@@ -10,6 +10,7 @@ from django.http import JsonResponse, HttpResponse
 from django.shortcuts import redirect, reverse
 from geoserver.catalog import Catalog
 from tethys_sdk.permissions import login_required
+from tethys_sdk.routing import controller
 
 from .app import GeoglowsHydroviewer as App
 from .hydroviewer_creator_tools import get_project_directory
@@ -17,8 +18,11 @@ from .hydroviewer_creator_tools import get_project_directory
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
 
-@login_required()
-def export_geoserver(request):
+@controller(
+    url='/creator/project/export/geoserver',
+    app_workspace=True,
+)
+def export_geoserver(request, app_workspace):
     project = request.POST.get('project', False)
     workspace_name = request.POST.get('workspace', 'geoglows_hydroviewer_creator')
     store_name = request.POST.get('store_name', 'shapefilestore')
@@ -26,7 +30,7 @@ def export_geoserver(request):
     store_name = str.lower(store_name)
     if not project:
         return JsonResponse({'error': 'unable to find the project'})
-    proj_dir = get_project_directory(project)
+    proj_dir = get_project_directory(project, app_workspace)
 
     # tailor the geoserver url
     url = request.POST.get('gs_url')
@@ -82,12 +86,15 @@ def export_geoserver(request):
     return JsonResponse({'status': 'success'})
 
 
-@login_required()
-def export_zipfile(request):
+@controller(
+    url='/creator/project/export/zipfile',
+    app_workspace=True,
+)
+def export_zipfile(request, app_workspace):
     project = request.GET.get('project', False)
     if not project:
         return JsonResponse({'error': 'unable to find the project'})
-    proj_dir = get_project_directory(project)
+    proj_dir = get_project_directory(project, app_workspace)
 
     zip_path = os.path.join(proj_dir, f'{request.GET.get("component")}_shapefile.zip')
     with open(zip_path, 'rb') as zip_file:
@@ -96,13 +103,16 @@ def export_zipfile(request):
         return response
 
 
-@login_required()
-def export_hydroshare(request):
+@controller(
+    url='/creator/project/export/hydroshare',
+    app_workspace=True,
+)
+def export_hydroshare(request, app_workspace):
     project = request.POST.get('project', False)
     if project is False:
         messages.error(request, 'Project not found. Please pick a valid project.')
         return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
-    proj_dir = get_project_directory(project)
+    proj_dir = get_project_directory(project, app_workspace)
 
     # verify the shapefile zips exist
     catchment_zip = os.path.join(proj_dir, 'catchment_shapefile.zip')
@@ -162,12 +172,15 @@ def export_hydroshare(request):
                         f'?{urllib.parse.urlencode(dict(project=project))}')
 
 
-@login_required()
-def export_html(request):
-    template_path = os.path.join(App.get_app_workspace().path, 'hydroviewer_interactive_template.html')
+@controller(
+    url='/creator/project/export/html',
+    app_workspace=True,
+)
+def export_html(request, app_workspace):
+    template_path = os.path.join(app_workspace.path, 'hydroviewer_interactive_template.html')
 
     title = request.POST.get('title')
-    html_path = os.path.join(App.get_app_workspace().path, f'{title}.html')
+    html_path = os.path.join(app_workspace.path, f'{title}.html')
 
     esridependency = any([request.POST.get('esri-imagery', False),
                           request.POST.get('esri-hybrid', False),

@@ -11,7 +11,8 @@
   <form id="render_existing_form" action="{% url 'geoglows_hydroviewer:render_hydroviewer' %}" method="get">
     <div class="btn-group ">
       <button class="btn btn-block btn-primary" role="button" form="render_existing_form" submit="True">
-        <span class="glyphicon glyphicon-plus"></span> Render Hydroviewer
+        <i class="bi bi-plus-lg"></i>
+        Render Hydroviewer
       </button>
     </div>
   </form>
@@ -21,7 +22,8 @@
            placeholder="Enter New Hydroviewer Project Name" style="width: 100%" required>
     <div class="btn-group ">
       <button class="btn btn-success" role="button" form="create_new_form" submit="True">
-        <span class="glyphicon glyphicon-plus"></span> Create New Hydroviewer
+        <i class="bi bi-plus-lg"></i>
+        Create New Hydroviewer
       </button>
     </div>
   </form>
@@ -31,7 +33,8 @@
       {% gizmo select_input projects %}
       <div class="btn-group ">
         <button class="btn btn-warning" role="button" form="select_existing_form" submit="True">
-          <span class="glyphicon glyphicon-pencil"></span> Edit Existing Hydroviewer
+          <i class="bi bi-pencil-fill"></i>
+          Edit Existing Hydroviewer
         </button>
       </div>
     </form>
@@ -41,7 +44,8 @@
         {% gizmo select_input projects %}
         <div class="btn-group ">
           <button class="btn btn-danger" role="button" form="remove_existing_form" submit="True">
-            <span class="glyphicon glyphicon-remove"></span> Delete Existing Hydroviewer
+            <i class="bi bi-file-earmark-x"></i>
+            Delete Existing Hydroviewer
           </button>
         </div>
       </form>

@@ -20,52 +20,50 @@
   {% url 'geoglows_hydroviewer:geoglows_hydroviewer_creator' as creator %}
 
   {% if request.user.is_authenticated %}
-    <li class="title">App Features</li>
-    <li class="{% if request.path == hydroviewer or request.path == hydroshare %}active{% endif %}"><a
-      href="{{ hydroviewer }}">Global Hydroviewer</a></li>
-    <li class="{% if request.path != hydroviewer and request.path != hydroshare %}active{% endif %}"><a
-      href="{{ creator }}">Hydroviewer Creator</a></li>
+    <li class="nav-item title">App Features</li>
+    <li class="nav-item">
+      <a class="nav-link{% if request.path == hydroviewer or request.path == hydroshare %} active{% endif %}" href="{{ hydroviewer }}">Global Hydroviewer</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link{% if request.path != hydroviewer and request.path != hydroshare %} active{% endif %}" href="{{ creator }}">Hydroviewer Creator</a>
+    </li>
   {% endif %}
 
   {% if request.path == hydroviewer or request.path == hydroshare %}
-    <li class="title">Map Controls</li>
+    <li class="nav-item title">Map Controls</li>
     {% if request.path == hydroviewer %}
       <label class="control-label" for="time-slider">Map Animation</label>
       <input type="range" min="0" max="40" value="0" class="slider" id="time-slider">
-      <li id="current-map-date" style="text-align: center"></li>
+      <li class="nav-item" id="current-map-date" style="text-align: center"></li>
       <div style="text-align: center;">
-        <button class="header-button glyphicon-button" id="animationBack1"><span
-          class="glyphicon glyphicon-chevron-left"></span></button>
-        <button class="header-button glyphicon-button" id="animationPlay"><span class="glyphicon glyphicon-play"></span>
-        </button>
-        <button class="header-button glyphicon-button" id="animationStop"><span class="glyphicon glyphicon-stop"></span>
-        </button>
-        <button class="header-button glyphicon-button" id="animationPlus1"><span
-          class="glyphicon glyphicon-chevron-right"></span></button>
+        <button type="header-button" class="btn btn-secondary-outline" id="animationBack1"><i class="bi bi-chevron-left"></i></button>
+        <button type="header-button" class="btn btn-secondary-outline" id="animationPlay"><i class="bi bi-play-fill"></i></button>
+        <button type="header-button" class="btn btn-secondary-outline" id="animationStop"><i class="bi bi-stop-fill"></i></button>
+        <button type="header-button" class="btn btn-secondary-outline" id="animationPlus1"><i class="bi bi-chevron-right"></i></button>
       </div>
     {% else %}
       <li>{% gizmo select_input watersheds_select_input %}</li>
     {% endif %}
     <li class="separator"></li>
-    <a class="btn btn-default" role="button" style="width: 100%" onclick="findReachID()">Find A Reach ID</a>
+    <a class="btn btn-outline-secondary" role="button" style="width: 100%" onclick="findReachID()">Find A Reach ID</a>
     <li class="separator"></li>
-    <a class="btn btn-default" role="button" style="width: 100%" onclick="findLatLon()">Zoom to Lat/Lon Coordinates</a>
+    <a class="btn btn-outline-secondary" role="button" style="width: 100%" onclick="findLatLon()">Zoom to Lat/Lon Coordinates</a>
     <li class="separator"></li>
-    <a class="btn btn-default" role="button" style="width: 100%"
+    <a class="btn btn-outline-secondary" role="button" style="width: 100%"
        onclick="if (mapMarker) {mapObj.removeLayer(mapMarker)}">Remove Map Marker</a>
     <li class="separator"></li>
     {% if request.path == hydroviewer %}
-      <a href="{{ hydroshare }}" class="btn btn-default" role="button" style="width: 100%">Switch to HydroShare Map</a>
+      <a href="{{ hydroshare }}" class="btn btn-outline-secondary" role="button" style="width: 100%">Switch to HydroShare Map</a>
     {% else %}
-      <a href="{{ hydroviewer }}" class="btn btn-default" role="button" style="width: 100%">Switch to ESRI Map</a>
+      <a href="{{ hydroviewer }}" class="btn btn-outline-secondary" role="button" style="width: 100%">Switch to ESRI Map</a>
     {% endif %}
     <li class="separator"></li>
     {% gizmo select_input gauge_networks %}
   {% else %}
     <li class="title">Hydroviewer Creation Tools</li>
-    <li {% if request.path == creator %}class="active"{% endif %}><a href="{{ creator }}">Project Selection</a></li>
-    <li {% if request.path == overview %}class="active"{% else %}class="disabled"{% endif %}><a>Project Overview</a></li>
-    <li {% if request.path == render %}class="active"{% endif %}><a href="{{ render }}">Render Hydroviewer</a></li>
+    <li class="nav-item"><a class="nav-link{% if request.path == creator %}class=" active"{% endif %}" href="{{ creator }}">Project Selection</a></li>
+    <li class="nav-item"><a class="nav-link{% if request.path == overview %}class=" active"{% else %}class=" disabled"{% endif %}" >Project Overview</a></li>
+    <li class="nav-item"><a class="nav-link{% if request.path == render %}class=" active"{% endif %}" href="{{ render }}">Render Hydroviewer</a></li>
   {% endif %}
 {% endblock %}
 
