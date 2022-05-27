@@ -6,10 +6,10 @@ import pandas as pd
 from django.http import JsonResponse
 
 from .app import GeoglowsHydroviewer as App
+from tethys_sdk.routing import controller
 
-
-def delete_old_observations():
-    workspace_path = App.get_app_workspace().path
+def delete_old_observations(app_workspace):
+    workspace_path = app_workspace.path
     uploaded_observations = glob.glob(os.path.join(workspace_path, 'observations', '*.csv'))
     expiration_time = datetime.datetime.now() - datetime.timedelta(days=1)
     for uploaded_observation in uploaded_observations:
@@ -19,8 +19,8 @@ def delete_old_observations():
     return
 
 
-def list_uploaded_observations():
-    workspace_path = App.get_app_workspace().path
+def list_uploaded_observations(app_workspace):
+    workspace_path = app_workspace.path
     uploaded_observations = glob.glob(os.path.join(workspace_path, 'observations', '*.csv'))
     list_of_observations = []
     for uploaded_observation in uploaded_observations:
@@ -30,9 +30,14 @@ def list_uploaded_observations():
     return tuple(sorted(list_of_observations))
 
 
-def upload_new_observations(request):
-    delete_old_observations()
-    workspace_path = App.get_app_workspace().path
+@controller(
+    name='upload_new_observations',
+    url='hydroviewer/upload_new_observations',
+    app_workspace=True,
+)
+def upload_new_observations(request, app_workspace):
+    delete_old_observations(app_workspace)
+    workspace_path = app_workspace.path
     files = request.FILES
     for file in files:
         new_observation_path = os.path.join(workspace_path, 'observations', files[file].name)
@@ -57,4 +62,4 @@ def upload_new_observations(request):
 
         df.to_csv(new_observation_path)
 
-    return JsonResponse(dict(new_file_list=list_uploaded_observations()))
+    return JsonResponse(dict(new_file_list=list_uploaded_observations(app_workspace)))

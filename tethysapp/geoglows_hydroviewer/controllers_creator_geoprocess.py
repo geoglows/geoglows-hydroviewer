@@ -6,6 +6,7 @@ from zipfile import ZipFile
 import geopandas as gpd
 from django.http import JsonResponse
 from tethys_sdk.permissions import login_required
+from tethys_sdk.routing import controller
 
 from .app import GeoglowsHydroviewer as App
 from .hydroviewer_creator_tools import get_project_directory
@@ -13,12 +14,16 @@ from .hydroviewer_creator_tools import get_project_directory
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
 
-@login_required()
-def geoprocess_hydroviewer_idregion(request):
+@controller(
+    name='geoprocess_idregion',
+    url='creator/project/geoprocessing/geoprocess_idregion',
+    app_workspace=True,
+)
+def geoprocess_hydroviewer_idregion(request, app_workspace):
     project = request.GET.get('project', False)
     if not project:
         raise FileNotFoundError('project directory not found')
-    proj_dir = get_project_directory(project)
+    proj_dir = get_project_directory(project, app_workspace)
     gjson_gdf = gpd.read_file(os.path.join(proj_dir, 'boundaries.json'))
     gjson_gdf = gjson_gdf.to_crs(epsg=3857)
 
@@ -30,13 +35,17 @@ def geoprocess_hydroviewer_idregion(request):
     return JsonResponse({'error': 'unable to find a region'}), 422
 
 
-@login_required()
-def geoprocess_hydroviewer_clip(request):
+@controller(
+    name='geoprocess_clip',
+    url='creator/project/geoprocessing/geoprocess_clip',
+    app_workspace=True,
+)
+def geoprocess_hydroviewer_clip(request, app_workspace):
     project = request.GET.get('project', False)
     region_name = request.GET.get('region', False)
     if not project:
         return JsonResponse({'error': 'unable to find the project'})
-    proj_dir = get_project_directory(project)
+    proj_dir = get_project_directory(project, app_workspace)
 
     catch_folder = os.path.join(proj_dir, 'catchment_shapefile')
     dl_folder = os.path.join(proj_dir, 'drainageline_shapefile')
@@ -77,10 +86,13 @@ def geoprocess_hydroviewer_clip(request):
         raise ValueError('illegal shapefile type specified')
 
 
-@login_required()
-def geoprocess_zip_shapefiles(request):
+@controller(
+    url='/creator/project/geoprocessing/geoprocess_zip_shapefiles',
+    app_workspace=True,
+)
+def geoprocess_zip_shapefiles(request, app_workspace):
     project = request.GET.get('project', False)
-    proj_dir = get_project_directory(project)
+    proj_dir = get_project_directory(project, app_workspace)
 
     catchment_zip = os.path.join(proj_dir, 'catchment_shapefile.zip')
     drainageline_zip = os.path.join(proj_dir, 'drainageline_shapefile.zip')

@@ -11,7 +11,7 @@
       <ol>
         {% if boundaries %}
           <h3>
-            <li>Project Boundaries Chosen <span class="glyphicon glyphicon-check" style="color: green"></span></li>
+            <li>Project Boundaries Chosen <i class="bi bi-check" fill="color: green"></i></li>
           </h3>
         {% else %}
           <h3>
@@ -22,7 +22,7 @@
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <div class="btn-group ">
               <button class="btn btn-success" role="button" form="boundaries-form" submit="True">
-                <span class="glyphicon glyphicon-globe"></span> Draw Project Boundaries on a Map
+                <i class="bi bi-globe2"></i> Draw Project Boundaries on a Map
               </button>
             </div>
           </form>
@@ -30,7 +30,7 @@
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <div class="btn-group ">
               <button class="btn btn-success" role="button" form="esri-layer-form" submit="True">
-                <span class="glyphicon glyphicon-check"></span> Choose Country or Region Boundaries
+                <i class="bi bi-check"></i> Choose Country or Region Boundaries
               </button>
             </div>
           </form>
@@ -38,7 +38,7 @@
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <div class="btn-group ">
               <button class="btn btn-success" role="button" form="outlet-form" submit="True">
-                <span class="glyphicon glyphicon-map-marker"></span> Pick Watershed Outlet Location
+                <i class="bi bi-geo-alt-fill"></i> Pick Watershed Outlet Location
               </button>
             </div>
           </form>
@@ -47,14 +47,14 @@
         {% if boundaries %}
           {% if shapefiles %}
             <h3>
-              <li>Shapefiles Created <span class="glyphicon glyphicon-check" style="color: green"></span></li>
+              <li>Shapefiles Created <i class="bi bi-check" style="color: green"></i></li>
             </h3>
           {% else %}
             <h3>
               <li>Create Shapefiles</li>
             </h3>
             <button class="btn btn-success" role="button" id="process-shapefiles" onclick="processShapefiles()">
-              <span class="glyphicon glyphicon-cog"></span> Create Custom Shapefiles
+              <i class="bi bi-gear-fill"></i> Create Custom Shapefiles
             </button>
             <p>
             <ul id="process-callback-list"></ul>
@@ -64,7 +64,7 @@
         {% if shapefiles %}
           {% if exported %}
             <h3>
-              <li>Export Shapefiles <span class="glyphicon glyphicon-check" style="color: green"></span></li>
+              <li>Export Shapefiles <i class="bi bi-check" fill="color: green"></i></li>
             </h3>
           {% else %}
             <h3>
@@ -73,19 +73,23 @@
           {% endif %}
 
           <a href="{% url 'geoglows_hydroviewer:export_zipfile' %}?project={{ project }}&component=catchment"
-             role="button" class="btn btn-success" download><span class="glyphicon glyphicon-download"></span>
+             role="button" class="btn btn-success" download>
+             <i class="bi bi-download"></i>
             Download Catchments Shapefile</a>
           <br>
           <a href="{% url 'geoglows_hydroviewer:export_zipfile' %}?project={{ project }}&component=drainageline"
-             role="button" class="btn btn-success" download><span class="glyphicon glyphicon-download"></span>
+             role="button" class="btn btn-success" download>
+             <i class="bi bi-download"></i>
             Download Drainagelines Shapefile</a>
           <hr>
-          <button class="btn btn-success" role="button" data-toggle="modal" data-target="#geoserver-options">
-            <span class="glyphicon glyphicon-cloud-upload"></span> Export to a Geoserver
+          <button class="btn btn-success" role="button" data-bs-toggle="modal" data-bs-target="#geoserver-options">
+            <i class="bi bi-cloud-upload"></i>
+            Export to a Geoserver
           </button>
           <br>
-          <button class="btn btn-success" role="button" data-toggle="modal" data-target="#hydroshare-export">
-            <span class="glyphicon glyphicon-plus-sign"></span> Export to HydroShare
+          <button class="btn btn-success" role="button" data-bs-toggle="modal" data-bs-target="#hydroshare-export">
+            <i class="bi bi-cloud-plus"></i>
+            Export to HydroShare
           </button>
         {% endif %}
 
@@ -98,7 +102,8 @@
             <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
             <div class="btn-group ">
               <button class="btn btn-block btn-success" role="button" form="render_existing_form" submit="True">
-                <span class="glyphicon glyphicon-circle-arrow-down"></span> Go To Hydroviewer Render Page
+                <i class="bi bi-arrow-down-circle-fill"></i>
+                Go To Hydroviewer Render Page
               </button>
             </div>
           </form>
@@ -126,7 +131,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span
                   aria-hidden="true">&times;</span></button>
           <h5 class="modal-title" id="help-modal-label">Geoserver Configuration Options</h5>
         </div>
@@ -194,7 +199,7 @@
                   src="{% static 'geoglows_hydroviewer/images/progress_bar.gif' %}"></div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -203,7 +208,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">x</span>
+          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span aria-hidden="true">x</span>
           </button>
           <h5 class="modal-title" id="help-modal-label">Export Shapefiles to Hydroshare</h5>
         </div>
@@ -242,7 +247,7 @@
           </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>

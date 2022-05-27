@@ -18,7 +18,7 @@
     <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
     <div class="btn-group ">
       <button class="btn btn-success" role="button" form="overview-form" submit="True">
-        <span class="glyphicon glyphicon-home"></span> Return to Overview Without Saving
+        <i class="bi bi-house-door"></i> Return to Overview Without Saving
       </button>
     </div>
   </form>
@@ -27,7 +27,6 @@
 {% block content_dependent_styles %}
   {{ block.super }}
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css">
-  {#  <link href="{% static 'geoglows_hydroviewer/css/main.css' %}" rel="stylesheet"/>#}
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/black-tie/jquery-ui.css"/>
 {% endblock %}
 
