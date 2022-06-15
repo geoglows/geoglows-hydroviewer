@@ -131,9 +131,8 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span
-                  aria-hidden="true">&times;</span></button>
           <h5 class="modal-title" id="help-modal-label">Geoserver Configuration Options</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <form id="geoserver-form" action="{% url 'geoglows_hydroviewer:export_geoserver' %}" method="post">
@@ -208,9 +207,8 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span aria-hidden="true">x</span>
-          </button>
           <h5 class="modal-title" id="help-modal-label">Export Shapefiles to Hydroshare</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <form id="hydroshare-form" action="{% url 'geoglows_hydroviewer:export_hydroshare' %}" method="post">
