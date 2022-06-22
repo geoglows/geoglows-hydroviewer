@@ -17,7 +17,10 @@ class GeoglowsHydroviewer(TethysAppBase):
     enable_feedback = False
     feedback_emails = []
     
-    controller_modules = ['controllers_creator_export', 'controllers_creator_geoprocess', 'controllers_creator', 'hydroviewer_creator_tools', 'manage_gauge_networks', 'manage_uploaded_observations']
+    controller_modules = [
+        'controllers_creator_export', 'controllers_creator_geoprocess', 'controllers_creator',
+        'hydroviewer_creator_tools', 'manage_gauge_networks', 'manage_uploaded_observations'
+    ]
 
     def custom_settings(self):
         return (
