@@ -61,9 +61,9 @@
     {% gizmo select_input gauge_networks %}
   {% else %}
     <li class="title">Hydroviewer Creation Tools</li>
-    <li class="nav-item"><a class="nav-link{% if request.path == creator %}class=" active"{% endif %}" href="{{ creator }}">Project Selection</a></li>
-    <li class="nav-item"><a class="nav-link{% if request.path == overview %}class=" active"{% else %}class=" disabled"{% endif %}" >Project Overview</a></li>
-    <li class="nav-item"><a class="nav-link{% if request.path == render %}class=" active"{% endif %}" href="{{ render }}">Render Hydroviewer</a></li>
+    <li class="nav-item"><a class="nav-link{% if request.path == creator %} active{% endif %}" href="{{ creator }}">Project Selection</a></li>
+    <li class="nav-item"><a class="nav-link{% if request.path == overview %} active{% else %} disabled{% endif %}" >Project Overview</a></li>
+    <li class="nav-item"><a class="nav-link{% if request.path == render %} active{% endif %}" href="{{ render }}">Render Hydroviewer</a></li>
   {% endif %}
 {% endblock %}
 
