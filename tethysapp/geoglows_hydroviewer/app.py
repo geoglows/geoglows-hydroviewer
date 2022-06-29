@@ -2,6 +2,7 @@ from tethys_sdk.app_settings import CustomSetting
 from tethys_sdk.base import TethysAppBase, url_map_maker
 from tethys_apps.base.workspace import _get_app_workspace
 
+
 class GeoglowsHydroviewer(TethysAppBase):
     """
     Tethys app class for the GEOGloWS ECMWF Streamflow Hydroviewer

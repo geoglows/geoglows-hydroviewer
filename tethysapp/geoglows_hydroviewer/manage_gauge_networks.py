@@ -8,8 +8,6 @@ import pandas as pd
 import requests
 import xmltodict
 
-from .app import GeoglowsHydroviewer as App
-
 
 def list_gauge_networks(app_workspace):
     workspace_path = app_workspace.path

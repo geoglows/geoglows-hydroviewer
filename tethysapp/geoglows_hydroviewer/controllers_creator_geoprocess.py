@@ -14,11 +14,7 @@ from .hydroviewer_creator_tools import get_project_directory
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
 
-@controller(
-    name='geoprocess_idregion',
-    url='creator/project/geoprocessing/geoprocess_idregion',
-    app_workspace=True,
-)
+@controller(name='geoprocess_idregion', url='creator/project/geoprocessing/geoprocess_idregion', app_workspace=True)
 def geoprocess_hydroviewer_idregion(request, app_workspace):
     project = request.GET.get('project', False)
     if not project:
@@ -35,11 +31,7 @@ def geoprocess_hydroviewer_idregion(request, app_workspace):
     return JsonResponse({'error': 'unable to find a region'}), 422
 
 
-@controller(
-    name='geoprocess_clip',
-    url='creator/project/geoprocessing/geoprocess_clip',
-    app_workspace=True,
-)
+@controller(name='geoprocess_clip', url='creator/project/geoprocessing/geoprocess_clip', app_workspace=True, )
 def geoprocess_hydroviewer_clip(request, app_workspace):
     project = request.GET.get('project', False)
     region_name = request.GET.get('region', False)
@@ -86,10 +78,8 @@ def geoprocess_hydroviewer_clip(request, app_workspace):
         raise ValueError('illegal shapefile type specified')
 
 
-@controller(
-    url='/creator/project/geoprocessing/geoprocess_zip_shapefiles',
-    app_workspace=True,
-)
+@controller(name='geoprocess_zipexport', url='/creator/project/geoprocessing/geoprocess_zip_shapefiles',
+            app_workspace=True)
 def geoprocess_zip_shapefiles(request, app_workspace):
     project = request.GET.get('project', False)
     proj_dir = get_project_directory(project, app_workspace)
