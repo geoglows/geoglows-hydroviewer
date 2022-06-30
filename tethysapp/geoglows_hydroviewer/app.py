@@ -1,11 +1,11 @@
 from tethys_sdk.app_settings import CustomSetting
-from tethys_sdk.base import TethysAppBase, url_map_maker
+from tethys_sdk.base import TethysAppBase
 from tethys_apps.base.workspace import _get_app_workspace
 
 
 class GeoglowsHydroviewer(TethysAppBase):
     """
-    Tethys app class for the GEOGloWS ECMWF Streamflow Hydroviewer
+    Tethys app class for the GEOGloWS Hydroviewer
     """
     name = 'GEOGloWS Hydroviewer'
     package = 'geoglows_hydroviewer'
@@ -13,7 +13,7 @@ class GeoglowsHydroviewer(TethysAppBase):
     index = 'home'
     icon = 'geoglows_hydroviewer/images/water.jpeg'
     color = '#2980b9'
-    description = 'A tool for viewing the GEOGloWS ECMWF Hydrologic Model and creating subset shapefiles.',
+    description = 'A tool for viewing the GEOGloWS ECMWF Streamflow Hydrologic Model and creating subset shapefiles.',
     tags = 'geoglows, streamflow, discharge, time series, hydrograph, geoprocessing, esri'
     enable_feedback = False
     feedback_emails = []

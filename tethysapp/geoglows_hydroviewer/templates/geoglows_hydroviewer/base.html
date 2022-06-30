@@ -44,20 +44,20 @@
     {% else %}
       <li>{% gizmo select_input watersheds_select_input %}</li>
     {% endif %}
-    <li class="separator"></li>
+    <div style="margin: 10px"></div>
     <a class="btn btn-outline-secondary custom-btn" role="button" style="width: 100%" onclick="findReachID()">Find A Reach ID</a>
-    <li class="separator"></li>
+    <div style="margin: 10px"></div>
     <a class="btn btn-outline-secondary custom-btn" role="button" style="width: 100%" onclick="findLatLon()">Zoom to Lat/Lon Coordinates</a>
-    <li class="separator"></li>
+    <div style="margin: 10px"></div>
     <a class="btn btn-outline-secondary custom-btn" role="button" style="width: 100%"
        onclick="if (mapMarker) {mapObj.removeLayer(mapMarker)}">Remove Map Marker</a>
-    <li class="separator"></li>
+    <div style="margin: 10px"></div>
     {% if request.path == hydroviewer %}
       <a href="{{ hydroshare }}" class="btn btn-outline-secondary custom-btn" role="button" style="width: 100%">Switch to HydroShare Map</a>
     {% else %}
       <a href="{{ hydroviewer }}" class="btn btn-outline-secondary custom-btn" role="button" style="width: 100%">Switch to ESRI Map</a>
     {% endif %}
-    <li class="separator"></li>
+    <div style="margin: 10px"></div>
     {% gizmo select_input gauge_networks %}
   {% else %}
     <li class="title">Hydroviewer Creation Tools</li>
