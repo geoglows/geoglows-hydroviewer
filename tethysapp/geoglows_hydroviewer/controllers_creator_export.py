@@ -18,10 +18,7 @@ from .hydroviewer_creator_tools import get_project_directory
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
 
-@controller(
-    url='/creator/project/export/geoserver',
-    app_workspace=True,
-)
+@controller(url='/creator/project/export/geoserver', app_workspace=True)
 def export_geoserver(request, app_workspace):
     project = request.POST.get('project', False)
     workspace_name = request.POST.get('workspace', 'geoglows_hydroviewer_creator')
@@ -86,10 +83,7 @@ def export_geoserver(request, app_workspace):
     return JsonResponse({'status': 'success'})
 
 
-@controller(
-    url='/creator/project/export/zipfile',
-    app_workspace=True,
-)
+@controller(url='/creator/project/export/zipfile', app_workspace=True)
 def export_zipfile(request, app_workspace):
     project = request.GET.get('project', False)
     if not project:
@@ -103,10 +97,7 @@ def export_zipfile(request, app_workspace):
         return response
 
 
-@controller(
-    url='/creator/project/export/hydroshare',
-    app_workspace=True,
-)
+@controller(url='/creator/project/export/hydroshare', app_workspace=True)
 def export_hydroshare(request, app_workspace):
     project = request.POST.get('project', False)
     if project is False:
@@ -172,10 +163,7 @@ def export_hydroshare(request, app_workspace):
                         f'?{urllib.parse.urlencode(dict(project=project))}')
 
 
-@controller(
-    url='/creator/project/export/html',
-    app_workspace=True,
-)
+@controller(url='/creator/project/export/html', app_workspace=True)
 def export_html(request, app_workspace):
     template_path = os.path.join(app_workspace.path, 'hydroviewer_interactive_template.html')
 

@@ -37,15 +37,11 @@ WARN_DOWNLOAD_SHAPEFILES = 'GEOGloWS Shapefile data not found. You can continue 
                            'settings and contact the server admin for help downloading this data.'
 
 
-@controller(
-    name='geoglows_hydroviewer_creator',
-    url='creator',
-    app_workspace=True,
-)
+@controller(name='geoglows_hydroviewer_creator', url='creator', app_workspace=True)
 def home(request, app_workspace):
     if not shapefiles_downloaded():
         messages.warning(request, WARN_DOWNLOAD_SHAPEFILES)
-        
+
     projects_path = os.path.join(app_workspace.path, 'projects')
     if not os.path.exists(projects_path):
         os.mkdir(projects_path)
@@ -71,10 +67,7 @@ def home(request, app_workspace):
     return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer_creator.html', context)
 
 
-@controller(
-    url='/creator/add-new-project',
-    app_workspace=True
-)
+@controller(url='/creator/add-new-project', app_workspace=True)
 def add_new_project(request, app_workspace):
     project = request.GET.get('new_project_name', False)
     if not project:
@@ -96,10 +89,7 @@ def add_new_project(request, app_workspace):
         return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
 
 
-@controller(
-    url='creator/delete_existing_project',
-    app_workspace=True,
-)
+@controller(url='creator/delete_existing_project', app_workspace=True)
 def delete_existing_project(request, app_workspace):
     project = request.GET.get('project', False)
     if not project:
@@ -113,10 +103,7 @@ def delete_existing_project(request, app_workspace):
     return redirect(reverse('geoglows_hydroviewer:geoglows_hydroviewer_creator'))
 
 
-@controller(
-    url= 'creator/project',
-    app_workspace=True,
-)
+@controller(url='creator/project', app_workspace=True)
 def project_overview(request, app_workspace):
     project = request.GET.get('project', False)
     if not project:
@@ -161,15 +148,12 @@ def project_overview(request, app_workspace):
     return render(request, 'geoglows_hydroviewer/creator_project_overview.html', context)
 
 
-@controller(
-    url='creator/render',
-    app_workspace=True,
-)
+@controller(url='creator/render', app_workspace=True)
 def render_hydroviewer(request, app_workspace):
     project = request.POST.get('project', False)
     project_title = False
 
-    # contols to auto fill form values with project values
+    # controls to auto fill form values with project values
     projects_path = os.path.join(app_workspace.path, 'projects')
     projects = os.listdir(projects_path)
     projects = [(prj.replace('_', ' '), prj) for prj in projects if os.path.isdir(os.path.join(projects_path, prj))]
@@ -213,10 +197,7 @@ def render_hydroviewer(request, app_workspace):
     return render(request, 'geoglows_hydroviewer/creator_render_hydroviewer.html', context)
 
 
-@controller(
-    url='/creator/project/edit/draw_boundaries',
-    app_workspace=True,
-)
+@controller(url='/creator/project/edit/draw_boundaries', app_workspace=True)
 def draw_boundaries(request, app_workspace):
     project = request.GET.get('project', False)
     if not project:
@@ -254,9 +235,7 @@ def draw_boundaries(request, app_workspace):
     return render(request, 'geoglows_hydroviewer/creator_boundaries_draw.html', context)
 
 
-@controller(
-    url='creator/project/edit/boundary_by_outlet',
-)
+@controller(url='creator/project/edit/boundary_by_outlet')
 def boundary_by_outlet(request):
     project = request.GET.get('project', False)
     if not project:
@@ -269,10 +248,7 @@ def boundary_by_outlet(request):
     return render(request, 'geoglows_hydroviewer/creator_boundaries_outlet.html', context)
 
 
-@controller(
-    url='/creator/project/edit/choose_boundary_country',
-    app_workspace=True,
-)
+@controller(url='/creator/project/edit/choose_boundary_country', app_workspace=True)
 def choose_boundary_country(request, app_workspace):
     project = request.GET.get('project', False)
     if not project:
@@ -321,10 +297,7 @@ def choose_boundary_country(request, app_workspace):
     return render(request, 'geoglows_hydroviewer/creator_boundaries_choose.html', context)
 
 
-@controller(
-    url='/creator/project/edit/save_boundaries',
-    app_workspace=True,
-)
+@controller(url='/creator/project/edit/save_boundaries', app_workspace=True)
 def save_boundaries(request, app_workspace):
     proj_dir = get_project_directory(request.POST['project'], app_workspace)
 
@@ -350,10 +323,8 @@ def save_boundaries(request, app_workspace):
 
     return JsonResponse({'status': 'success'})
 
-@controller(
-    url='/creator/project/edit/find_upstream_boundaries',
-    app_workspace=True,
-)
+
+@controller(url='/creator/project/edit/find_upstream_boundaries', app_workspace=True)
 def find_upstream_boundaries(request, app_workspace):
     project = request.GET.get('project', False)
     reachid = int(request.GET.get('reachid'))
@@ -396,11 +367,7 @@ def find_upstream_boundaries(request, app_workspace):
         return JsonResponse({'status': 'fail'})
 
 
-@controller(
-    name='retrieve_boundaries',
-    url='creator/project/edit/retrieve_boundaries',
-    app_workspace=True,
-)
+@controller(name='retrieve_boundaries', url='creator/project/edit/retrieve_boundaries', app_workspace=True)
 def retrieve_hydroviewer_boundaries(request, app_workspace):
     proj_dir = get_project_directory(request.GET['project'], app_workspace)
     with open(os.path.join(proj_dir, 'boundaries.json'), 'r') as geojson:

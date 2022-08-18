@@ -5,36 +5,10 @@ import os
 import pandas as pd
 from django.http import JsonResponse
 
-from .app import GeoglowsHydroviewer as App
 from tethys_sdk.routing import controller
 
-def delete_old_observations(app_workspace):
-    workspace_path = app_workspace.path
-    uploaded_observations = glob.glob(os.path.join(workspace_path, 'observations', '*.csv'))
-    expiration_time = datetime.datetime.now() - datetime.timedelta(days=1)
-    for uploaded_observation in uploaded_observations:
-        created_date = datetime.datetime.fromtimestamp(os.path.getctime(uploaded_observation))
-        if created_date <= expiration_time:
-            os.remove(uploaded_observation)
-    return
 
-
-def list_uploaded_observations(app_workspace):
-    workspace_path = app_workspace.path
-    uploaded_observations = glob.glob(os.path.join(workspace_path, 'observations', '*.csv'))
-    list_of_observations = []
-    for uploaded_observation in uploaded_observations:
-        file_name = os.path.basename(uploaded_observation)
-        presentation_name = file_name.replace('_', ' ').replace('.csv', '')
-        list_of_observations.append((presentation_name, file_name))
-    return tuple(sorted(list_of_observations))
-
-
-@controller(
-    name='upload_new_observations',
-    url='hydroviewer/upload_new_observations',
-    app_workspace=True,
-)
+@controller(name='upload_new_observations', url='hydroviewer/upload_new_observations', app_workspace=True)
 def upload_new_observations(request, app_workspace):
     delete_old_observations(app_workspace)
     workspace_path = app_workspace.path
@@ -63,3 +37,25 @@ def upload_new_observations(request, app_workspace):
         df.to_csv(new_observation_path)
 
     return JsonResponse(dict(new_file_list=list_uploaded_observations(app_workspace)))
+
+
+def delete_old_observations(app_workspace):
+    workspace_path = app_workspace.path
+    uploaded_observations = glob.glob(os.path.join(workspace_path, 'observations', '*.csv'))
+    expiration_time = datetime.datetime.now() - datetime.timedelta(days=1)
+    for uploaded_observation in uploaded_observations:
+        created_date = datetime.datetime.fromtimestamp(os.path.getctime(uploaded_observation))
+        if created_date <= expiration_time:
+            os.remove(uploaded_observation)
+    return
+
+
+def list_uploaded_observations(app_workspace):
+    workspace_path = app_workspace.path
+    uploaded_observations = glob.glob(os.path.join(workspace_path, 'observations', '*.csv'))
+    list_of_observations = []
+    for uploaded_observation in uploaded_observations:
+        file_name = os.path.basename(uploaded_observation)
+        presentation_name = file_name.replace('_', ' ').replace('.csv', '')
+        list_of_observations.append((presentation_name, file_name))
+    return tuple(sorted(list_of_observations))
