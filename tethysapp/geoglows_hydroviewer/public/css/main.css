@@ -132,3 +132,8 @@ th, tr, td {
   background: #4CAF50;
   cursor: pointer;
 }
+
+.modal-body{
+    height: 100%;
+    overflow-y: scroll;
+}
