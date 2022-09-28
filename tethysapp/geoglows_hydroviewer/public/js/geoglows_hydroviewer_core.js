@@ -316,6 +316,7 @@ function getHistoricalData() {
             // update other messages and links
             tl.tab("show")
             updateStatusIcons("ready")
+            updateDownloadLinks("set")
         },
         error: function() {
             updateStatusIcons("fail")
