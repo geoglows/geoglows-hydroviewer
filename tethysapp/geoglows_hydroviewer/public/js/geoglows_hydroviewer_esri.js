@@ -93,6 +93,35 @@ let VIIRSlayer = L.tileLayer(
         pane: "viirs"
     }
 )
+
+let accumPrecip = L.tileLayer.wms(
+    "http://ows.globalfloods.eu/glofas-ows/ows.py?",
+    {
+        layers: 'AccRainEGE'
+    }
+)
+
+let precip50= L.tileLayer.wms(
+    "http://ows.globalfloods.eu/glofas-ows/ows.py?",
+    {
+        layers: 'EGE_probRgt50'
+    }
+)
+
+let precip150= L.tileLayer.wms(
+    "http://ows.globalfloods.eu/glofas-ows/ows.py?",
+    {
+        layers: 'EGE_probRgt150'
+    }
+)
+
+let precip300 = L.tileLayer.wms(
+    "http://ows.globalfloods.eu/glofas-ows/ows.py?",
+    {
+        layers: 'EGE_probRgt300'
+    }
+)
+
 const globalLayer = L.esri
     .dynamicMapLayer({
         url:
@@ -109,7 +138,11 @@ L.control
         {
             "Stream Network": globalLayer,
             "Gauge Network": gaugeNetwork,
-            "VIIRS Imagery": VIIRSlayer
+            "VIIRS Imagery": VIIRSlayer,
+            "Accumulated Precipitation": accumPrecip,
+            "Precipitation Prob. > 50mm": precip50,
+            "Precipitation Prob. > 150mm": precip150,
+            "Precipitation Prob. > 300mm": precip300
         },
         { collapsed: false }
     )
