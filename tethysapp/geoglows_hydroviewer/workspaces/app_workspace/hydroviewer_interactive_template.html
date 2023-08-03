@@ -253,7 +253,7 @@
         updateDownloadLinks('clear');
         clearChartDivs();
         ftl.tab('show')
-        fc.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
+        fc.html(`<img src= ${loading_gif} >`);
         $.ajax({
             type: 'GET',
             async: true,

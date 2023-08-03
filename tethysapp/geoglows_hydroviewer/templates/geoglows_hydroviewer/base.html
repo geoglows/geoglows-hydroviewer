@@ -79,6 +79,9 @@
 
 {% block scripts %}
   {{ block.super }}
+  <script>
+    var loading_gif = "{% static 'geoglows_hydroviewer/images/progress_bar.gif' %}"
+</script>
   <!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-3K5B8H0KHJ"></script>
   <script>

@@ -252,7 +252,7 @@ function getForecastData() {
     ftl.tab("show")
     let fc = chart_divs[0]
     fc.html(
-        '<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">'
+        `<img src= ${loading_gif} >`
     )
     fc.css("text-align", "center")
     let dateOffset = 24 * 60 * 60 * 1000 * 7 // 7 days converted to milliseconds, the js time unit
@@ -291,7 +291,7 @@ function getHistoricalData() {
     tl.tab("show")
     let plotdiv = chart_divs[2]
     plotdiv.html(
-        '<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">'
+        `<img src= ${loading_gif} >`
     )
     plotdiv.css("text-align", "center")
     $.ajax({
