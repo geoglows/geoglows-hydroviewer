@@ -16,7 +16,8 @@
     {% csrf_token %}
     {% gizmo select_input projects %}
     <button class="btn btn-success" role="button" form="fill-values-form" submit="True">
-      <span class="glyphicon glyphicon-circle-arrow-down"></span> Get Hydroviewer Values
+      <i class="bi bi-arrow-down-circle-fill"></i>
+      Get Hydroviewer Values
     </button>
   </form>
   <hr>
@@ -65,7 +66,8 @@
     <hr>
 
     <button class="btn btn-success" role="button" form="render-configs-form" submit="True">
-      <span class="glyphicon glyphicon-save"></span> Download Rendered Hydroviewer HTML
+      <i class="bi bi-hdd"></i>
+      Download Rendered Hydroviewer HTML
     </button>
   </form>
 {% endblock %}
@@ -73,7 +75,8 @@
 {% block app_actions %}
   <a href="{% url 'geoglows_hydroviewer:geoglows_hydroviewer_creator' %}">
     <button class="btn btn-group btn-success" role="button">
-      <span class="glyphicon glyphicon-home"></span> Return to Creator
+      <i class="bi bi-house-door"></i>
+      Return to Creator
     </button>
   </a>
 {% endblock %}
@@ -81,7 +84,6 @@
 {% block content_dependent_styles %}
   {{ block.super }}
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css">
-  {#  <link href="{% static 'geoglows_hydroviewer/css/main.css' %}" rel="stylesheet"/>#}
   <link href="{% static 'geoglows_hydroviewer/css/overflow.css' %}" rel="stylesheet"/>
 {% endblock %}
 

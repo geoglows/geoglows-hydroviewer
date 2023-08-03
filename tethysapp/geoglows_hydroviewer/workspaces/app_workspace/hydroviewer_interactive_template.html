@@ -38,22 +38,21 @@
     <div class="modal-content">
 
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                aria-hidden="true">&times;</span></button>
-        <div class="row"><h2 style="text-align: center">Streamflow Results <span id="request-status"
-                                                                                 class="load-status"></span></h2></div>
+          <div class="row"><h2 style="text-align: center">Streamflow Results <span id="request-status"
+            class="load-status"></span></h2></div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <div class="modal-body">
         <!-- Nav tabs -->
         <ul class="nav nav-tabs" role="tablist">
-          <li role="presentation"><a id="forecast_tab_link" href="#forecast" role="tab" data-toggle="tab">Forecasted
+          <li role="presentation"><a id="forecast_tab_link" href="#forecast" role="tab" data-bs-toggle="tab">Forecasted
             Flow</a></li>
-          <li role="presentation"><a id="historical_tab_link" href="#historical" role="tab" data-toggle="tab">Historical
+          <li role="presentation"><a id="historical_tab_link" href="#historical" role="tab" data-bs-toggle="tab">Historical
             Simulation</a></li>
-          <li role="presentation"><a id="daily_tab_link" href="#daily" role="tab" data-toggle="tab">Daily Average</a>
+          <li role="presentation"><a id="daily_tab_link" href="#daily" role="tab" data-bs-toggle="tab">Daily Average</a>
           </li>
-          <li role="presentation"><a id="monthly_tab_link" href="#monthly" role="tab" data-toggle="tab">Monthly
+          <li role="presentation"><a id="monthly_tab_link" href="#monthly" role="tab" data-bs-toggle="tab">Monthly
             Average</a></li>
         </ul>
         <!-- Tab panes -->
@@ -89,7 +88,7 @@
         <button type="button" class="btn btn-info" id="resize_charts" onclick="fix_chart_sizes('forecasts')">Resize the
           Chart
         </button>
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -99,9 +98,8 @@
     <div class="modal-content">
 
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                aria-hidden="true">&times;</span></button>
-        <div class="row"><h2 style="text-align: center">Instructions</h2></div>
+          <div class="row"><h2 style="text-align: center">Instructions</h2></div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <div class="modal-body">
@@ -117,7 +115,7 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -211,7 +209,7 @@
     const modal_toggles = L.control({position: 'bottomright'});
     modal_toggles.onAdd = function () {
         let div = L.DomUtil.create('div');
-        div.innerHTML = '<div id="modal_toggles" style="text-align: right;">' + '<button id="show_modal_btn" class="btn btn-lg btn-warning" data-toggle="modal" data-target="#instructions_modal">Instructions</button><br>' + '<button id="show_modal_btn" class="btn btn-lg btn-warning" data-toggle="modal" data-target="#chart_modal">Open Charts Window</button>' + '</div>';
+        div.innerHTML = '<div id="modal_toggles" style="text-align: right;">' + '<button id="show_modal_btn" class="btn btn-lg btn-warning" data-bs-toggle="modal" data-bs-target="#instructions_modal">Instructions</button><br>' + '<button id="show_modal_btn" class="btn btn-lg btn-warning" data-bs-toggle="modal" data-bs-target="#chart_modal">Open Charts Window</button>' + '</div>';
         return div
     };
     modal_toggles.addTo(map);
@@ -255,7 +253,7 @@
         updateDownloadLinks('clear');
         clearChartDivs();
         ftl.tab('show')
-        fc.html('<img src="https://www.ashland.edu/sites/all/themes/ashlandecard/2014card/images/load.gif">');
+        fc.html(`<img src= ${loading_gif} >`);
         $.ajax({
             type: 'GET',
             async: true,

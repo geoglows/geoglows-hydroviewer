@@ -23,7 +23,7 @@
       <div id="loading-bar-div" style="display: none"><img src="{% static 'geoglows_hydroviewer/images/progress_bar.gif' %}"></div>
       <p>Upload Status: <span id="loading-message-div">{% if geojson %}A previously determined boundary has already been uploaded{% endif %}</span></p>
       <button id="return_to_overview" class="btn btn-success" role="button" form="overview-form" submit="True" {% if not geojson %}style="display: none"{% endif %}>
-        <span class="glyphicon glyphicon-home"></span> Return to Overview
+        <i class="bi bi-house-door"></i> Return to Overview
       </button>
     </div>
     <div style="width: 65%; height: 80vh; float: left;" id="map"></div>
@@ -35,7 +35,7 @@
     <input class="form-group" type="text" name="project" style="display: none" value="{{ project }}">
     <div class="btn-group ">
       <button class="btn btn-success" role="button" form="overview-form" submit="True">
-        <span class="glyphicon glyphicon-home"></span> Return to Overview Without Saving</button>
+        <i class="bi bi-house-door"></i> Return to Overview Without Saving
     </div>
   </form>
 {% endblock %}

@@ -1,6 +1,3 @@
-/*#app-actions {*/
-/*    display: none !important;*/
-/*}*/
 /* MAP STYLES */
 #app-content-wrapper #app-content {
     height: 100%;
@@ -131,4 +128,8 @@ th, tr, td {
   height: 25px;
   background: #4CAF50;
   cursor: pointer;
+}
+
+.custom-btn {
+    color: black;
 }

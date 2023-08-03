@@ -16,7 +16,7 @@ resource_files += find_resource_files('tethysapp/' + app_package + '/workspaces'
 setup(
     name=release_package,
     version='1.9',
-    description='Interface with the GEOGloWS ECMWF Streamflow model developed by the BYU Hydroinformatics lab.',
+    description='GUI for the GEOGloWS ECMWF Streamflow model',
     long_description='Contains an interactive map for viewing modeled streamflow using the GEOGloWS data and mapping '
                      'web services. Includes tools for extracting a subset of the delineated shapefiles and creating '
                      'a customized hydroviewer interface.',

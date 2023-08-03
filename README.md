@@ -1,4 +1,4 @@
-# GEOGloWS Hydroviewer - Tethys Web App
+# GEOGloWS Hydroviewer (Tethys Web App)
 
 Developed by Riley Hales and Kyler Ashby, 2020
 (c) Riley Hales, Kyler Ashby, BYU Hydroinformatics Lab

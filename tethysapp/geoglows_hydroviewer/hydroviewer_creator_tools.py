@@ -9,8 +9,8 @@ from .app import GeoglowsHydroviewer as App
 SHAPE_DIR = App.get_custom_setting('global_delineation_shapefiles_directory')
 
 
-def get_project_directory(project):
-    workspace_path = App.get_app_workspace().path
+def get_project_directory(project, app_workspace):
+    workspace_path = app_workspace.path
     project = str(project).replace(' ', '_')
     return os.path.join(workspace_path, 'projects', project)
 
