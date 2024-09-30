@@ -3,20 +3,25 @@
 {% block title %}GEOGloWS Hydroviewer{% endblock %}
 
 {% load static %}
-{% load staticfiles %}
 {% load tethys_gizmos %}
 {% block import_gizmos %}
     {% import_gizmo_dependency date_picker %}
 {% endblock %}
 {% block header_buttons %}
-  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="About Map Data">
-    <a data-toggle="modal" data-target="#about_modal"><span class="glyphicon glyphicon-question-sign"></span></a>
+  <div class="header-button glyphicon-button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="About Map Data">
+    <a data-bs-toggle="modal" data-bs-target="#about_modal">
+      <i class="bi bi-question-circle"></i>
+    </a>
   </div>
-  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Upload CSV">
-    <a data-toggle="modal" data-target="#csv_modal"><span class="glyphicon glyphicon-upload"></span></a>
+  <div class="header-button glyphicon-button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Upload CSV">
+    <a data-bs-toggle="modal" data-bs-target="#csv_modal">
+      <i class="bi bi-cloud-upload"></i>
+    </a>
   </div>
-  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="View Chart">
-    <a data-toggle="modal" data-target="#chart_modal"><span class="glyphicon glyphicon-globe"></span></a>
+  <div class="header-button glyphicon-button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="View Chart">
+    <a data-bs-toggle="modal" data-bs-target="#chart_modal">
+      <i class="bi bi-graph-up"></i>
+    </a>
   </div>
 {% endblock %}
 
@@ -28,35 +33,34 @@
 {% endblock %}
 
 {% block app_actions %}
-  <a role="button" class="btn btn-default" data-toggle="modal" data-target="#about_modal">About the Map Data</a>
+  <a role="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#about_modal">About the Map Data</a>
 {% endblock %}
 
 {% block after_app_content %}
   {# Chart Modals #}
   <div class="modal fade" id="chart_modal" role="dialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-xl" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                  aria-hidden="true">&times;</span></button>
           <div class="row">
             <h2 style="text-align: center">Streamflow Results <span id="request-status" class="load-status"/></h2>
           </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
         <div class="modal-body">
           <!-- Nav tabs -->
-          <ul class="nav nav-tabs" role="tablist">
-            <li role="presentation" class="active"><a id="forecast_tab_link" href="#forecast" role="tab"
-                                                      data-toggle="tab">Forecasts</a></li>
-            <li role="presentation"><a id="historical_tab_link" href="#historical" role="tab" data-toggle="tab"
+          <ul class="nav nav-tabs">
+            <li  class="active"><a id="forecast_tab_link" href="#forecast" class="nav-link active"
+                                                      data-bs-toggle="tab">Forecasts</a></li>
+            <li class="nav-item"><a id="historical_tab_link" href="#historical" class="nav-link" data-bs-toggle="tab"
                                        style="display: none">Historical</a></li>
-            <li role="presentation"><a id="avg_flow_tab_link" href="#average_flows" role="tab" data-toggle="tab"
+            <li class="nav-item"><a id="avg_flow_tab_link" href="#average_flows" class="nav-link" data-bs-toggle="tab"
                                        style="display: none">Average Flows</a></li>
-            <li role="presentation"><a id="flow_duration_tab_link" href="#flow_duration" role="tab" data-toggle="tab"
+            <li class="nav-item"><a id="flow_duration_tab_link" href="#flow_duration" class="nav-link" data-bs-toggle="tab"
                                        style="display: none">Flow-Duration</a></li>
-            <li role="presentation"><a id="bias_correction_tab_link" href="#bias_correction" role="tab"
-                                       style="display: none" data-toggle="tab">Bias Correction</a></li>
+            <li class="nav-item"><a id="bias_correction_tab_link" href="#bias_correction" class="nav-link"
+                                       style="display: none" data-bs-toggle="tab">Bias Correction</a></li>
           </ul>
 
           <!-- Tab panes -->
@@ -100,7 +104,7 @@
               <div class="panel panel-default">
                 <div style="margin-left: auto; margin-right: auto; width: 80%">
                   <br>
-                  <a class="btn btn-info" role="button" data-toggle="modal" data-target="#csv_modal"
+                  <a class="btn btn-info" role="button" data-bs-toggle="modal" data-bs-target="#csv_modal"
                      style="width: 100%">Upload New Observation</a>
                   <hr>
                   <p>{% gizmo select_input uploaded_observations %}</p>
@@ -122,20 +126,19 @@
           <button type="button" class="btn btn-info" id="resize_charts" onclick="fix_chart_sizes('forecasts')">Resize
             the Chart
           </button>
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
   </div>
   <div class="modal fade" id="about_modal" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                  aria-hidden="true">&times;</span></button>
           <div class="row">
             <h1 style="text-align: center">About Map Data</h1>
           </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
         <div class="modal-body">
@@ -182,18 +185,17 @@
           </ul>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
   </div>
   <div class="modal fade" id="csv_modal" role="dialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-xl" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                  aria-hidden="true">&times;</span></button>
           <h2 style="text-align: center">Upload Observational Data</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
         <div class="modal-body">
@@ -228,7 +230,7 @@
             <p><strong>Upload Status: </strong><span id="hydrograph-csv-status"></span></p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>

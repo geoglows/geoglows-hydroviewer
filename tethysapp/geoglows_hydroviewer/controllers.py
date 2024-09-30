@@ -10,8 +10,8 @@ import requests
 from django.http import JsonResponse
 from django.shortcuts import render
 from tethys_sdk.gizmos import SelectInput, Button
+from tethys_sdk.routing import controller
 
-from .app import GeoglowsHydroviewer as App
 from .manage_gauge_networks import get_observed_station_flow
 from .manage_gauge_networks import list_gauge_networks
 from .manage_uploaded_observations import delete_old_observations
@@ -35,25 +35,26 @@ GLOBAL_DELINEATIONS = (
 )
 
 
-def home(request):
+@controller(app_workspace=True)
+def home(request, app_workspace):
     """
     Controller for the app home page.
     """
-    delete_old_observations()
+    delete_old_observations(app_workspace)
 
     uploaded_observations = SelectInput(
         display_text='Uploaded Observational Data',
         name='uploaded_observations',
         multiple=False,
         original=True,
-        options=list_uploaded_observations(),
+        options=list_uploaded_observations(app_workspace),
     )
     gauge_networks = SelectInput(
         display_text='Stream Gauge Networks',
         name='gauge_networks',
         multiple=False,
         original=True,
-        options=list_gauge_networks(),
+        options=list_gauge_networks(app_workspace),
     )
     upload_new_observation = Button(
         name='Upload New Observation',
@@ -73,7 +74,8 @@ def home(request):
     return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer.html', context)
 
 
-def hydroshare_view(request):
+@controller(url='hydroshare', app_workspace=True)
+def hydroshare_view(request, app_workspace):
     """
     Controller for the Hydroshare view page.
     """
@@ -99,21 +101,21 @@ def hydroshare_view(request):
         initial=''
     )
 
-    delete_old_observations()
+    delete_old_observations(app_workspace)
 
     uploaded_observations = SelectInput(
         display_text='Uploaded Observational Data',
         name='uploaded_observations',
         multiple=False,
         original=True,
-        options=list_uploaded_observations(),
+        options=list_uploaded_observations(app_workspace),
     )
     gauge_networks = SelectInput(
         display_text='Stream Gauge Networks',
         name='gauge_networks',
         multiple=False,
         original=True,
-        options=list_gauge_networks(),
+        options=list_gauge_networks(app_workspace),
     )
     upload_new_observation = Button(
         name='Upload New Observation',
@@ -135,6 +137,7 @@ def hydroshare_view(request):
     return render(request, 'geoglows_hydroviewer/geoglows_hydroviewer.html', context)
 
 
+@controller(name='getAvailableDates', url='hydroviewer/getAvailableDates')
 def get_available_dates(request):
     reach_id = request.GET['reach_id']
     s = requests.Session()
@@ -146,13 +149,14 @@ def get_available_dates(request):
     ))
 
 
+@controller(name='getForecastData', url='hydroviewer/getForecastData')
 def get_forecast_data(request):
     # get data
     s = requests.Session()
     reach_id = request.GET['reach_id']
     start_date = request.GET['start_date']
     end_date = request.GET['end_date']
-    rec = gsf.forecast_records(reach_id, start_date=start_date.split('.')[0], end_date=end_date.split('.')[0],  s=s)
+    rec = gsf.forecast_records(reach_id, start_date=start_date.split('.')[0], end_date=end_date.split('.')[0], s=s)
     stats = gsf.forecast_stats(reach_id, forecast_date=end_date, s=s)
     ens = gsf.forecast_ensembles(reach_id, forecast_date=end_date, s=s)
     rper = gsf.return_periods(reach_id, s=s)
@@ -167,6 +171,7 @@ def get_forecast_data(request):
     ))
 
 
+@controller(name='getHistoricalData', url='hydroviewer/getHistoricalData')
 def get_historical_data(request):
     # get data
     s = requests.Session()
@@ -188,7 +193,8 @@ def get_historical_data(request):
     ))
 
 
-def get_bias_adjusted(request):
+@controller(name='getBiasAdjusted', url='hydroviewer/getBiasAdjusted', app_workspace=True)
+def get_bias_adjusted(request, app_workspace):
     # accept the parameters from the user
     data = request.GET.dict()
     network = data.get('gauge_network', False)
@@ -198,7 +204,7 @@ def get_bias_adjusted(request):
     else:
         reach_id = data['reach_id']
         csv = data['observation']
-        workspace_path = App.get_app_workspace().path
+        workspace_path = app_workspace.path
         obs_path = os.path.join(workspace_path, 'observations', csv)
         obs_data = pd.read_csv(obs_path, index_col=0)
         obs_data.index = pd.to_datetime(obs_data.index)
@@ -208,7 +214,7 @@ def get_bias_adjusted(request):
     # get the data you need to correct bias
     sim_data = gsf.historic_simulation(reach_id)
     forecast_stats = gsf.forecast_stats(reach_id)
-    
+
     # remove negative flows from the historical simulation
     sim_data[sim_data["streamflow_m^3/s"] < 0] = 0
 
@@ -232,13 +238,15 @@ def get_bias_adjusted(request):
     ))
 
 
+@controller(url='findReachID')
 def find_reach_id(request):
     reach_id = request.GET['reach_id']
     lat, lon = gsf.reach_to_latlon(int(reach_id))
     return JsonResponse({'lat': lat, 'lon': lon})
 
 
-def get_gauge_geojson(request):
-    workspace_path = App.get_app_workspace().path
-    with open(os.path.join(workspace_path, 'gauge_networks', request.GET['network'])) as geojson:
+@controller(name='get_gauge_geojson', url='getGaugeGeoJSON', app_workspace=True)
+def get_gauge_geojson(request, app_workspace):
+    workspace_path = app_workspace
+    with open(os.path.join(workspace_path.path, 'gauge_networks', request.GET['network'])) as geojson:
         return JsonResponse(json.load(geojson))

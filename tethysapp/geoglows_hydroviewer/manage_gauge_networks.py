@@ -8,11 +8,9 @@ import pandas as pd
 import requests
 import xmltodict
 
-from .app import GeoglowsHydroviewer as App
 
-
-def list_gauge_networks():
-    workspace_path = App.get_app_workspace().path
+def list_gauge_networks(app_workspace):
+    workspace_path = app_workspace.path
     gauge_jsons = glob.glob(os.path.join(workspace_path, 'gauge_networks', '*.json'))
     list_of_gauges = []
     for uploaded_observation in gauge_jsons:
