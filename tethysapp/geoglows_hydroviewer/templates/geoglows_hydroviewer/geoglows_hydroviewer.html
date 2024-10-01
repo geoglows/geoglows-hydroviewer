@@ -37,6 +37,24 @@
 {% endblock %}
 
 {% block after_app_content %}
+  <div class="modal fade" id="warning_modal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Warning</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>This app displays the data from GEOGLOWS Version 1, which will continue to be available until April, 2025. For more information join our Google Group and Mailing List 
+            <a href=" https://groups.google.com/g/geoglows-streamflow" target="_blank">Here</a>.</p>
+          <p>You can interact with GEOGLOWS Version 2 data from the following beta apps: 
+            <a href="https://hydroviewer.geoglows.org/">https://hydroviewer.geoglows.org</a> and
+            <a href="https://beta.apps.geoglows.org/apps/hydroviewer/">https://beta.apps.geoglows.org/apps/hydroviewer</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
   {# Chart Modals #}
   <div class="modal fade" id="chart_modal" role="dialog">
     <div class="modal-dialog modal-xl" role="document">

@@ -11,6 +11,10 @@ let mapMarker = null
 let controlsObj
 let SelectedSegment = L.geoJSON(false, { weight: 5, color: "#00008b" }).addTo(mapObj)
 
+$(document).ready(function() {
+    $('#warning_modal').modal('show');
+})
+
 const basemapsJson = {
     "ESRI Topographic": L.esri.basemapLayer("Topographic").addTo(mapObj),
     "ESRI Terrain": L.layerGroup([
