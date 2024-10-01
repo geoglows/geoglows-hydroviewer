@@ -8,8 +8,17 @@
     height: 100%;
 }
 
+#warning_modal .modal-dialog {
+    top: 30%;
+}
+
+#warning_modal .modal-dialog .modal-content {
+    color: #856404;
+    background-color: #fff3cd;
+}
+
 #chart_modal .modal-dialog {
-    width: 80%
+    width: 80%;
 }
 
 #app-navigation li {
